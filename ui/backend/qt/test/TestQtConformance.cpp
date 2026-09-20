@@ -88,129 +88,129 @@ namespace
         ui::charts::Log10Axis frequencyAxis;
         ui::charts::ChartCore frequencyChart{ frequencyAxis, ui::charts::ChartConfig{ 1, 2 } };
     };
+}
 
-    TEST_F(QtConformanceTest, TimeChartRendersThroughBothBackends)
+TEST_F(QtConformanceTest, TimeChartRendersThroughBothBackends)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
+
+    PaintThroughBoth(timeChart);
+
+    EXPECT_FALSE(recording.Commands().empty());
+    EXPECT_TRUE(HasInk(image, image.rect(), background));
+}
+
+TEST_F(QtConformanceTest, FrequencyChartRendersThroughBothBackends)
+{
+    frequencyChart.SetAxisValues(Ramp(256, 10.0f));
+    frequencyChart.SetPanels(OnePanel(256));
+
+    PaintThroughBoth(frequencyChart);
+
+    EXPECT_FALSE(recording.Commands().empty());
+    EXPECT_TRUE(HasInk(image, image.rect(), background));
+}
+
+TEST_F(QtConformanceTest, AxisLinesLandAtTheRecordedCoordinates)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
+
+    PaintThroughBoth(timeChart);
+
+    const auto* axisLine = FirstOf(CommandKind::DrawLine);
+    ASSERT_NE(axisLine, nullptr);
+
+    const ui::Point midpoint{ (axisLine->from.x + axisLine->to.x) * 0.5f, (axisLine->from.y + axisLine->to.y) * 0.5f };
+    EXPECT_TRUE(HasInk(image, Around(midpoint, 2), background));
+}
+
+TEST_F(QtConformanceTest, SeriesTraceLandsAtTheRecordedPoints)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
+
+    PaintThroughBoth(timeChart);
+
+    const auto* polyline = FirstOf(CommandKind::DrawPolyline);
+    ASSERT_NE(polyline, nullptr);
+    ASSERT_GT(polyline->points.size(), 16u);
+
+    for (std::size_t i = 0; i < polyline->points.size(); i += 16)
+        EXPECT_TRUE(HasInk(image, Around(polyline->points[i], 2), background)) << "no ink at recorded sample " << i;
+}
+
+TEST_F(QtConformanceTest, TheSeriesTraceIsOnePolylineNotOneLinePerSample)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
+
+    PaintThroughBoth(timeChart);
+
+    EXPECT_EQ(recording.CountOf(CommandKind::DrawPolyline), 1u);
+    EXPECT_LT(recording.CountOf(CommandKind::DrawLine), 32u);
+}
+
+TEST_F(QtConformanceTest, EveryRecordedPrimitiveStaysInsideTheWidgetBounds)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
+
+    PaintThroughBoth(timeChart);
+
+    for (const auto& command : recording.Commands())
     {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
-
-        PaintThroughBoth(timeChart);
-
-        EXPECT_FALSE(recording.Commands().empty());
-        EXPECT_TRUE(HasInk(image, image.rect(), background));
-    }
-
-    TEST_F(QtConformanceTest, FrequencyChartRendersThroughBothBackends)
-    {
-        frequencyChart.SetAxisValues(Ramp(256, 10.0f));
-        frequencyChart.SetPanels(OnePanel(256));
-
-        PaintThroughBoth(frequencyChart);
-
-        EXPECT_FALSE(recording.Commands().empty());
-        EXPECT_TRUE(HasInk(image, image.rect(), background));
-    }
-
-    TEST_F(QtConformanceTest, AxisLinesLandAtTheRecordedCoordinates)
-    {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
-
-        PaintThroughBoth(timeChart);
-
-        const auto* axisLine = FirstOf(CommandKind::DrawLine);
-        ASSERT_NE(axisLine, nullptr);
-
-        const ui::Point midpoint{ (axisLine->from.x + axisLine->to.x) * 0.5f, (axisLine->from.y + axisLine->to.y) * 0.5f };
-        EXPECT_TRUE(HasInk(image, Around(midpoint, 2), background));
-    }
-
-    TEST_F(QtConformanceTest, SeriesTraceLandsAtTheRecordedPoints)
-    {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
-
-        PaintThroughBoth(timeChart);
-
-        const auto* polyline = FirstOf(CommandKind::DrawPolyline);
-        ASSERT_NE(polyline, nullptr);
-        ASSERT_GT(polyline->points.size(), 16u);
-
-        for (std::size_t i = 0; i < polyline->points.size(); i += 16)
-            EXPECT_TRUE(HasInk(image, Around(polyline->points[i], 2), background)) << "no ink at recorded sample " << i;
-    }
-
-    TEST_F(QtConformanceTest, TheSeriesTraceIsOnePolylineNotOneLinePerSample)
-    {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
-
-        PaintThroughBoth(timeChart);
-
-        EXPECT_EQ(recording.CountOf(CommandKind::DrawPolyline), 1u);
-        EXPECT_LT(recording.CountOf(CommandKind::DrawLine), 32u);
-    }
-
-    TEST_F(QtConformanceTest, EveryRecordedPrimitiveStaysInsideTheWidgetBounds)
-    {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
-
-        PaintThroughBoth(timeChart);
-
-        for (const auto& command : recording.Commands())
+        for (const auto& point : command.points)
         {
-            for (const auto& point : command.points)
-            {
-                EXPECT_GE(point.x, bounds.Left());
-                EXPECT_LE(point.x, bounds.Right());
-                EXPECT_GE(point.y, bounds.Top());
-                EXPECT_LE(point.y, bounds.Bottom());
-            }
+            EXPECT_GE(point.x, bounds.Left());
+            EXPECT_LE(point.x, bounds.Right());
+            EXPECT_GE(point.y, bounds.Top());
+            EXPECT_LE(point.y, bounds.Bottom());
         }
     }
+}
 
-    // What "the two backends see the same scene" actually reduces to: the engine emits an
-    // identical command stream regardless of which Canvas it is handed, so a QPainter-only
-    // behaviour cannot leak back into the portable layer.
-    TEST_F(QtConformanceTest, TheCommandStreamIsUnchangedByHavingRenderedThroughQt)
-    {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
+// What "the two backends see the same scene" actually reduces to: the engine emits an
+// identical command stream regardless of which Canvas it is handed, so a QPainter-only
+// behaviour cannot leak back into the portable layer.
+TEST_F(QtConformanceTest, TheCommandStreamIsUnchangedByHavingRenderedThroughQt)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
 
-        timeChart.Paint(recording, bounds);
-        const auto before = recording.Commands().size();
+    timeChart.Paint(recording, bounds);
+    const auto before = recording.Commands().size();
 
-        QPainter painter{ &image };
-        ui::backend::qt::QtCanvas canvas{ painter };
-        timeChart.Paint(canvas, bounds);
-        painter.end();
+    QPainter painter{ &image };
+    ui::backend::qt::QtCanvas canvas{ painter };
+    timeChart.Paint(canvas, bounds);
+    painter.end();
 
-        recording.Clear();
-        timeChart.Paint(recording, bounds);
+    recording.Clear();
+    timeChart.Paint(recording, bounds);
 
-        EXPECT_EQ(recording.Commands().size(), before);
-    }
+    EXPECT_EQ(recording.Commands().size(), before);
+}
 
-    TEST_F(QtConformanceTest, ClippingKeepsTheTraceInsideTheRecordedPlotArea)
-    {
-        timeChart.SetAxisValues(Ramp(256, 0.01f));
-        timeChart.SetPanels(OnePanel(256));
+TEST_F(QtConformanceTest, ClippingKeepsTheTraceInsideTheRecordedPlotArea)
+{
+    timeChart.SetAxisValues(Ramp(256, 0.01f));
+    timeChart.SetPanels(OnePanel(256));
 
-        PaintThroughBoth(timeChart);
+    PaintThroughBoth(timeChart);
 
-        const auto* clip = FirstOf(CommandKind::SetClip);
-        ASSERT_NE(clip, nullptr);
+    const auto* clip = FirstOf(CommandKind::SetClip);
+    ASSERT_NE(clip, nullptr);
 
-        const auto series = ui::theme::Light().Series(0);
-        const auto seriesPixel = qRgb(series.red, series.green, series.blue);
+    const auto series = ui::theme::Light().Series(0);
+    const auto seriesPixel = qRgb(series.red, series.green, series.blue);
 
-        for (auto y = 0; y < image.height(); ++y)
-            for (auto x = 0; x < image.width(); ++x)
-                if (image.pixel(x, y) == seriesPixel)
-                {
-                    EXPECT_GE(static_cast<float>(x), clip->rect.Left() - 1.0f);
-                    EXPECT_LE(static_cast<float>(x), clip->rect.Right() + 1.0f);
-                }
-    }
+    for (auto y = 0; y < image.height(); ++y)
+        for (auto x = 0; x < image.width(); ++x)
+            if (image.pixel(x, y) == seriesPixel)
+            {
+                EXPECT_GE(static_cast<float>(x), clip->rect.Left() - 1.0f);
+                EXPECT_LE(static_cast<float>(x), clip->rect.Right() + 1.0f);
+            }
 }

@@ -48,167 +48,167 @@ namespace
         ::testing::StrictMock<PaintedViewMock> view;
         ui::backend::qt::QtPaintedWidget widget{ view };
     };
+}
 
-    TEST_F(QtPaintedWidgetTest, WheelDeltaKeepsQtSignConvention)
+TEST_F(QtPaintedWidgetTest, WheelDeltaKeepsQtSignConvention)
+{
+    ui::WheelEvent forwarded;
+    EXPECT_CALL(view, OnWheel(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    QWheelEvent event{ QPointF{ 80.0f, 40.0f }, QPointF{ 80.0f, 40.0f }, QPoint{ 0, 0 }, QPoint{ 0, 120 },
+        ::Qt::NoButton, ::Qt::NoModifier, ::Qt::NoScrollPhase, false };
+    Send(event);
+
+    EXPECT_NEAR(forwarded.delta, 120.0f, 1e-3f);
+    EXPECT_NEAR(forwarded.position.x, 80.0f, 1e-3f);
+    EXPECT_NEAR(forwarded.position.y, 40.0f, 1e-3f);
+}
+
+TEST_F(QtPaintedWidgetTest, WheelDeltaKeepsItsNegativeSign)
+{
+    ui::WheelEvent forwarded;
+    EXPECT_CALL(view, OnWheel(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    QWheelEvent event{ QPointF{ 10.0f, 10.0f }, QPointF{ 10.0f, 10.0f }, QPoint{ 0, 0 }, QPoint{ 0, -120 },
+        ::Qt::NoButton, ::Qt::NoModifier, ::Qt::NoScrollPhase, false };
+    Send(event);
+
+    EXPECT_NEAR(forwarded.delta, -120.0f, 1e-3f);
+}
+
+TEST_F(QtPaintedWidgetTest, MousePressCarriesPositionAndButton)
+{
+    ui::MouseEvent forwarded;
+    EXPECT_CALL(view, OnMousePress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    auto event = Mouse(QEvent::MouseButtonPress, QPointF{ 30.0f, 50.0f }, ::Qt::LeftButton);
+    Send(event);
+
+    EXPECT_EQ(forwarded.button, ui::MouseButton::Left);
+    EXPECT_NEAR(forwarded.position.x, 30.0f, 1e-3f);
+    EXPECT_NEAR(forwarded.position.y, 50.0f, 1e-3f);
+}
+
+TEST_F(QtPaintedWidgetTest, MouseMoveArrivesWithNoButtonHeld)
+{
+    ui::MouseEvent forwarded;
+    EXPECT_CALL(view, OnMouseMove(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    auto event = Mouse(QEvent::MouseMove, QPointF{ 12.0f, 90.0f }, ::Qt::NoButton);
+    Send(event);
+
+    EXPECT_EQ(forwarded.button, ui::MouseButton::None);
+    EXPECT_NEAR(forwarded.position.x, 12.0f, 1e-3f);
+}
+
+TEST_F(QtPaintedWidgetTest, MouseReleaseAndDoubleClickAreForwarded)
+{
+    ui::MouseEvent released;
+    ui::MouseEvent doubleClicked;
+    EXPECT_CALL(view, OnMouseRelease(::testing::_)).WillOnce(::testing::SaveArg<0>(&released));
+    EXPECT_CALL(view, OnMouseDoubleClick(::testing::_)).WillOnce(::testing::SaveArg<0>(&doubleClicked));
+
+    auto release = Mouse(QEvent::MouseButtonRelease, QPointF{ 5.0f, 5.0f }, ::Qt::LeftButton);
+    Send(release);
+
+    auto doubleClick = Mouse(QEvent::MouseButtonDblClick, QPointF{ 7.0f, 8.0f }, ::Qt::LeftButton);
+    Send(doubleClick);
+
+    EXPECT_EQ(released.button, ui::MouseButton::Left);
+    EXPECT_NEAR(doubleClicked.position.y, 8.0f, 1e-3f);
+}
+
+TEST_F(QtPaintedWidgetTest, RightAndMiddleButtonsAreDistinguished)
+{
+    ui::MouseEvent right;
+    ui::MouseEvent middle;
+    EXPECT_CALL(view, OnMousePress(::testing::_))
+        .WillOnce(::testing::SaveArg<0>(&right))
+        .WillOnce(::testing::SaveArg<0>(&middle));
+
+    auto rightPress = Mouse(QEvent::MouseButtonPress, QPointF{ 1.0f, 1.0f }, ::Qt::RightButton);
+    Send(rightPress);
+
+    auto middlePress = Mouse(QEvent::MouseButtonPress, QPointF{ 1.0f, 1.0f }, ::Qt::MiddleButton);
+    Send(middlePress);
+
+    EXPECT_EQ(right.button, ui::MouseButton::Right);
+    EXPECT_EQ(middle.button, ui::MouseButton::Middle);
+}
+
+TEST_F(QtPaintedWidgetTest, ModifiersAreTranslated)
+{
+    ui::MouseEvent forwarded;
+    EXPECT_CALL(view, OnMousePress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    QMouseEvent event{ QEvent::MouseButtonPress, QPointF{ 2.0f, 3.0f }, QPointF{ 2.0f, 3.0f },
+        ::Qt::LeftButton, ::Qt::LeftButton, ::Qt::ShiftModifier | ::Qt::ControlModifier };
+    Send(event);
+
+    EXPECT_TRUE(forwarded.modifiers.shift);
+    EXPECT_TRUE(forwarded.modifiers.control);
+    EXPECT_FALSE(forwarded.modifiers.alt);
+}
+
+TEST_F(QtPaintedWidgetTest, LeaveIsForwarded)
+{
+    EXPECT_CALL(view, OnMouseLeave());
+
+    QEvent event{ QEvent::Leave };
+    Send(event);
+}
+
+TEST_F(QtPaintedWidgetTest, KeyPressCarriesTheMappedKeyAndCodepoint)
+{
+    ui::KeyEvent forwarded;
+    EXPECT_CALL(view, OnKeyPress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    QKeyEvent event{ QEvent::KeyPress, ::Qt::Key_Left, ::Qt::NoModifier };
+    Send(event);
+
+    EXPECT_EQ(forwarded.key, ui::Key::Left);
+    EXPECT_EQ(forwarded.codepoint, char32_t{ 0 });
+}
+
+TEST_F(QtPaintedWidgetTest, UnmappedKeysStillCarryTheirCodepoint)
+{
+    ui::KeyEvent forwarded;
+    EXPECT_CALL(view, OnKeyPress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
+
+    QKeyEvent event{ QEvent::KeyPress, ::Qt::Key_A, ::Qt::NoModifier, QStringLiteral("a") };
+    Send(event);
+
+    EXPECT_EQ(forwarded.key, ui::Key::Unknown);
+    EXPECT_EQ(forwarded.codepoint, U'a');
+}
+
+TEST_F(QtPaintedWidgetTest, MinimumSizeHintComesFromTheView)
+{
+    EXPECT_CALL(view, MinimumSize()).WillOnce(::testing::Return(ui::Size{ 320.0f, 240.0f }));
+
+    EXPECT_EQ(widget.minimumSizeHint(), QSize(320, 240));
+}
+
+TEST_F(QtPaintedWidgetTest, PaintFillsTheThemeBackgroundAndDelegatesToTheView)
+{
+    ui::Rect painted;
+    EXPECT_CALL(view, Paint(::testing::_, ::testing::_)).WillOnce(::testing::SaveArg<1>(&painted));
+
+    QImage image{ 200, 160, QImage::Format_ARGB32 };
+    image.fill(qRgb(0, 0, 0));
+    widget.render(&image);
+
+    EXPECT_EQ(image.pixel(100, 80), background);
+    EXPECT_NEAR(painted.width, 200.0f, 1e-3f);
+    EXPECT_NEAR(painted.height, 160.0f, 1e-3f);
+}
+
+TEST_F(QtPaintedWidgetTest, DestroyingTheWidgetClearsTheViewsRepaintCallback)
+{
     {
-        ui::WheelEvent forwarded;
-        EXPECT_CALL(view, OnWheel(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        QWheelEvent event{ QPointF{ 80.0f, 40.0f }, QPointF{ 80.0f, 40.0f }, QPoint{ 0, 0 }, QPoint{ 0, 120 },
-            ::Qt::NoButton, ::Qt::NoModifier, ::Qt::NoScrollPhase, false };
-        Send(event);
-
-        EXPECT_NEAR(forwarded.delta, 120.0f, 1e-3f);
-        EXPECT_NEAR(forwarded.position.x, 80.0f, 1e-3f);
-        EXPECT_NEAR(forwarded.position.y, 40.0f, 1e-3f);
+        ui::backend::qt::QtPaintedWidget scoped{ view };
+        EXPECT_TRUE(static_cast<bool>(view.onRepaintRequested));
     }
 
-    TEST_F(QtPaintedWidgetTest, WheelDeltaKeepsItsNegativeSign)
-    {
-        ui::WheelEvent forwarded;
-        EXPECT_CALL(view, OnWheel(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        QWheelEvent event{ QPointF{ 10.0f, 10.0f }, QPointF{ 10.0f, 10.0f }, QPoint{ 0, 0 }, QPoint{ 0, -120 },
-            ::Qt::NoButton, ::Qt::NoModifier, ::Qt::NoScrollPhase, false };
-        Send(event);
-
-        EXPECT_NEAR(forwarded.delta, -120.0f, 1e-3f);
-    }
-
-    TEST_F(QtPaintedWidgetTest, MousePressCarriesPositionAndButton)
-    {
-        ui::MouseEvent forwarded;
-        EXPECT_CALL(view, OnMousePress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        auto event = Mouse(QEvent::MouseButtonPress, QPointF{ 30.0f, 50.0f }, ::Qt::LeftButton);
-        Send(event);
-
-        EXPECT_EQ(forwarded.button, ui::MouseButton::Left);
-        EXPECT_NEAR(forwarded.position.x, 30.0f, 1e-3f);
-        EXPECT_NEAR(forwarded.position.y, 50.0f, 1e-3f);
-    }
-
-    TEST_F(QtPaintedWidgetTest, MouseMoveArrivesWithNoButtonHeld)
-    {
-        ui::MouseEvent forwarded;
-        EXPECT_CALL(view, OnMouseMove(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        auto event = Mouse(QEvent::MouseMove, QPointF{ 12.0f, 90.0f }, ::Qt::NoButton);
-        Send(event);
-
-        EXPECT_EQ(forwarded.button, ui::MouseButton::None);
-        EXPECT_NEAR(forwarded.position.x, 12.0f, 1e-3f);
-    }
-
-    TEST_F(QtPaintedWidgetTest, MouseReleaseAndDoubleClickAreForwarded)
-    {
-        ui::MouseEvent released;
-        ui::MouseEvent doubleClicked;
-        EXPECT_CALL(view, OnMouseRelease(::testing::_)).WillOnce(::testing::SaveArg<0>(&released));
-        EXPECT_CALL(view, OnMouseDoubleClick(::testing::_)).WillOnce(::testing::SaveArg<0>(&doubleClicked));
-
-        auto release = Mouse(QEvent::MouseButtonRelease, QPointF{ 5.0f, 5.0f }, ::Qt::LeftButton);
-        Send(release);
-
-        auto doubleClick = Mouse(QEvent::MouseButtonDblClick, QPointF{ 7.0f, 8.0f }, ::Qt::LeftButton);
-        Send(doubleClick);
-
-        EXPECT_EQ(released.button, ui::MouseButton::Left);
-        EXPECT_NEAR(doubleClicked.position.y, 8.0f, 1e-3f);
-    }
-
-    TEST_F(QtPaintedWidgetTest, RightAndMiddleButtonsAreDistinguished)
-    {
-        ui::MouseEvent right;
-        ui::MouseEvent middle;
-        EXPECT_CALL(view, OnMousePress(::testing::_))
-            .WillOnce(::testing::SaveArg<0>(&right))
-            .WillOnce(::testing::SaveArg<0>(&middle));
-
-        auto rightPress = Mouse(QEvent::MouseButtonPress, QPointF{ 1.0f, 1.0f }, ::Qt::RightButton);
-        Send(rightPress);
-
-        auto middlePress = Mouse(QEvent::MouseButtonPress, QPointF{ 1.0f, 1.0f }, ::Qt::MiddleButton);
-        Send(middlePress);
-
-        EXPECT_EQ(right.button, ui::MouseButton::Right);
-        EXPECT_EQ(middle.button, ui::MouseButton::Middle);
-    }
-
-    TEST_F(QtPaintedWidgetTest, ModifiersAreTranslated)
-    {
-        ui::MouseEvent forwarded;
-        EXPECT_CALL(view, OnMousePress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        QMouseEvent event{ QEvent::MouseButtonPress, QPointF{ 2.0f, 3.0f }, QPointF{ 2.0f, 3.0f },
-            ::Qt::LeftButton, ::Qt::LeftButton, ::Qt::ShiftModifier | ::Qt::ControlModifier };
-        Send(event);
-
-        EXPECT_TRUE(forwarded.modifiers.shift);
-        EXPECT_TRUE(forwarded.modifiers.control);
-        EXPECT_FALSE(forwarded.modifiers.alt);
-    }
-
-    TEST_F(QtPaintedWidgetTest, LeaveIsForwarded)
-    {
-        EXPECT_CALL(view, OnMouseLeave());
-
-        QEvent event{ QEvent::Leave };
-        Send(event);
-    }
-
-    TEST_F(QtPaintedWidgetTest, KeyPressCarriesTheMappedKeyAndCodepoint)
-    {
-        ui::KeyEvent forwarded;
-        EXPECT_CALL(view, OnKeyPress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        QKeyEvent event{ QEvent::KeyPress, ::Qt::Key_Left, ::Qt::NoModifier };
-        Send(event);
-
-        EXPECT_EQ(forwarded.key, ui::Key::Left);
-        EXPECT_EQ(forwarded.codepoint, char32_t{ 0 });
-    }
-
-    TEST_F(QtPaintedWidgetTest, UnmappedKeysStillCarryTheirCodepoint)
-    {
-        ui::KeyEvent forwarded;
-        EXPECT_CALL(view, OnKeyPress(::testing::_)).WillOnce(::testing::SaveArg<0>(&forwarded));
-
-        QKeyEvent event{ QEvent::KeyPress, ::Qt::Key_A, ::Qt::NoModifier, QStringLiteral("a") };
-        Send(event);
-
-        EXPECT_EQ(forwarded.key, ui::Key::Unknown);
-        EXPECT_EQ(forwarded.codepoint, U'a');
-    }
-
-    TEST_F(QtPaintedWidgetTest, MinimumSizeHintComesFromTheView)
-    {
-        EXPECT_CALL(view, MinimumSize()).WillOnce(::testing::Return(ui::Size{ 320.0f, 240.0f }));
-
-        EXPECT_EQ(widget.minimumSizeHint(), QSize(320, 240));
-    }
-
-    TEST_F(QtPaintedWidgetTest, PaintFillsTheThemeBackgroundAndDelegatesToTheView)
-    {
-        ui::Rect painted;
-        EXPECT_CALL(view, Paint(::testing::_, ::testing::_)).WillOnce(::testing::SaveArg<1>(&painted));
-
-        QImage image{ 200, 160, QImage::Format_ARGB32 };
-        image.fill(qRgb(0, 0, 0));
-        widget.render(&image);
-
-        EXPECT_EQ(image.pixel(100, 80), background);
-        EXPECT_NEAR(painted.width, 200.0f, 1e-3f);
-        EXPECT_NEAR(painted.height, 160.0f, 1e-3f);
-    }
-
-    TEST_F(QtPaintedWidgetTest, DestroyingTheWidgetClearsTheViewsRepaintCallback)
-    {
-        {
-            ui::backend::qt::QtPaintedWidget scoped{ view };
-            EXPECT_TRUE(static_cast<bool>(view.onRepaintRequested));
-        }
-
-        EXPECT_FALSE(static_cast<bool>(view.onRepaintRequested));
-    }
+    EXPECT_FALSE(static_cast<bool>(view.onRepaintRequested));
 }

@@ -46,12 +46,12 @@ namespace
 
         static constexpr ui::Rect bounds{ 0.0f, 0.0f, 800.0f, 600.0f };
     };
+}
 
-    TEST_F(ChartCoreTest, TheSeriesIsDrawnAsOnePolyline)
-    {
-        // Arrange, Act, Assert
-        EXPECT_EQ(canvas.CountOf(CommandKind::DrawPolyline), 1u);
-    }
+TEST_F(ChartCoreTest, TheSeriesIsDrawnAsOnePolyline)
+{
+    // Arrange, Act, Assert
+    EXPECT_EQ(canvas.CountOf(CommandKind::DrawPolyline), 1u);
 }
 ```
 
@@ -64,8 +64,9 @@ Extend it when a new `Canvas` primitive lands.
 
 ## Rules
 
-- Fixture class and type aliases go inside an anonymous `namespace {}`; in this repository the
-  `TEST_F` macros sit inside it too, which keeps a translation unit self-contained
+- Fixture class and type aliases go inside an anonymous `namespace {}`; the `TEST_F` macros go
+  **outside** it. cppcheck cannot parse a `TEST_F` nested in a namespace and fails the Linting job
+  with `syntaxError`, so this is enforced, not stylistic
 - Include `<gmock/gmock.h>` when matchers or mocks are needed, `<gtest/gtest.h>` otherwise
 - **ONLY `StrictMock`**: never `testing::NiceMock<>` or a bare mock instantiation — `NiceMock`
   silences unexpected-call warnings and masks test gaps; `StrictMock` makes every interaction explicit

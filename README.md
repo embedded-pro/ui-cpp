@@ -34,15 +34,10 @@ cmake --build --preset host-Debug
 ctest --preset host
 ```
 
-The Qt backend is opt-in and off by default:
-
-```sh
-cmake --preset host -DUI_BUILD_QT_BACKEND=On
-```
-
-It is deliberately *not* inferred from a consumer's `*_BUILD_SIMULATOR` flag — e-foc configures its
-host tools (and therefore Qt) on every host build, while the toolboxes only do so under their
-simulator option.
+The Qt backend is not in the tree yet; `UI_BUILD_QT_BACKEND` exists but turning it on is an error
+until `ui/backend/qt` lands. When it does, it stays opt-in and off by default, and is deliberately
+*not* inferred from a consumer's `*_BUILD_SIMULATOR` flag — e-foc configures its host tools (and
+therefore Qt) on every host build, while the toolboxes only do so under their simulator option.
 
 ## Contributing
 

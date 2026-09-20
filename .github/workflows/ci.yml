@@ -43,8 +43,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends qt6-base-dev libgl1-mesa-dev
       - uses: lukka/run-cmake@5d55ea7949e25f69f0ecb516d8d572297e03a956 # v10.9
         with:
-          # Switches to the host-qt preset once ui/backend/qt exists; until then the Qt
-          # backend has nothing to build and host-qt fails to configure.
+          # Gains a Qt-backend preset once ui/backend/qt exists; until then there is no
+          # backend to build and enabling UI_BUILD_QT_BACKEND is a configure error.
           configurePreset: "host"
           buildPreset: "host-Debug"
           testPreset: "host"

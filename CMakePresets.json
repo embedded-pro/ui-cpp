@@ -24,14 +24,6 @@
       }
     },
     {
-      "name": "host-qt",
-      "displayName": "Host build with the Qt backend",
-      "inherits": "host",
-      "cacheVariables": {
-        "UI_BUILD_QT_BACKEND": true
-      }
-    },
-    {
       "name": "host-single-Debug",
       "displayName": "Host single-config Debug (no Qt; macOS/Windows CI)",
       "inherits": "defaults",
@@ -49,22 +41,52 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "UI_BUILD_TESTS": true,
-        "UI_BUILD_QT_BACKEND": true,
         "EMIL_ENABLE_COVERAGE": "On"
       }
     }
   ],
   "buildPresets": [
-    { "name": "host-Debug", "configurePreset": "host", "configuration": "Debug" },
-    { "name": "host-RelWithDebInfo", "configurePreset": "host", "configuration": "RelWithDebInfo" },
-    { "name": "host-qt-Debug", "configurePreset": "host-qt", "configuration": "Debug" },
-    { "name": "host-single-Debug", "configurePreset": "host-single-Debug" },
-    { "name": "coverage", "configurePreset": "coverage" }
+    {
+      "name": "host-Debug",
+      "configurePreset": "host",
+      "configuration": "Debug"
+    },
+    {
+      "name": "host-RelWithDebInfo",
+      "configurePreset": "host",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "host-single-Debug",
+      "configurePreset": "host-single-Debug"
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage"
+    }
   ],
   "testPresets": [
-    { "name": "host", "configurePreset": "host", "configuration": "Debug", "output": { "outputOnFailure": true } },
-    { "name": "host-qt", "configurePreset": "host-qt", "configuration": "Debug", "output": { "outputOnFailure": true } },
-    { "name": "host-single-Debug", "configurePreset": "host-single-Debug", "output": { "outputOnFailure": true } },
-    { "name": "coverage", "configurePreset": "coverage", "output": { "outputOnFailure": true } }
+    {
+      "name": "host",
+      "configurePreset": "host",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "host-single-Debug",
+      "configurePreset": "host-single-Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
   ]
 }

@@ -41,7 +41,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "UI_BUILD_TESTS": true,
-        "EMIL_ENABLE_COVERAGE": "On"
+        "UI_ENABLE_COVERAGE": true
       }
     }
   ],

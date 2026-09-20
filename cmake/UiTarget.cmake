@@ -23,6 +23,7 @@ function(ui_add_library target)
     endif()
 
     ui_set_warnings(${target})
+    ui_enable_coverage(${target})
 endfunction()
 
 function(ui_add_test target)
@@ -36,8 +37,22 @@ function(ui_add_test target)
     target_sources(${target} PRIVATE ${ARG_SOURCES})
     target_link_libraries(${target} PRIVATE ${ARG_LINK} GTest::gmock_main)
     ui_set_warnings(${target})
+    ui_enable_coverage(${target})
 
     add_test(NAME ${target} COMMAND ${target})
+endfunction()
+
+# emil supplies coverage instrumentation in the sibling repos; this repo keeps emil optional, so
+# it has to instrument its own targets. Deliberately not applied to vendored googletest.
+function(ui_enable_coverage target)
+    if (NOT UI_ENABLE_COVERAGE)
+        return()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PUBLIC --coverage -O0)
+        target_link_options(${target} PUBLIC --coverage)
+    endif()
 endfunction()
 
 function(ui_set_warnings target)

@@ -1,0 +1,9 @@
+ui_add_test(ui.scope_test
+    SOURCES
+        TestRingBuffer.cpp
+        TestScopeCore.cpp
+        TestTrigger.cpp
+    LINK
+        ui.scope
+        ui.backend.recording
+)

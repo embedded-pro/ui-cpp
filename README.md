@@ -15,12 +15,13 @@ plain structs. Qt is the first backend; a second toolkit can be added without to
 ui/core      geometry, colour, font, Canvas, input, PaintedView, Callback   — no Qt
 ui/theme     colour/font roles, chart metrics, Light + Instrument themes    — no Qt
 ui/charts    ChartCore, AxisTransform (linear + log10), interaction         — no Qt
+ui/scope     ScopeCore, RingBuffer, edge triggering                         — no Qt
 ui/backend/recording  records draw calls — the test harness                 — no Qt
 
 ui/backend/qt         QtCanvas, QtPaintedWidget, QtTheme — Qt6 Widgets
 ```
 
-Still to come: `ui/model` (FormSpec, TableModel), `ui/widgets` (oscilloscope), `ui/sim`,
+Still to come: `ui/model` (FormSpec, TableModel), `ui/scene` (3D camera), `ui/sim`,
 `ui/shell` (AppShell, FormView, TableView) and `ui/backend/svg`.
 
 Everything but `ui/backend/qt` builds and is unit-tested on Linux, macOS and Windows **with no Qt

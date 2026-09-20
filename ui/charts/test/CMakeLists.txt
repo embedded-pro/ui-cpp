@@ -1,0 +1,9 @@
+ui_add_test(ui.charts_test
+    SOURCES
+        TestAxisTransform.cpp
+        TestChartCore.cpp
+        TestChartInteraction.cpp
+    LINK
+        ui.charts
+        ui.backend.recording
+)

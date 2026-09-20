@@ -24,6 +24,16 @@
       }
     },
     {
+      "name": "host-qt",
+      "displayName": "Host build with the Qt backend (Linux CI; needs qt6-base-dev)",
+      "inherits": "defaults",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "UI_BUILD_TESTS": true,
+        "UI_BUILD_QT_BACKEND": true
+      }
+    },
+    {
       "name": "host-single-Debug",
       "displayName": "Host single-config Debug (no Qt; macOS/Windows CI)",
       "inherits": "defaults",
@@ -57,6 +67,11 @@
       "configuration": "RelWithDebInfo"
     },
     {
+      "name": "host-qt-Debug",
+      "configurePreset": "host-qt",
+      "configuration": "Debug"
+    },
+    {
       "name": "host-single-Debug",
       "configurePreset": "host-single-Debug"
     },
@@ -69,6 +84,14 @@
     {
       "name": "host",
       "configurePreset": "host",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "host-qt",
+      "configurePreset": "host-qt",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true

@@ -1,5 +1,5 @@
 ---
-description: "Review code changes against ui standards: no heap, float-only templates, embedded pragmas, TEST_F on float, SOLID, docs. Does NOT modify files."
+description: "Review code changes against ui standards: portability tiers, allocation discipline, theme roles, TEST_F/StrictMock, docs. Does NOT modify files."
 tools: [read, search]
 model: "claude-sonnet-4-6"
 handoffs:
@@ -11,13 +11,15 @@ handoffs:
     prompt: "Revise the implementation plan based on the review feedback above."
 ---
 
-Canonical rules: `AGENTS.md`. Review only — no file modifications.
+Canonical rules: `AGENTS.md`. Tiers: `doc/portability.md`. Canvas contract: `doc/canvas.md`.
+Review only — no file modifications.
 
 ## Workflow
 
 1. Identify changed files; read each completely.
-2. Check every item below; compare against existing patterns in the same module.
-3. Verify mathematical correctness and doc alignment.
+2. Determine each file's **tier** first — the rules differ by tier, and applying Tier 1 rules to a
+   backend file (or the reverse) is the most common review error in this repo.
+3. Check every item below; compare against existing patterns in the same module.
 
 ## Output format
 
@@ -32,51 +34,63 @@ End with totals + verdict: APPROVE / REQUEST CHANGES.
 
 ## Checklist
 
-### Memory (CRITICAL)
+### Portability (CRITICAL)
 
-- [ ] No heap: `new`/`delete`/`make_unique`/`make_shared`/`std::vector`/`string`/`deque`/`list`/`map`/`set`. Tests too.
-- [ ] No recursion.
+- [ ] No `<Q...>` include and no `Qt6::` link anywhere under `ui/` outside `ui/backend/qt/`.
+- [ ] `setStyleSheet(` is called only in `ui/backend/qt/QtTheme.cpp`.
+- [ ] No `I` prefix on an interface. Interfaces declare `virtual ~Name() = default`, never `= 0`.
+- [ ] Tier 1 has no external dependency — not emil, not Qt, not fmt.
 
-### Numeric types (CRITICAL)
+### Allocation (CRITICAL)
 
-- [ ] `template<typename T>` + `static_assert(std::is_floating_point_v<T>)`. `float` only — no Q15/Q31.
-- [ ] `std::numbers::pi_v<float>` — no hardcoded constants.
-- [ ] `extern template` guarded by `#ifdef UI_COVERAGE_BUILD`.
+This is a host GUI repo, **not** an embedded one: `std::vector`, `std::string` and `new` are
+allowed. The rule is about *when*, not *whether*.
 
-### Embedded optimizations (WARNING)
+- [ ] Nothing allocates inside `Paint()` — scratch buffers are members, reused and `clear()`ed,
+      never sized per frame. `SetPanels`/`SetAxisValues` may allocate.
+- [ ] No `std::format` inside `Paint()` — it returns a `std::string`. Use `ui::FormatBuffer`.
+- [ ] Tier 1 outside the backends is allocation-free after construction.
 
-- [ ] `#pragma GCC optimize("O3","fast-math")` after `#pragma once` in algorithm headers.
-- [ ] `OPTIMIZE_FOR_SPEED` on `Filter/Compute/Update/Solve/Step`.
+### Canvas (CRITICAL)
 
-### Namespaces (WARNING)
+- [ ] No per-sample virtual call — traces accumulate into one `DrawPolyline`.
+- [ ] A `std::string_view` passed to `DrawText` is converted with an explicit length; it is not
+      guaranteed null-terminated.
+- [ ] A new `Canvas` method is implemented by **every** backend, `RecordingCanvas` included.
 
-- [ ] Active filters (Kalman family): `namespace filters` — **not** `namespace filters::active`.
-- [ ] Passive filters: `namespace filters::passive`. Window functions: `namespace windowing`.
+### Theme (WARNING)
+
+- [ ] No colour, font or chart-margin literal at a call site — use `theme::ColorRole`,
+      `theme::FontRole`, `theme::Current().Charts()`.
 
 ### Style (WARNING)
 
 - [ ] Allman braces, brace-init `{}`, PascalCase types/methods, camelCase members.
-- [ ] Functions ≤ ~30 lines. `const`-correct on all non-mutating methods. No comments except license/NOLINT.
-- [ ] SOLID: one concern per class, constructor injection, depend on abstractions, no duplicated logic.
+- [ ] Functions ≤ ~30 lines. `const`-correct on all non-mutating methods.
+- [ ] No comments except a non-obvious *why*, license, or `NOLINT`.
+- [ ] SOLID: one concern per class, constructor injection, depend on abstractions.
 
-### Interfaces & errors (WARNING)
+### Errors (WARNING)
 
-- [ ] `virtual ~I() = default` — never `= 0`. No exceptions — `std::optional`/status enums.
+- [ ] No exceptions — `std::optional` or a status enum.
 
 ### Testing (WARNING)
 
-- [ ] `TEST_F` on `float` — no `TYPED_TEST`, no multi-type, never plain `TEST()`.
-- [ ] `StrictMock` only (no `NiceMock`/bare). Anonymous-namespace fixture; macros outside.
-- [ ] No redundant tests. Arrange/Act/Assert. `EXPECT_NEAR` + `math::Tolerance<float>()`.
+- [ ] `TEST_F`, never plain `TEST()`. `StrictMock` only — no `NiceMock`, no bare mock.
+- [ ] Anonymous-namespace fixture; `TEST_F` macros outside it. `EXPECT_NEAR` for floats.
+- [ ] A Tier 1 test needs no Qt and no display; a Qt-backend test runs under
+      `QT_QPA_PLATFORM=offscreen`.
+- [ ] No redundant cases — one behaviour per test.
 
 ### CMake (WARNING)
 
-- [ ] `ui_add_library()`, `ui_add_coverage_sources()`, `${UI_VISIBILITY}`.
-- [ ] If new simulator: `.vscode/launch.json` has a `cppdbg` entry inserted before `"Linux Debug"`.
+- [ ] `ui_add_library()` / `ui_add_test()`, not raw `add_library`/`add_executable`.
+- [ ] A Qt target passes `QT` (for AUTOMOC); a Tier 1 target does not link `Qt6::`.
 
 ### Docs (CRITICAL)
 
-- [ ] `doc/{domain}/{Name}.md` updated per `doc/TEMPLATE.md`. No class names, no code examples.
-- [ ] `doc/{domain}/README.md` updated if a new algorithm was added.
+- [ ] `doc/portability.md` records any new Tier 3 component and its one-line justification.
+- [ ] `doc/canvas.md` updated if the `Canvas` contract changed.
+- [ ] `README.md` tree updated if a directory was added or removed.
 
 **Terse**: report file paths + CRITICAL/WARNING counts. Don't narrate; don't re-read files.

@@ -5,6 +5,9 @@ on:
     paths:
       - "doc/**"
       - "scripts/validate-docs.py"
+      # A new backend has to be registered in doc/portability.md, so adding one
+      # is exactly when this needs to run.
+      - "ui/backend/**"
 
 jobs:
   validate-docs:

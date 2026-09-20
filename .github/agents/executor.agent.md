@@ -1,5 +1,5 @@
 ---
-description: "Implement code changes in ui — float-only templates, no heap, embedded pragmas, TEST_F on float, CMake wiring, docs. Needs a clear task or plan."
+description: "Implement code changes in ui — portability tiers, allocation discipline, theme roles, TEST_F/StrictMock, CMake wiring, docs. Needs a clear task or plan."
 tools: [read, edit, search, execute, todo]
 model: "Claude Sonnet 4.6"
 handoffs:
@@ -8,49 +8,52 @@ handoffs:
     prompt: "Review the implementation changes made above against ui project standards."
 ---
 
-Canonical rules: `AGENTS.md`. Implement exactly what's asked — nothing more.
+Canonical rules: `AGENTS.md`. Tiers: `doc/portability.md`. Canvas contract: `doc/canvas.md`.
+Implement exactly what's asked — nothing more.
 
 ## Workflow
 
-1. Read the plan/task; search existing patterns and follow them exactly.
-2. Implement one file at a time per all `AGENTS.md` rules.
-3. Write tests first: `TEST_F` on `float`, `StrictMock` only, no heap, Arrange/Act/Assert.
-4. Update `CMakeLists.txt` (new files), `doc/{domain}/{Name}.md` (every algorithm change),
-   and `doc/{domain}/README.md` (new algorithms only).
-   If a new simulator: add a `cppdbg` entry to `.vscode/launch.json` before `"Linux Debug"`.
-5. Build: `cmake --preset host && cmake --build --preset host`
-   Test: `ctest --preset host`. Fix until green.
-6. Report file paths + pass/fail. Nothing else.
+1. Read the plan/task; decide which **tier** each new file belongs to before writing it.
+2. Search existing patterns and follow them exactly.
+3. Implement one file at a time per all `AGENTS.md` rules.
+4. Write tests alongside: `TEST_F`, `StrictMock` only, anonymous-namespace fixture.
+5. Update `CMakeLists.txt` (new files) and the docs a change touches — `doc/portability.md` for a
+   new Tier 3 component, `doc/canvas.md` if the `Canvas` contract moved, `README.md` if the tree
+   changed.
+6. Build and test. Tier 1 only:
+   `cmake --preset host && cmake --build --preset host-Debug && ctest --preset host`.
+   Touching `ui/backend/qt`, also:
+   `cmake --preset host-qt && cmake --build --preset host-qt-Debug && ctest --preset host-qt`.
+   Fix until green.
+7. Report file paths + pass/fail. Nothing else.
 
-## Memory — quick reference
+## Tiers — quick reference
 
-**Forbidden**: `new`/`delete`/`malloc`/`free`, `make_unique`/`make_shared`,
-`std::vector`/`string`/`deque`/`list`/`map`/`set`.
+**Tier 1** (`ui/core`, `ui/theme`, `ui/charts`, `ui/backend/recording`): no `<Q...>` include, no
+`Qt6::` link, no emil, no fmt. Builds and tests with no Qt installed and no display.
 
-**Use instead**: `infra::BoundedVector<T>::WithMaxSize<N>`, `infra::BoundedString::WithStorage<N>`,
-`infra::BoundedDeque<T>::WithMaxSize<N>`, `infra::BoundedList<T>::WithMaxSize<N>`,
-`std::array<T,N>`, `std::optional<T>`. Stack/static only. No recursion. **Tests too.**
+**Tier 2/3** (`ui/backend/qt`): may use Qt freely. `setStyleSheet(` only in `QtTheme.cpp`.
 
-## Coverage template (when EMIL_ENABLE_COVERAGE is set)
+A new `Canvas` method means implementing it in **every** backend, `RecordingCanvas` included.
 
-Header (bottom, guarded):
+## Allocation — quick reference
 
-```cpp
-#ifdef UI_COVERAGE_BUILD
-extern template class Algorithm<float, N>;
-#endif
-```
+Heap is allowed: this is a host GUI repo, and `std::vector`/`std::string` are used throughout.
+What is forbidden is allocating **inside `Paint()`**.
 
-Matching `.cpp`: `template class Algorithm<float, N>;` — add via `ui_add_coverage_sources()`.
+- Scratch buffers are members, sized once and `clear()`ed per frame — never constructed per frame.
+- `ui::FormatBuffer` inside `Paint()`, never `std::format` (it returns a `std::string`).
+- `SetPanels`/`SetAxisValues` and anything else outside the paint path may allocate.
 
-## Namespace convention
+## Theme — quick reference
 
-Active filters (Kalman family): `namespace filters` — **not** `namespace filters::active`.
+No colour, font or margin literal at a call site. `theme::Current().Get(ColorRole::…)`,
+`theme::Current().Get(FontRole::…)`, `theme::Current().Charts()`.
 
 ## What NOT to do
 
 - No extra features, unrelated refactors, docstrings, or one-off abstractions.
-- No Q15/Q31 — float-only; the generic `T` keeps it a cheap future add.
-- No `std::make_unique` anywhere, including tests.
+- No `I` prefix on an interface; `virtual ~Name() = default`, never `= 0`.
+- No exceptions — `std::optional` or a status enum.
 
 **Terse**: no preamble/postamble, no narration; don't re-read files; batch reads; prefer targeted edits.

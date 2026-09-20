@@ -26,16 +26,25 @@ function(ui_add_library target)
     ui_enable_coverage(${target})
 endfunction()
 
+# CUSTOM_MAIN is for suites that must own a process-wide object across every test. The Qt backend
+# needs it: a QApplication destroyed from an exit handler outlives Qt's own statics and crashes on
+# the way out, so it has to be constructed and destroyed inside main.
 function(ui_add_test target)
-    cmake_parse_arguments(ARG "" "" "SOURCES;LINK" ${ARGN})
+    cmake_parse_arguments(ARG "CUSTOM_MAIN" "" "SOURCES;LINK" ${ARGN})
 
     if (NOT UI_BUILD_TESTS)
         return()
     endif()
 
+    if (ARG_CUSTOM_MAIN)
+        set(entrypoint GTest::gmock)
+    else()
+        set(entrypoint GTest::gmock_main)
+    endif()
+
     add_executable(${target})
     target_sources(${target} PRIVATE ${ARG_SOURCES})
-    target_link_libraries(${target} PRIVATE ${ARG_LINK} GTest::gmock_main)
+    target_link_libraries(${target} PRIVATE ${ARG_LINK} ${entrypoint})
     ui_set_warnings(${target})
     ui_enable_coverage(${target})
 

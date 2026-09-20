@@ -31,7 +31,9 @@ Every component is Tier 1, 2 or 3. The tier is not advisory — it is enforced i
 
 **Tier 1 — genuinely backend-agnostic.** No `<Q...>` include, no `Qt6::` link, builds and tests
 on Linux, macOS and Windows with no Qt installed.
-`ui/core/`, `ui/theme/`, `ui/model/`, `ui/widgets/`, `ui/sim/`, `ui/backend/recording/`, `ui/backend/svg/`.
+Everything under `ui/` **except** the toolkit backends — today `ui/core/`, `ui/theme/`, `ui/charts/`
+and `ui/backend/recording/`. The CI check is phrased as that exclusion, so a directory added later
+is policed without anyone remembering to list it.
 
 **Tier 2 — interface abstracted, only a Qt implementation is reasonable.**
 `FormView`, `TableView`, `AppShell`, `Alert`. Declared in `ui/shell/`, implemented in `ui/backend/qt/`.
@@ -43,7 +45,7 @@ Requires a one-line justification in `doc/portability.md`.
 
 1. No `<Q...>` include and no `Qt6::` link anywhere in a Tier 1 directory.
 2. Qt-specific code lives only under `ui/backend/qt/`.
-3. `setStyleSheet` may appear in exactly one file: `ui/backend/qt/QtTheme.cpp`.
+3. `setStyleSheet(` may be called in exactly one file: `ui/backend/qt/QtTheme.cpp`.
 4. No per-sample virtual calls in a `Paint()` — batch into `DrawPolyline`.
 
 1–3 are checked by the `guardrails` CI job. Breaking them fails the build, not review.

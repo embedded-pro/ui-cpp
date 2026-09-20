@@ -20,7 +20,7 @@ no widget changes.
 ## Tier 3 — Qt-only, with justification
 
 | Component | Why it is not abstracted |
-|---|---|
+| --- | --- |
 | `QtTheme` | Maps theme roles onto `QPalette` and Qt stylesheet strings. Both are Qt concepts with no equivalent elsewhere; another backend maps the same roles onto its own styling model. |
 | `QtConversions` | By definition: it is the type mapping between `ui::` and `Qt::`. |
 
@@ -31,7 +31,7 @@ default implementation, so a view that relies on one of these still compiles and
 simply never receives the event.
 
 | Event | Absent on |
-|---|---|
+| --- | --- |
 | `OnMouseMove` with no button held (hover) | touch |
 | `OnMouseLeave` | touch |
 | `OnMouseDoubleClick` | some embedded input stacks |

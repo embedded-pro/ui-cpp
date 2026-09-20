@@ -1,5 +1,5 @@
 ---
-description: "Produce an implementation plan for ui — per-file steps, interface design, test strategy, CMake, docs. No code. Best for new algorithms or multi-file work."
+description: "Produce an implementation plan for ui — tier placement, per-file steps, interface design, test strategy, CMake, docs. No code."
 tools: [read, search, web]
 model: "claude-opus-4-8"
 handoffs:
@@ -8,27 +8,28 @@ handoffs:
     prompt: "Implement the plan outlined above, following all project conventions strictly."
 ---
 
-Canonical rules: `AGENTS.md`. Produce plans only — no code edits.
+Canonical rules: `AGENTS.md`. Tiers: `doc/portability.md`. Canvas contract: `doc/canvas.md`.
+Produce plans only — no code edits.
 
 ## Workflow
 
-1. **Research**: search existing patterns (toolbox is consistent — follow them); check `CMakeLists.txt`
-   deps; find existing tests in `{module}/test/`; consult `doc/TEMPLATE.md` and `doc/{domain}/`.
+1. **Research**: search existing patterns (the repo is consistent — follow them); check the
+   relevant `CMakeLists.txt`; find existing tests in `{module}/test/`.
 2. **Plan** — every plan must include:
-   - **Overview**: modules/namespaces affected, files to create/modify
-   - **Math**: equations, complexity, stability
+   - **Tier placement**: which tier each new file lands in, and why anything lands in Tier 3
+   - **Overview**: directories and targets affected, files to create/modify
    - **Detailed steps**: file path + action + specifics per file
-   - **Interface design**: class/method signatures, `OPTIMIZE_FOR_SPEED` placement
-   - **Tests**: `TEST_F` on `float`, `StrictMock`, Arrange/Act/Assert, no heap
-   - **CMake**: `ui_add_library()`, `ui_add_coverage_sources()`;
-     if new simulator add `.vscode/launch.json` `cppdbg` entry before `"Linux Debug"`
-   - **Docs**: `doc/{domain}/{Name}.md` per `doc/TEMPLATE.md`;
-     update `doc/{domain}/README.md` if adding a new algorithm
+   - **Interface design**: class/method signatures; what, if anything, the `Canvas` interface needs
+   - **Allocation**: what is constructed once vs. per frame, and what `Paint()` touches
+   - **Tests**: `TEST_F`, `StrictMock`, what runs without Qt and what needs the offscreen platform
+   - **CMake**: `ui_add_library()` / `ui_add_test()`, and whether the target needs `QT`
+   - **Docs**: `doc/portability.md`, `doc/canvas.md`, `README.md` — whichever the change touches
 3. **Validate before output**:
-   - [ ] No heap; no recursion; tests too
-   - [ ] `template<typename T>` + `static_assert(std::is_floating_point_v<T>)`; `float` only
-   - [ ] `TEST_F` on `float` — no `TYPED_TEST`; `StrictMock` only; never plain `TEST()`
-   - [ ] `#pragma GCC optimize` + `OPTIMIZE_FOR_SPEED` on hot paths
-   - [ ] `doc/` update planned
+   - [ ] No Qt outside `ui/backend/qt`; no `I` prefix; no exceptions
+   - [ ] Nothing allocates inside `Paint()`; no `std::format` there
+   - [ ] Any new `Canvas` method is implemented by every backend, `RecordingCanvas` included
+   - [ ] No colour/font/margin literal at a call site — theme roles instead
+   - [ ] `TEST_F` + `StrictMock`; Tier 1 tests need no Qt and no display
+   - [ ] Doc update planned
 
 **Terse**: no preamble/postamble, no plan restatement; don't re-read files; batch reads.

@@ -1,5 +1,5 @@
 ---
-description: "UI Toolbox testing: TEST_F on float, StrictMock only, anonymous-namespace fixtures, no plain TEST(), no redundant cases, Arrange-Act-Assert. Canonical: AGENTS.md."
+description: "UI Toolbox testing: TEST_F, StrictMock only, anonymous-namespace fixtures, no plain TEST(), draw-call assertions via RecordingCanvas, no redundant cases. Canonical: AGENTS.md."
 applyTo: "**/test/**"
 ---
 
@@ -8,75 +8,89 @@ applyTo: "**/test/**"
 ## File Structure
 
 - Test files: `ui/{area}/test/Test{ComponentName}.cpp`
-- CMake: tests added via `add_subdirectory(test)` with standard test target patterns
+- CMake: `ui_add_test()` in `ui/{area}/test/CMakeLists.txt`, reached via `add_subdirectory(test)`
 
 ## Framework
 
-- GoogleTest for assertions — **`TEST_F` on `float`** (no `TYPED_TEST`, no multi-type)
+- GoogleTest for assertions — **always `TEST_F`**, never the plain `TEST()` macro (cppcheck
+  reports `syntaxError` on it)
 - GoogleMock (`testing::StrictMock<>`) only when needed
-- No heap allocation in tests — same rules as production code
-- **NEVER use plain `TEST()` macro** — cppcheck reports `syntaxError`
+- A Tier 1 test links no Qt and needs no display, so it runs on the macOS and Windows CI jobs where
+  Qt is not installed. A `ui/backend/qt` test runs under `QT_QPA_PLATFORM=offscreen`, which its own
+  `main` sets.
 
-## Fixture Test Pattern (float)
+## What to assert
+
+Painted components are tested through their **draw-call stream**, not through pixels. Paint into a
+`RecordingCanvas` and assert command kinds and counts, polyline point counts, label strings and pen
+colours by theme role. This is what catches a silent visual regression, and it is only possible
+because the rendering goes through an interface.
 
 ```cpp
-#include "numerical/solvers/DiscreteAlgebraicRiccatiEquation.hpp"
-#include <gtest/gtest.h>
+#include "ui/backend/recording/RecordingCanvas.hpp"
+#include "ui/charts/ChartCore.hpp"
+#include "ui/charts/LinearAxis.hpp"
+#include <gmock/gmock.h>
 
 namespace
 {
-    class TestDare : public ::testing::Test
+    using ui::backend::recording::CommandKind;
+
+    class ChartCoreTest
+        : public ::testing::Test
     {
     protected:
-        solvers::DiscreteAlgebraicRiccatiEquation<float, 2, 1> solver;
-    };
-}
+        ui::backend::recording::RecordingCanvas canvas;
+        ui::charts::LinearAxis axis{ ui::charts::LinearAxis::Time() };
+        ui::charts::ChartCore chart{ axis, ui::charts::ChartConfig{} };
 
-TEST_F(TestDare, solves_simple_system)
-{
-    // Arrange, Act, Assert
+        static constexpr ui::Rect bounds{ 0.0f, 0.0f, 800.0f, 600.0f };
+    };
+
+    TEST_F(ChartCoreTest, TheSeriesIsDrawnAsOnePolyline)
+    {
+        // Arrange, Act, Assert
+        EXPECT_EQ(canvas.CountOf(CommandKind::DrawPolyline), 1u);
+    }
 }
 ```
 
+Pure logic — axis transforms, interaction arithmetic, geometry, formatting — is asserted directly
+with `EXPECT_NEAR` against an independently derived value.
+
+The Qt backend additionally has a **conformance suite**: it runs one scene through both
+`RecordingCanvas` and `QtCanvas` and asserts Qt painted ink where the recording says it should be.
+Extend it when a new `Canvas` primitive lands.
+
 ## Rules
 
-- Fixture class and type aliases go inside anonymous `namespace {}`
-- `TEST_F` macros go **outside** the anonymous namespace
-- Include `<gtest/gtest.h>` (not `<gmock/gmock.h>`) unless gmock matchers are needed
-- Use `testing::StrictMock<MockType>` for strict mock expectations
-- **ONLY `StrictMock`**: Never use `testing::NiceMock<>` or bare mock instantiation — `NiceMock` silences unexpected-call warnings, masking test gaps; `StrictMock` enforces all interactions explicitly
-- Test `float` only (single type) — no multi-type tests
-- **No redundant tests** — implement exactly the spec's enumerated cases; no overlapping/extra cases
-- Test numerical accuracy against known reference values (not just "doesn't crash")
-- Pick the properties to assert from [`AGENTS.md`](../../AGENTS.md) — the canonical rules for this repository
-- Test genuine edge cases (zero input, extreme values) without duplicating coverage
-- One behavior per test — keep tests focused
-- Use descriptive test names that explain the scenario
+- Fixture class and type aliases go inside an anonymous `namespace {}`; in this repository the
+  `TEST_F` macros sit inside it too, which keeps a translation unit self-contained
+- Include `<gmock/gmock.h>` when matchers or mocks are needed, `<gtest/gtest.h>` otherwise
+- **ONLY `StrictMock`**: never `testing::NiceMock<>` or a bare mock instantiation — `NiceMock`
+  silences unexpected-call warnings and masks test gaps; `StrictMock` makes every interaction explicit
+- **No redundant tests** — one behaviour per test, not one test per parameter permutation
+- **Independent reference** — never assert an implementation against its own output
+- Test genuine edge cases (empty data, a single sample, a zero-width plot area) without duplicating
+  coverage
+- Use descriptive test names that state the property being asserted
 - Allman brace style and PascalCase naming apply to test code too
 
 ## TDD Approach
 
-- **Clarify requirements first**: Before writing any code, define and document all use cases, inputs, outputs, and edge cases as test cases
-- **Write tests before implementation**: Tests define the expected behavior; implementation exists only to satisfy the tests
-- **Red-Green-Refactor cycle**: Write a failing test, make it pass with minimal code, then refactor while keeping tests green
+- **Clarify requirements first**: define the use cases, inputs, outputs and edge cases as test cases
+  before writing code
+- **Write tests before implementation**: tests define the expected behaviour; the implementation
+  exists to satisfy them
+- **Red-Green-Refactor**: write a failing test, make it pass with minimal code, then refactor while
+  keeping it green
 
-## Coverage for Template Code
+## Coverage
 
-When `EMIL_ENABLE_COVERAGE` is set, template code needs explicit instantiation in a `.cpp` file that is compiled with coverage flags. Add to the header (guarded):
+`UI_ENABLE_COVERAGE` instruments this project's own targets — emil is optional here, so
+`EMIL_ENABLE_COVERAGE` does not apply. Nothing in this repository is a template needing explicit
+instantiation to be measured.
 
-```cpp
-#ifdef UI_COVERAGE_BUILD
-extern template class ForwardKinematics<float, 3>;
-#endif
-```
-
-And in the matching `.cpp` file:
-
-```cpp
-#include "ui/charts/ChartCore.hpp"
-
-namespace kinematics
-{
-    template class ForwardKinematics<float, 3>;
-}
+```sh
+cmake --preset coverage && cmake --build --preset coverage && ctest --preset coverage
 ```

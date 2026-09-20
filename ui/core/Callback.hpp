@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <new>
 #include <type_traits>
@@ -18,7 +19,8 @@ namespace ui
     public:
         Callback() = default;
 
-        template<class Invocable, class = std::enable_if_t<!std::is_same_v<std::decay_t<Invocable>, Callback>>>
+        template<class Invocable>
+        requires(!std::is_same_v<std::decay_t<Invocable>, Callback>)
         Callback(Invocable&& invocable)
         {
             Assign(std::forward<Invocable>(invocable));
@@ -27,7 +29,7 @@ namespace ui
         Callback(const Callback& other)
         {
             if (other.operations != nullptr)
-                other.operations->copy(other.storage, storage);
+                other.operations->copy(other.storage.data(), storage.data());
 
             operations = other.operations;
         }
@@ -39,7 +41,7 @@ namespace ui
                 Reset();
 
                 if (other.operations != nullptr)
-                    other.operations->copy(other.storage, storage);
+                    other.operations->copy(other.storage.data(), storage.data());
 
                 operations = other.operations;
             }
@@ -52,7 +54,8 @@ namespace ui
             Reset();
         }
 
-        template<class Invocable, class = std::enable_if_t<!std::is_same_v<std::decay_t<Invocable>, Callback>>>
+        template<class Invocable>
+        requires(!std::is_same_v<std::decay_t<Invocable>, Callback>)
         Callback& operator=(Invocable&& invocable)
         {
             Reset();
@@ -67,13 +70,13 @@ namespace ui
 
         Result operator()(Arguments... arguments) const
         {
-            return operations->invoke(storage, std::forward<Arguments>(arguments)...);
+            return operations->invoke(storage.data(), std::forward<Arguments>(arguments)...);
         }
 
         void Reset()
         {
             if (operations != nullptr)
-                operations->destroy(storage);
+                operations->destroy(storage.data());
 
             operations = nullptr;
         }
@@ -94,7 +97,7 @@ namespace ui
             static_assert(alignof(Stored) <= alignof(std::max_align_t), "Callback target over-aligned");
             static_assert(std::is_copy_constructible_v<Stored>, "Callback target must be copy constructible");
 
-            new (storage) Stored{ std::forward<Invocable>(invocable) };
+            new (storage.data()) Stored{ std::forward<Invocable>(invocable) };
 
             static constexpr Operations stored{
                 [](const std::byte* from, Arguments... arguments) -> Result
@@ -114,7 +117,7 @@ namespace ui
             operations = &stored;
         }
 
-        alignas(std::max_align_t) std::byte storage[Capacity]{};
+        alignas(std::max_align_t) std::array<std::byte, Capacity> storage{};
         const Operations* operations{ nullptr };
     };
 }

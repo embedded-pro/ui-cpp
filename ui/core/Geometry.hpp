@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 namespace ui
 {
@@ -105,7 +106,7 @@ namespace ui
 
         [[nodiscard]] Point Apply(Point point) const
         {
-            const auto radians = rotationDegrees * 3.14159265358979323846f / 180.0f;
+            const auto radians = rotationDegrees * std::numbers::pi_v<float> / 180.0f;
             const auto cosine = std::cos(radians);
             const auto sine = std::sin(radians);
 
@@ -126,6 +127,12 @@ namespace ui
 
     [[nodiscard]] constexpr float Clamp(float value, float lowest, float highest)
     {
-        return value < lowest ? lowest : (value > highest ? highest : value);
+        if (value < lowest)
+            return lowest;
+
+        if (value > highest)
+            return highest;
+
+        return value;
     }
 }

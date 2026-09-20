@@ -34,6 +34,8 @@ namespace ui
         Modifiers modifiers;
     };
 
+    // Wider than the current value set needs: a full key enumeration runs well past 255 entries,
+    // and widening the base type later would be a silent ABI change.
     enum class Key : std::uint16_t
     {
         Unknown,

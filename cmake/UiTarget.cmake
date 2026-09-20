@@ -23,6 +23,7 @@ function(ui_add_library target)
     endif()
 
     ui_set_warnings(${target})
+    ui_enable_coverage(${target})
 endfunction()
 
 function(ui_add_test target)
@@ -36,8 +37,22 @@ function(ui_add_test target)
     target_sources(${target} PRIVATE ${ARG_SOURCES})
     target_link_libraries(${target} PRIVATE ${ARG_LINK} GTest::gmock_main)
     ui_set_warnings(${target})
+    ui_enable_coverage(${target})
 
     add_test(NAME ${target} COMMAND ${target})
+endfunction()
+
+# emil supplies coverage instrumentation in the sibling repos; this repo keeps emil optional, so
+# it has to instrument its own targets. Deliberately not applied to vendored googletest.
+function(ui_enable_coverage target)
+    if (NOT UI_ENABLE_COVERAGE)
+        return()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PUBLIC --coverage -O0)
+        target_link_options(${target} PUBLIC --coverage)
+    endif()
 endfunction()
 
 function(ui_set_warnings target)
@@ -62,4 +77,13 @@ function(ui_fetch_googletest)
     set(gtest_force_shared_crt On CACHE BOOL "" FORCE)
     set(INSTALL_GTEST Off CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
+
+    # This project builds warnings-as-error, but that policy is ours and does not belong to a
+    # vendored dependency: AppleClang 21 rejects googletest's own char8_t handling in
+    # gtest-printers.h under -Wcharacter-conversion.
+    foreach(vendored gtest gtest_main gmock gmock_main)
+        if (TARGET ${vendored})
+            set_target_properties(${vendored} PROPERTIES COMPILE_WARNING_AS_ERROR Off)
+        endif()
+    endforeach()
 endfunction()

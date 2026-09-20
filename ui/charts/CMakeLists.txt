@@ -1,0 +1,19 @@
+ui_add_library(ui.charts
+    SOURCES
+        AxisTransform.cpp
+        AxisTransform.hpp
+        ChartCore.cpp
+        ChartCore.hpp
+        ChartInteraction.cpp
+        ChartInteraction.hpp
+        LinearAxis.cpp
+        LinearAxis.hpp
+        Log10Axis.cpp
+        Log10Axis.hpp
+        Series.hpp
+    LINK
+        ui.core
+        ui.theme
+)
+
+add_subdirectory(test)

@@ -79,6 +79,72 @@ TEST_F(RecordingCanvasTest, ClearDiscardsRecordedCommands)
     EXPECT_TRUE(canvas.Commands().empty());
 }
 
+TEST_F(RecordingCanvasTest, RecordsTheFullPrimitiveSurface)
+{
+    const std::array<ui::Point, 3> triangle{ ui::Point{ 0.0f, 0.0f }, ui::Point{ 1.0f, 0.0f }, ui::Point{ 0.5f, 1.0f } };
+
+    canvas.DrawPolygon(triangle);
+    canvas.DrawEllipse(ui::Point{ 5.0f, 5.0f }, 2.0f, 3.0f);
+    canvas.DrawRoundedRect(ui::Rect{ 0.0f, 0.0f, 10.0f, 4.0f }, 3.0f, 3.0f);
+    canvas.FillRect(ui::Rect{ 0.0f, 0.0f, 2.0f, 2.0f }, ui::colors::black);
+
+    EXPECT_EQ(canvas.CountOf(CommandKind::DrawPolygon), 1u);
+    EXPECT_EQ(canvas.CountOf(CommandKind::DrawEllipse), 1u);
+    EXPECT_EQ(canvas.CountOf(CommandKind::DrawRoundedRect), 1u);
+    EXPECT_EQ(canvas.CountOf(CommandKind::FillRect), 1u);
+}
+
+TEST_F(RecordingCanvasTest, EllipseRecordsItsCentreAndRadii)
+{
+    canvas.DrawEllipse(ui::Point{ 5.0f, 6.0f }, 2.0f, 3.0f);
+    const auto& command = canvas.Commands().back();
+
+    EXPECT_NEAR(command.from.x, 5.0f, 1e-5f);
+    EXPECT_NEAR(command.from.y, 6.0f, 1e-5f);
+    EXPECT_NEAR(command.radiusX, 2.0f, 1e-5f);
+    EXPECT_NEAR(command.radiusY, 3.0f, 1e-5f);
+}
+
+TEST_F(RecordingCanvasTest, FillRectRecordsItsOwnColourNotThePen)
+{
+    canvas.SetPen(ui::Pen{ ui::Color::Rgb(0x2980B9) });
+    canvas.FillRect(ui::Rect{ 0.0f, 0.0f, 1.0f, 1.0f }, ui::Color::Rgb(0xE74C3C));
+
+    EXPECT_EQ(canvas.Commands().back().color, ui::Color::Rgb(0xE74C3C));
+}
+
+TEST_F(RecordingCanvasTest, TransformsAndAntialiasingAreRecorded)
+{
+    canvas.Translate(ui::Point{ 3.0f, 4.0f });
+    canvas.Rotate(90.0f);
+    canvas.SetAntialiasing(true);
+
+    EXPECT_EQ(canvas.CountOf(CommandKind::Translate), 1u);
+    EXPECT_EQ(canvas.CountOf(CommandKind::Rotate), 1u);
+    EXPECT_EQ(canvas.CountOf(CommandKind::SetAntialiasing), 1u);
+}
+
+TEST_F(RecordingCanvasTest, BrushAndFontAreTrackedAsState)
+{
+    canvas.SetBrush(ui::Brush{ ui::Color::Rgb(0x27AE60) });
+    canvas.SetFont(ui::FontSpec{ ui::FontFamily::Monospace, 11, true, false });
+    canvas.DrawRect(ui::Rect{ 0.0f, 0.0f, 1.0f, 1.0f });
+
+    const auto& command = canvas.Commands().back();
+
+    EXPECT_EQ(command.brush.color, ui::Color::Rgb(0x27AE60));
+    EXPECT_EQ(canvas.CurrentPen().width, 1.0f);
+}
+
+TEST_F(RecordingCanvasTest, ClipCanBeSetAndCleared)
+{
+    canvas.SetClip(ui::Rect{ 0.0f, 0.0f, 5.0f, 5.0f });
+    canvas.ClearClip();
+
+    EXPECT_EQ(canvas.CountOf(CommandKind::SetClip), 1u);
+    EXPECT_EQ(canvas.CountOf(CommandKind::ClearClip), 1u);
+}
+
 TEST_F(RecordingCanvasTest, StateGuardEmitsSaveAndRestore)
 {
     {

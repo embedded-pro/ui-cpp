@@ -14,16 +14,16 @@ plain structs. Qt is the first backend; a second toolkit can be added without to
 ```text
 ui/core      geometry, colour, font, Canvas, input, PaintedView, Callback   — no Qt
 ui/theme     colour/font roles, chart metrics, Light + Instrument themes    — no Qt
-ui/model     FormSpec, FieldSpec, FormValues, TableModel                    — no Qt
-ui/widgets   charts (time-series, frequency), oscilloscope                  — no Qt
-ui/sim       SignalComponent, SignalGenerator                               — no Qt
-ui/shell     AppShell, FormView, TableView, MainLoop  (interfaces)
-ui/backend/qt         Qt6 Widgets implementation
-ui/backend/recording  records draw calls — the test harness
-ui/backend/svg        renders to SVG — documentation figures
+ui/charts    ChartCore, AxisTransform (linear + log10), interaction         — no Qt
+ui/backend/recording  records draw calls — the test harness                 — no Qt
+
+ui/backend/qt         QtCanvas, QtPaintedWidget, QtTheme — Qt6 Widgets
 ```
 
-Everything above `ui/shell` builds and is unit-tested on Linux, macOS and Windows **with no Qt
+Still to come: `ui/model` (FormSpec, TableModel), `ui/widgets` (oscilloscope), `ui/sim`,
+`ui/shell` (AppShell, FormView, TableView) and `ui/backend/svg`.
+
+Everything but `ui/backend/qt` builds and is unit-tested on Linux, macOS and Windows **with no Qt
 installed**. That is the point of the split, and it is enforced in CI rather than by convention.
 
 ## Build
@@ -34,10 +34,18 @@ cmake --build --preset host-Debug
 ctest --preset host
 ```
 
-The Qt backend is not in the tree yet; `UI_BUILD_QT_BACKEND` exists but turning it on is an error
-until `ui/backend/qt` lands. When it does, it stays opt-in and off by default, and is deliberately
-*not* inferred from a consumer's `*_BUILD_SIMULATOR` flag — e-foc configures its host tools (and
-therefore Qt) on every host build, while the toolboxes only do so under their simulator option.
+To build the Qt backend as well — `QtCanvas`, `QtPaintedWidget`, `QtTheme` and their tests — use the
+`host-qt` preset, which needs `qt6-base-dev` and `libgl1-mesa-dev`:
+
+```sh
+cmake --preset host-qt
+cmake --build --preset host-qt-Debug
+ctest --preset host-qt
+```
+
+`UI_BUILD_QT_BACKEND` is opt-in and off by default, and is deliberately *not* inferred from a
+consumer's `*_BUILD_SIMULATOR` flag — e-foc configures its host tools (and therefore Qt) on every
+host build, while the toolboxes only do so under their simulator option.
 
 ## Contributing
 

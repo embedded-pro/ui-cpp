@@ -21,27 +21,34 @@ jobs:
         with:
           persist-credentials: false
 
+      # Everything under ui/ is Tier 1 except the backends that are allowed a toolkit. Phrased as
+      # an exclusion rather than a list of Tier 1 directories: a list silently stops covering any
+      # directory added after it was written, which is how ui/charts went unpoliced.
       - name: No Qt includes in Tier 1
         run: |
-          if grep -rn --include='*.hpp' --include='*.cpp' -E '#include *[<"]Q' \
-               ui/core ui/theme ui/model ui/widgets ui/sim ui/backend/recording ui/backend/svg; then
+          offenders=$(grep -rn --include='*.hpp' --include='*.cpp' -E '#include *[<"]Q' ui | grep -v '^ui/backend/qt/' || true)
+          if [ -n "$offenders" ]; then
             echo "::error::Tier 1 directories must not include Qt headers (AGENTS.md invariant 1)"
+            echo "$offenders"
             exit 1
           fi
           echo "ok: no Qt includes in Tier 1"
 
       - name: No Qt links in Tier 1
         run: |
-          if grep -rn --include='CMakeLists.txt' 'Qt6::' \
-               ui/core ui/theme ui/model ui/widgets ui/sim ui/backend/recording ui/backend/svg; then
+          offenders=$(grep -rn --include='CMakeLists.txt' 'Qt6::' ui | grep -v '^ui/backend/qt/' || true)
+          if [ -n "$offenders" ]; then
             echo "::error::Tier 1 targets must not link Qt6:: (AGENTS.md invariant 1)"
+            echo "$offenders"
             exit 1
           fi
           echo "ok: no Qt links in Tier 1"
 
       - name: setStyleSheet confined to QtTheme.cpp
         run: |
-          offenders=$(grep -rln 'setStyleSheet' ui | grep -v '^ui/backend/qt/QtTheme.cpp$' || true)
+          # Matches the call, not the name: the rule is about who may style widgets, and the
+          # header that declares the sanctioned helper has to be able to say so.
+          offenders=$(grep -rln -E 'setStyleSheet *\(' ui | grep -v '^ui/backend/qt/QtTheme.cpp$' || true)
           if [ -n "$offenders" ]; then
             echo "::error::setStyleSheet is allowed only in ui/backend/qt/QtTheme.cpp (AGENTS.md invariant 3)"
             echo "$offenders"

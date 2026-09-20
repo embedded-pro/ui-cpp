@@ -48,7 +48,10 @@ jobs:
           apt-get install -y --no-install-recommends qt6-base-dev libgl1-mesa-dev
       - name: Build & Collect Coverage
         run: |
-          cmake --preset coverage -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # The Qt backend is switched on here rather than in the preset itself: Sonar needs a
+          # compile command for every analysed file, but a developer without qt6-base-dev must
+          # still be able to run the coverage preset.
+          cmake --preset coverage -DUI_BUILD_QT_BACKEND=On -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build --preset coverage
           GTEST_OUTPUT="xml:${PWD}/testresults/" ctest --preset coverage
           gcovr --sonarqube=coverage.xml --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();' --exclude-unreachable-branches --exclude-throw-branches -j 2 --exclude=.*/_deps/.* --exclude=.*/generated/.* --exclude=.*/examples/.* --exclude=.*/tracing/.* --exclude=.*/test/.*

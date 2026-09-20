@@ -5,10 +5,10 @@ Portability tiers: `doc/portability.md`. Geometry conventions: `doc/canvas.md`.
 
 Essentials (full detail in AGENTS.md):
 
-- **Host GUI repo** — heap allowed in `ui/backend/**` and `ui/shell/**`; `ui/core|theme|model|widgets|sim`
-  must be **allocation-free after construction**. Never allocate per-frame in `Paint()`.
-- **Tier 1 is sacred** — no `<Q...>` include, no `Qt6::` link in `ui/core|theme|model|widgets|sim`.
-  CI fails on violation, not review.
+- **Host GUI repo** — heap allowed in `ui/backend/**` and `ui/shell/**`; the rest of `ui/` must be
+  **allocation-free after construction**. Never allocate per-frame in `Paint()`.
+- **Tier 1 is sacred** — no `<Q...>` include, no `Qt6::` link anywhere under `ui/` outside
+  `ui/backend/qt/`. CI fails on violation, not review.
 - **No `I` prefix on interfaces** — `Canvas`, not `ICanvas`.
 - **Zero external deps in Tier 1** — no emil, no Qt, no fmt. emil helpers are optional
   (`if (COMMAND ...)`). Format via `ui/core/Format.hpp` (`std::format_to_n` into a caller-owned

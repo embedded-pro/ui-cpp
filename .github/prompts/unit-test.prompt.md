@@ -5,7 +5,7 @@ argument-hint: "Name the ui/ component to author unit tests for (e.g. Biquad, Ka
 model: "Claude Sonnet 5"
 ---
 
-Author (or extend) the unit tests for the named **ui-toolbox** algorithm in
+Author (or extend) the unit tests for the named **ui** algorithm in
 `ui/<area>/test/Test<Name>.cpp`. Follow the `unit-tester` workflow: read the algorithm's
 public interface and doc; look up its family in `TESTING.md` and select the metric
 types to assert (accuracy, frequency/transient response, stability, boundaries, invariants,

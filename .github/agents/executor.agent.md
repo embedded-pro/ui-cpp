@@ -1,11 +1,11 @@
 ---
-description: "Implement code changes in ui-toolbox — float-only templates, no heap, embedded pragmas, TEST_F on float, CMake wiring, docs. Needs a clear task or plan."
+description: "Implement code changes in ui — float-only templates, no heap, embedded pragmas, TEST_F on float, CMake wiring, docs. Needs a clear task or plan."
 tools: [read, edit, search, execute, todo]
 model: "Claude Sonnet 4.6"
 handoffs:
   - label: "Review Changes"
     agent: reviewer
-    prompt: "Review the implementation changes made above against ui-toolbox project standards."
+    prompt: "Review the implementation changes made above against ui project standards."
 ---
 
 Canonical rules: `AGENTS.md`. Implement exactly what's asked — nothing more.
@@ -35,11 +35,11 @@ Canonical rules: `AGENTS.md`. Implement exactly what's asked — nothing more.
 
 Header (bottom, guarded):
 ```cpp
-#ifdef UI_TOOLBOX_COVERAGE_BUILD
+#ifdef UI_COVERAGE_BUILD
 extern template class Algorithm<float, N>;
 #endif
 ```
-Matching `.cpp`: `template class Algorithm<float, N>;` — add via `ui_toolbox_add_coverage_sources()`.
+Matching `.cpp`: `template class Algorithm<float, N>;` — add via `ui_add_coverage_sources()`.
 
 ## Namespace convention
 Active filters (Kalman family): `namespace filters` — **not** `namespace filters::active`.

@@ -6,7 +6,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "ui-toolbox",
+      "package-name": "ui",
       "extra-files": [
         "CMakeLists.txt"
       ],

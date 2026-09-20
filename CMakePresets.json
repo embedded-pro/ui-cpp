@@ -20,7 +20,7 @@
       "inherits": "defaults",
       "generator": "Ninja Multi-Config",
       "cacheVariables": {
-        "UI_TOOLBOX_BUILD_TESTS": true
+        "UI_BUILD_TESTS": true
       }
     },
     {
@@ -28,7 +28,7 @@
       "displayName": "Host build with the Qt backend",
       "inherits": "host",
       "cacheVariables": {
-        "UI_TOOLBOX_BUILD_QT_BACKEND": true
+        "UI_BUILD_QT_BACKEND": true
       }
     },
     {
@@ -38,7 +38,7 @@
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "UI_TOOLBOX_BUILD_TESTS": true
+        "UI_BUILD_TESTS": true
       }
     },
     {
@@ -48,8 +48,8 @@
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "UI_TOOLBOX_BUILD_TESTS": true,
-        "UI_TOOLBOX_BUILD_QT_BACKEND": true,
+        "UI_BUILD_TESTS": true,
+        "UI_BUILD_QT_BACKEND": true,
         "EMIL_ENABLE_COVERAGE": "On"
       }
     }

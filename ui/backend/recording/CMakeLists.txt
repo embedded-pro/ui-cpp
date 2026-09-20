@@ -1,4 +1,4 @@
-ui_toolbox_add_library(ui.backend.recording
+ui_add_library(ui.backend.recording
     SOURCES
         RecordingCanvas.cpp
         RecordingCanvas.hpp

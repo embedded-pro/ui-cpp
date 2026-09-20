@@ -37,7 +37,7 @@ ctest --preset host
 The Qt backend is opt-in and off by default:
 
 ```sh
-cmake --preset host -DUI_TOOLBOX_BUILD_QT_BACKEND=On
+cmake --preset host -DUI_BUILD_QT_BACKEND=On
 ```
 
 It is deliberately *not* inferred from a consumer's `*_BUILD_SIMULATOR` flag — e-foc configures its

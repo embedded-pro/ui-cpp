@@ -1,5 +1,5 @@
 ---
-description: "Triage development tasks in ui-toolbox and route to planner, executor, or reviewer. Start here for any new feature, bug fix, or code review."
+description: "Triage development tasks in ui and route to planner, executor, or reviewer. Start here for any new feature, bug fix, or code review."
 tools: [read, search, web, agent]
 model: "Claude Sonnet 4.6"
 agents: [planner, executor, reviewer, modernizer]
@@ -9,13 +9,13 @@ handoffs:
     prompt: "Create a detailed implementation plan for the task described above."
   - label: "Execute Directly"
     agent: executor
-    prompt: "Implement the task described above following all ui-toolbox project conventions."
+    prompt: "Implement the task described above following all ui project conventions."
   - label: "Review Code"
     agent: reviewer
-    prompt: "Review the code changes described above against ui-toolbox project standards."
+    prompt: "Review the code changes described above against ui project standards."
   - label: "Modernize Legacy Algorithm"
     agent: modernizer
-    prompt: "Refactor the pre-roadmap algorithm described above to reuse shared utilities and simplify tests, following ui-toolbox conventions."
+    prompt: "Refactor the pre-roadmap algorithm described above to reuse shared utilities and simplify tests, following ui conventions."
 ---
 
 Triage requests and route to the right specialist. Do NOT implement or plan yourself.

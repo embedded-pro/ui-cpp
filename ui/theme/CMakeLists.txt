@@ -1,4 +1,4 @@
-ui_toolbox_add_library(ui.theme
+ui_add_library(ui.theme
     SOURCES
         Theme.cpp
         Theme.hpp

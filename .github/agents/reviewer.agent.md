@@ -1,11 +1,11 @@
 ---
-description: "Review code changes against ui-toolbox standards: no heap, float-only templates, embedded pragmas, TEST_F on float, SOLID, docs. Does NOT modify files."
+description: "Review code changes against ui standards: no heap, float-only templates, embedded pragmas, TEST_F on float, SOLID, docs. Does NOT modify files."
 tools: [read, search]
 model: "claude-sonnet-4-6"
 handoffs:
   - label: "Fix Issues"
     agent: executor
-    prompt: "Fix the issues identified in the review above, following all ui-toolbox project conventions."
+    prompt: "Fix the issues identified in the review above, following all ui project conventions."
   - label: "Re-plan"
     agent: planner
     prompt: "Revise the implementation plan based on the review feedback above."
@@ -38,7 +38,7 @@ End with totals + verdict: APPROVE / REQUEST CHANGES.
 **Numeric types (CRITICAL)**
 - [ ] `template<typename T>` + `static_assert(std::is_floating_point_v<T>)`. `float` only — no Q15/Q31.
 - [ ] `std::numbers::pi_v<float>` — no hardcoded constants.
-- [ ] `extern template` guarded by `#ifdef UI_TOOLBOX_COVERAGE_BUILD`.
+- [ ] `extern template` guarded by `#ifdef UI_COVERAGE_BUILD`.
 
 **Embedded optimizations (WARNING)**
 - [ ] `#pragma GCC optimize("O3","fast-math")` after `#pragma once` in algorithm headers.
@@ -62,7 +62,7 @@ End with totals + verdict: APPROVE / REQUEST CHANGES.
 - [ ] No redundant tests. Arrange/Act/Assert. `EXPECT_NEAR` + `math::Tolerance<float>()`.
 
 **CMake (WARNING)**
-- [ ] `ui_toolbox_add_library()`, `ui_toolbox_add_coverage_sources()`, `${UI_TOOLBOX_VISIBILITY}`.
+- [ ] `ui_add_library()`, `ui_add_coverage_sources()`, `${UI_VISIBILITY}`.
 - [ ] If new simulator: `.vscode/launch.json` has a `cppdbg` entry inserted before `"Linux Debug"`.
 
 **Docs (CRITICAL)**

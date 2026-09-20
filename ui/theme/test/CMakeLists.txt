@@ -1,4 +1,4 @@
-ui_toolbox_add_test(ui.theme_test
+ui_add_test(ui.theme_test
     SOURCES
         TestRecordingCanvas.cpp
         TestTheme.cpp

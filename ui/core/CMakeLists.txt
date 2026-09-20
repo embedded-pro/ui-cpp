@@ -1,4 +1,4 @@
-ui_toolbox_add_library(ui.core
+ui_add_library(ui.core
     SOURCES
         Callback.hpp
         Canvas.hpp

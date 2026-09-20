@@ -1,5 +1,5 @@
 ---
-description: "Produce an implementation plan for ui-toolbox — per-file steps, interface design, test strategy, CMake, docs. No code. Best for new algorithms or multi-file work."
+description: "Produce an implementation plan for ui — per-file steps, interface design, test strategy, CMake, docs. No code. Best for new algorithms or multi-file work."
 tools: [read, search, web]
 model: "claude-opus-4-8"
 handoffs:
@@ -20,7 +20,7 @@ Canonical rules: `AGENTS.md`. Produce plans only — no code edits.
    - **Detailed steps**: file path + action + specifics per file
    - **Interface design**: class/method signatures, `OPTIMIZE_FOR_SPEED` placement
    - **Tests**: `TEST_F` on `float`, `StrictMock`, Arrange/Act/Assert, no heap
-   - **CMake**: `ui_toolbox_add_library()`, `ui_toolbox_add_coverage_sources()`;
+   - **CMake**: `ui_add_library()`, `ui_add_coverage_sources()`;
      if new simulator add `.vscode/launch.json` `cppdbg` entry before `"Linux Debug"`
    - **Docs**: `doc/{domain}/{Name}.md` per `doc/TEMPLATE.md`;
      update `doc/{domain}/README.md` if adding a new algorithm

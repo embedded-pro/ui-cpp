@@ -65,7 +65,7 @@ TEST_F(TestDare, solves_simple_system)
 When `EMIL_ENABLE_COVERAGE` is set, template code needs explicit instantiation in a `.cpp` file that is compiled with coverage flags. Add to the header (guarded):
 
 ```cpp
-#ifdef UI_TOOLBOX_COVERAGE_BUILD
+#ifdef UI_COVERAGE_BUILD
 extern template class ForwardKinematics<float, 3>;
 #endif
 ```

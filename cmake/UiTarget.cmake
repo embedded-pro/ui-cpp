@@ -62,4 +62,13 @@ function(ui_fetch_googletest)
     set(gtest_force_shared_crt On CACHE BOOL "" FORCE)
     set(INSTALL_GTEST Off CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
+
+    # This project builds warnings-as-error, but that policy is ours and does not belong to a
+    # vendored dependency: AppleClang 21 rejects googletest's own char8_t handling in
+    # gtest-printers.h under -Wcharacter-conversion.
+    foreach(vendored gtest gtest_main gmock gmock_main)
+        if (TARGET ${vendored})
+            set_target_properties(${vendored} PROPERTIES COMPILE_WARNING_AS_ERROR Off)
+        endif()
+    endforeach()
 endfunction()

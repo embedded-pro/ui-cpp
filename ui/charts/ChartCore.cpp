@@ -103,10 +103,10 @@ namespace ui::charts
             const auto weight = static_cast<float>(std::max(chartPanels[i].heightWeight, 1));
             const auto panelHeight = availableHeight * weight / static_cast<float>(totalWeight);
 
-            layouts.push_back(PanelLayout{
+            layouts.emplace_back(
                 Rect{ plotArea.x, currentY, plotArea.width, panelHeight },
                 ComputeBounds(chartPanels[i]),
-                i });
+                i);
 
             currentY += panelHeight + spacing;
         }
@@ -128,7 +128,7 @@ namespace ui::charts
                     continue;
 
                 const auto position = axis->ToView(axisValues[i]);
-                if (position < interaction.viewMinimum || position > interaction.viewMaximum)
+                if (position < interaction.ViewMinimum() || position > interaction.ViewMaximum())
                     continue;
 
                 bounds.maximumY = std::max(bounds.maximumY, series.data[i]);
@@ -149,11 +149,11 @@ namespace ui::charts
 
     float ChartCore::ValueToX(float value, const Rect& plotArea) const
     {
-        const auto span = interaction.viewMaximum - interaction.viewMinimum;
+        const auto span = interaction.ViewMaximum() - interaction.ViewMinimum();
         if (span <= 0.0f)
             return plotArea.Left();
 
-        const auto ratio = (axis->ToView(value) - interaction.viewMinimum) / span;
+        const auto ratio = (axis->ToView(value) - interaction.ViewMinimum()) / span;
         return plotArea.Left() + ratio * plotArea.width;
     }
 
@@ -219,7 +219,7 @@ namespace ui::charts
             canvas.DrawLine(Point{ plotArea.Left(), y }, Point{ plotArea.Right(), y });
         }
 
-        const AxisRange view{ interaction.viewMinimum, interaction.viewMaximum };
+        const AxisRange view{ interaction.ViewMinimum(), interaction.ViewMaximum() };
         const auto count = axis->GridLines(view, gridLines);
         const auto span = view.Span();
 
@@ -260,7 +260,7 @@ namespace ui::charts
 
     void ChartCore::DrawSeries(Canvas& canvas, const Rect& plotArea, const Series& series, const PanelBounds& bounds)
     {
-        if (interaction.viewMaximum - interaction.viewMinimum <= 0.0f || series.data.empty())
+        if (interaction.ViewMaximum() - interaction.ViewMinimum() <= 0.0f || series.data.empty())
             return;
 
         const auto range = bounds.Span() > 0.0f ? bounds.Span() : 1.0f;
@@ -331,7 +331,7 @@ namespace ui::charts
 
         canvas.SetFont(theme.Get(theme::FontRole::AxisLabel));
 
-        const AxisRange view{ interaction.viewMinimum, interaction.viewMaximum };
+        const AxisRange view{ interaction.ViewMinimum(), interaction.ViewMaximum() };
         const auto count = axis->Ticks(view, ticks);
         const auto span = view.Span();
 
@@ -376,15 +376,15 @@ namespace ui::charts
 
     void ChartCore::DrawCrosshair(Canvas& canvas) const
     {
-        if (!interaction.showCrosshair || layouts.empty())
+        if (!interaction.CrosshairVisible() || layouts.empty())
             return;
 
         const auto& theme = theme::Current();
         canvas.SetPen(Pen{ theme.Get(theme::ColorRole::Crosshair), 1.0f, LineStyle::Dash });
 
         for (const auto& layout : layouts)
-            canvas.DrawLine(Point{ interaction.cursorPosition.x, layout.plotArea.Top() },
-                Point{ interaction.cursorPosition.x, layout.plotArea.Bottom() });
+            canvas.DrawLine(Point{ interaction.CursorPosition().x, layout.plotArea.Top() },
+                Point{ interaction.CursorPosition().x, layout.plotArea.Bottom() });
     }
 
     void ChartCore::OnWheel(const WheelEvent& event)
@@ -410,8 +410,7 @@ namespace ui::charts
 
     void ChartCore::OnMouseMove(const MouseEvent& event)
     {
-        interaction.showCrosshair = true;
-        interaction.cursorPosition = event.position;
+        interaction.ShowCrosshairAt(event.position);
 
         if (interaction.IsPanning() && !layouts.empty())
             interaction.UpdatePan(event.position, layouts.front().plotArea.width);
@@ -434,7 +433,7 @@ namespace ui::charts
 
     void ChartCore::OnMouseLeave()
     {
-        interaction.showCrosshair = false;
+        interaction.HideCrosshair();
         RequestRepaint();
     }
 }

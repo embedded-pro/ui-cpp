@@ -1,7 +1,7 @@
 #include "ui/charts/Log10Axis.hpp"
+#include "ui/core/Format.hpp"
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
 
 namespace ui::charts
 {
@@ -25,8 +25,8 @@ namespace ui::charts
         if (values.empty())
             return AxisRange{ 0.0f, 0.0f };
 
-        auto smallest = *std::min_element(values.begin(), values.end());
-        const auto largest = *std::max_element(values.begin(), values.end());
+        auto smallest = *std::ranges::min_element(values);
+        const auto largest = *std::ranges::max_element(values);
 
         if (smallest <= 0.0f)
             smallest = 1.0f;
@@ -36,11 +36,9 @@ namespace ui::charts
 
     std::size_t Log10Axis::FormatMagnitude(float value, std::span<char> out)
     {
-        const auto written = value >= 1000.0f
-                                 ? std::snprintf(out.data(), out.size(), "%.3gk", static_cast<double>(value / 1000.0f))
-                                 : std::snprintf(out.data(), out.size(), "%.3g", static_cast<double>(value));
-
-        return written < 0 ? 0 : std::min(static_cast<std::size_t>(written), out.size() - 1);
+        return value >= 1000.0f
+                   ? FormatInto(out, "{:.3g}k", value / 1000.0f)
+                   : FormatInto(out, "{:.3g}", value);
     }
 
     // The endpoints are always labelled; whole decades strictly inside the view are labelled too.
@@ -91,9 +89,13 @@ namespace ui::charts
         const auto firstDecade = static_cast<int>(std::floor(view.minimum));
         const auto lastDecade = static_cast<int>(std::ceil(view.maximum));
 
-        for (auto decade = firstDecade; decade <= lastDecade && count < out.size(); ++decade)
-            for (auto subdivision = 1; subdivision <= subdivisionsPerDecade && count < out.size(); ++subdivision)
+        for (auto decade = firstDecade; decade <= lastDecade; ++decade)
+        {
+            for (auto subdivision = 1; subdivision <= subdivisionsPerDecade; ++subdivision)
             {
+                if (count == out.size())
+                    return count;
+
                 const auto value = static_cast<float>(subdivision) * std::pow(10.0f, static_cast<float>(decade));
                 const auto position = ToView(value);
 
@@ -104,6 +106,7 @@ namespace ui::charts
                 out[count].major = subdivision == 1;
                 ++count;
             }
+        }
 
         return count;
     }
@@ -115,10 +118,8 @@ namespace ui::charts
 
     std::size_t Log10Axis::FormatCursorValue(float value, std::span<char> out) const
     {
-        const auto written = value >= 1000.0f
-                                 ? std::snprintf(out.data(), out.size(), "f = %.2f kHz", static_cast<double>(value / 1000.0f))
-                                 : std::snprintf(out.data(), out.size(), "f = %.1f Hz", static_cast<double>(value));
-
-        return written < 0 ? 0 : std::min(static_cast<std::size_t>(written), out.size() - 1);
+        return value >= 1000.0f
+                   ? FormatInto(out, "f = {:.2f} kHz", value / 1000.0f)
+                   : FormatInto(out, "f = {:.1f} Hz", value);
     }
 }

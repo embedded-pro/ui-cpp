@@ -1,7 +1,6 @@
 #include "ui/charts/LinearAxis.hpp"
 #include "ui/core/Format.hpp"
 #include <algorithm>
-#include <cstdio>
 
 namespace ui::charts
 {
@@ -85,11 +84,6 @@ namespace ui::charts
 
     std::size_t LinearAxis::FormatCursorValue(float value, std::span<char> out) const
     {
-        const auto written = std::snprintf(out.data(), out.size(), "%.*s%.3f%.*s",
-            static_cast<int>(cursorPrefix.size()), cursorPrefix.data(),
-            static_cast<double>(value),
-            static_cast<int>(cursorUnit.size()), cursorUnit.data());
-
-        return written < 0 ? 0 : std::min(static_cast<std::size_t>(written), out.size() - 1);
+        return FormatInto(out, "{}{:.3f}{}", cursorPrefix, value, cursorUnit);
     }
 }

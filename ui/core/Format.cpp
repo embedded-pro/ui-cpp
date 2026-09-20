@@ -6,8 +6,7 @@ namespace ui
 {
     std::string FormatFixed(float value, int decimals)
     {
-        FormatBuffer<64> buffer;
-        return std::string{ buffer.Fixed(value, decimals) };
+        return std::format("{:.{}f}", value, decimals);
     }
 
     std::string FormatEngineering(float value, int decimals)
@@ -23,7 +22,6 @@ namespace ui
 
         const auto scaled = value / std::pow(10.0f, static_cast<float>(exponent * 3));
 
-        FormatBuffer<64> buffer;
-        return std::string{ buffer.Fixed(scaled, decimals) } + std::string{ prefixes[exponent + unityIndex] };
+        return std::format("{:.{}f}{}", scaled, decimals, prefixes[exponent + unityIndex]);
     }
 }

@@ -16,16 +16,24 @@ namespace ui::charts
         void UpdatePan(Point position, float plotWidth);
         void EndPan();
 
+        [[nodiscard]] float ViewMinimum() const;
+        [[nodiscard]] float ViewMaximum() const;
+        [[nodiscard]] float ViewSpan() const;
         [[nodiscard]] bool IsZoomed() const;
         [[nodiscard]] bool IsPanning() const;
 
+        void ShowCrosshairAt(Point position);
+        void HideCrosshair();
+        [[nodiscard]] bool CrosshairVisible() const;
+        [[nodiscard]] Point CursorPosition() const;
+
+    private:
         float viewMinimum{ 0.0f };
         float viewMaximum{ 1.0f };
 
         bool showCrosshair{ false };
         Point cursorPosition;
 
-    private:
         void ClampView();
 
         float dataMinimum{ 0.0f };

@@ -61,6 +61,42 @@ namespace ui::charts
         panning = false;
     }
 
+    float ChartInteraction::ViewMinimum() const
+    {
+        return viewMinimum;
+    }
+
+    float ChartInteraction::ViewMaximum() const
+    {
+        return viewMaximum;
+    }
+
+    float ChartInteraction::ViewSpan() const
+    {
+        return viewMaximum - viewMinimum;
+    }
+
+    void ChartInteraction::ShowCrosshairAt(Point position)
+    {
+        showCrosshair = true;
+        cursorPosition = position;
+    }
+
+    void ChartInteraction::HideCrosshair()
+    {
+        showCrosshair = false;
+    }
+
+    bool ChartInteraction::CrosshairVisible() const
+    {
+        return showCrosshair;
+    }
+
+    Point ChartInteraction::CursorPosition() const
+    {
+        return cursorPosition;
+    }
+
     bool ChartInteraction::IsZoomed() const
     {
         const auto tolerance = (dataMaximum - dataMinimum) * 0.001f;

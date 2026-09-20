@@ -57,8 +57,9 @@ emil is **optional**. Its helpers are used when a consumer provides them
 (`if (COMMAND emil_clangformat_directories)`), with plain CMake equivalents otherwise. The four
 consumers pin three different emil revisions; depending on it here would import that skew.
 
-`std::format` is **not** available on the GCC 11 shipped by the Ubuntu CI image. Use the
-`snprintf`-based helpers in `ui/core/Format.hpp`.
+Formatting goes through `ui/core/Format.hpp`, which wraps `std::format_to_n` into a caller-owned
+buffer. Inside `Paint` use `FormatBuffer`, never `std::format` directly: `std::format` returns a
+`std::string` and therefore allocates.
 
 ## Style
 

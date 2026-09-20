@@ -3,6 +3,7 @@ ui_add_test(ui.backend.qt_test CUSTOM_MAIN
         Main.cpp
         TestQtCanvas.cpp
         TestQtConformance.cpp
+        TestQtConversions.cpp
         TestQtPaintedWidget.cpp
         TestQtTheme.cpp
     LINK

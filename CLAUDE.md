@@ -4,6 +4,7 @@ Canonical rules: **[AGENTS.md](AGENTS.md)** (shared with Copilot).
 Portability tiers: `doc/portability.md`. Geometry conventions: `doc/canvas.md`.
 
 Essentials (full detail in AGENTS.md):
+
 - **Host GUI repo** — heap allowed in `ui/backend/**` and `ui/shell/**`; `ui/core|theme|model|widgets|sim`
   must be **allocation-free after construction**. Never allocate per-frame in `Paint()`.
 - **Tier 1 is sacred** — no `<Q...>` include, no `Qt6::` link in `ui/core|theme|model|widgets|sim`.

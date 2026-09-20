@@ -4,6 +4,7 @@ Canonical rules: **[AGENTS.md](../AGENTS.md)** (shared with Claude; VS Code auto
 Code-file specifics: `.github/instructions/` (applyTo-scoped). Deployment recipe: `roadmap/DEPLOYMENT.md`.
 
 Essentials (full detail in AGENTS.md):
+
 - **No heap** — bounded containers / `std::array` / `std::optional`; no recursion; tests too.
 - **Float-only** — generic `template<typename T>` + `static_assert(std::is_floating_point_v<T>)`; instantiate/test `float`; no Q15/Q31.
 - **Embedded** — `#pragma GCC optimize("O3","fast-math")` + `OPTIMIZE_FOR_SPEED` on hot paths.

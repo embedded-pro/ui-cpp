@@ -22,6 +22,7 @@ Canonical rules: `AGENTS.md`. Review only — no file modifications.
 ## Output format
 
 ### `path/to/file`
+
 **CRITICAL** — must fix before merge: [C1] ...
 **WARNING** — should fix: [W1] ...
 **SUGGESTION** — nice to have: [S1] ...
@@ -31,41 +32,50 @@ End with totals + verdict: APPROVE / REQUEST CHANGES.
 
 ## Checklist
 
-**Memory (CRITICAL)**
+### Memory (CRITICAL)
+
 - [ ] No heap: `new`/`delete`/`make_unique`/`make_shared`/`std::vector`/`string`/`deque`/`list`/`map`/`set`. Tests too.
 - [ ] No recursion.
 
-**Numeric types (CRITICAL)**
+### Numeric types (CRITICAL)
+
 - [ ] `template<typename T>` + `static_assert(std::is_floating_point_v<T>)`. `float` only — no Q15/Q31.
 - [ ] `std::numbers::pi_v<float>` — no hardcoded constants.
 - [ ] `extern template` guarded by `#ifdef UI_COVERAGE_BUILD`.
 
-**Embedded optimizations (WARNING)**
+### Embedded optimizations (WARNING)
+
 - [ ] `#pragma GCC optimize("O3","fast-math")` after `#pragma once` in algorithm headers.
 - [ ] `OPTIMIZE_FOR_SPEED` on `Filter/Compute/Update/Solve/Step`.
 
-**Namespaces (WARNING)**
+### Namespaces (WARNING)
+
 - [ ] Active filters (Kalman family): `namespace filters` — **not** `namespace filters::active`.
 - [ ] Passive filters: `namespace filters::passive`. Window functions: `namespace windowing`.
 
-**Style (WARNING)**
+### Style (WARNING)
+
 - [ ] Allman braces, brace-init `{}`, PascalCase types/methods, camelCase members.
 - [ ] Functions ≤ ~30 lines. `const`-correct on all non-mutating methods. No comments except license/NOLINT.
 - [ ] SOLID: one concern per class, constructor injection, depend on abstractions, no duplicated logic.
 
-**Interfaces & errors (WARNING)**
+### Interfaces & errors (WARNING)
+
 - [ ] `virtual ~I() = default` — never `= 0`. No exceptions — `std::optional`/status enums.
 
-**Testing (WARNING)**
+### Testing (WARNING)
+
 - [ ] `TEST_F` on `float` — no `TYPED_TEST`, no multi-type, never plain `TEST()`.
 - [ ] `StrictMock` only (no `NiceMock`/bare). Anonymous-namespace fixture; macros outside.
 - [ ] No redundant tests. Arrange/Act/Assert. `EXPECT_NEAR` + `math::Tolerance<float>()`.
 
-**CMake (WARNING)**
+### CMake (WARNING)
+
 - [ ] `ui_add_library()`, `ui_add_coverage_sources()`, `${UI_VISIBILITY}`.
 - [ ] If new simulator: `.vscode/launch.json` has a `cppdbg` entry inserted before `"Linux Debug"`.
 
-**Docs (CRITICAL)**
+### Docs (CRITICAL)
+
 - [ ] `doc/{domain}/{Name}.md` updated per `doc/TEMPLATE.md`. No class names, no code examples.
 - [ ] `doc/{domain}/README.md` updated if a new algorithm was added.
 

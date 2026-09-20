@@ -11,7 +11,7 @@ A small rendering and control abstraction plus the widgets built on it. The port
 nothing about Qt: it draws through a `Canvas` interface of ~15 primitives and reports input through
 plain structs. Qt is the first backend; a second toolkit can be added without touching a widget.
 
-```
+```text
 ui/core      geometry, colour, font, Canvas, input, PaintedView, Callback   — no Qt
 ui/theme     colour/font roles, chart metrics, Light + Instrument themes    — no Qt
 ui/model     FormSpec, FieldSpec, FormValues, TableModel                    — no Qt

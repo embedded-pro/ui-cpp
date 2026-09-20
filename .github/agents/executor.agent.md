@@ -34,17 +34,21 @@ Canonical rules: `AGENTS.md`. Implement exactly what's asked — nothing more.
 ## Coverage template (when EMIL_ENABLE_COVERAGE is set)
 
 Header (bottom, guarded):
+
 ```cpp
 #ifdef UI_COVERAGE_BUILD
 extern template class Algorithm<float, N>;
 #endif
 ```
+
 Matching `.cpp`: `template class Algorithm<float, N>;` — add via `ui_add_coverage_sources()`.
 
 ## Namespace convention
+
 Active filters (Kalman family): `namespace filters` — **not** `namespace filters::active`.
 
 ## What NOT to do
+
 - No extra features, unrelated refactors, docstrings, or one-off abstractions.
 - No Q15/Q31 — float-only; the generic `T` keeps it a cheap future add.
 - No `std::make_unique` anywhere, including tests.

@@ -1,0 +1,9 @@
+ui_add_test(ui.scene_test
+    SOURCES
+        TestCamera3D.cpp
+        TestSceneGizmos.cpp
+        TestVector3.cpp
+    LINK
+        ui.scene
+        ui.backend.recording
+)

@@ -1,5 +1,6 @@
 #include "ui/backend/recording/RecordingCanvas.hpp"
 #include "ui/theme/Theme.hpp"
+#include <functional>
 #include <gmock/gmock.h>
 
 namespace
@@ -59,4 +60,28 @@ TEST_F(ThemeTest, ChartMetricsCarryTheInheritedMargins)
     EXPECT_EQ(metrics.bottomMargin, 35);
     EXPECT_EQ(metrics.panelSpacing, 45);
     EXPECT_EQ(metrics.gridLines, 5);
+}
+
+// The two colour arrays are positional brace-initialiser lists, so appending a role to one and
+// not the other, or in a different order, compiles and silently mis-colours. These two cases are
+// the cheapest way to catch that.
+TEST_F(ThemeTest, TheSceneBackgroundIsDarkInBothThemes)
+{
+    EXPECT_EQ(ui::theme::Instrument().Get(ui::theme::ColorRole::SceneBackground), ui::Color::Rgb(0x1E1E2D));
+    EXPECT_NE(ui::theme::Light().Get(ui::theme::ColorRole::SceneBackground),
+        ui::theme::Instrument().Get(ui::theme::ColorRole::SceneBackground));
+}
+
+TEST_F(ThemeTest, TheAxisTriadRolesAreDistinctInBothThemes)
+{
+    for (const auto& theme : { std::cref(ui::theme::Light()), std::cref(ui::theme::Instrument()) })
+    {
+        const auto x = theme.get().Get(ui::theme::ColorRole::SceneAxisX);
+        const auto y = theme.get().Get(ui::theme::ColorRole::SceneAxisY);
+        const auto z = theme.get().Get(ui::theme::ColorRole::SceneAxisZ);
+
+        EXPECT_NE(x, y);
+        EXPECT_NE(y, z);
+        EXPECT_NE(x, z);
+    }
 }

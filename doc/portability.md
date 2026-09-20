@@ -5,7 +5,7 @@ records what actually sits in each one and why anything in Tier 3 is there.
 
 ## Tier 1 — no Qt, builds and tests everywhere
 
-`ui/core`, `ui/theme`, `ui/charts`, `ui/backend/recording`.
+`ui/core`, `ui/theme`, `ui/charts`, `ui/scope`, `ui/scene`, `ui/backend/recording`.
 
 These compile and their tests run on Linux, macOS and Windows with no Qt installed and no display.
 CI proves it: the `macos-latest` and `windows-latest` jobs build the `host-single-Debug` preset,

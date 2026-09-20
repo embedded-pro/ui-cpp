@@ -2,6 +2,7 @@ add_subdirectory(core)
 add_subdirectory(theme)
 add_subdirectory(charts)
 add_subdirectory(scope)
+add_subdirectory(scene)
 add_subdirectory(backend/recording)
 
 if (UI_BUILD_QT_BACKEND)

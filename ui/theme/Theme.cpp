@@ -70,13 +70,13 @@ namespace ui::theme
         };
 
         constexpr std::array<FontSpec, static_cast<std::size_t>(FontRole::Count)> defaultFonts{
-            FontSpec{ FontFamily::UiDefault, 9, false, false },  // Body
-            FontSpec{ FontFamily::UiDefault, 8, false, false },  // Small
-            FontSpec{ FontFamily::UiDefault, 10, true, false },  // ChartTitle
-            FontSpec{ FontFamily::UiDefault, 8, false, false },  // AxisLabel
-            FontSpec{ FontFamily::UiDefault, 8, false, false },  // Legend
-            FontSpec{ FontFamily::Monospace, 9, false, false },  // Monospace
-            FontSpec{ FontFamily::UiDefault, 9, true, false }    // StatusBold
+            FontSpec{ FontFamily::UiDefault, 9, false, false }, // Body
+            FontSpec{ FontFamily::UiDefault, 8, false, false }, // Small
+            FontSpec{ FontFamily::UiDefault, 10, true, false }, // ChartTitle
+            FontSpec{ FontFamily::UiDefault, 8, false, false }, // AxisLabel
+            FontSpec{ FontFamily::UiDefault, 8, false, false }, // Legend
+            FontSpec{ FontFamily::Monospace, 9, false, false }, // Monospace
+            FontSpec{ FontFamily::UiDefault, 9, true, false }   // StatusBold
         };
 
         constexpr ChartMetrics defaultChartMetrics{};

@@ -20,7 +20,7 @@ namespace ui
         Callback() = default;
 
         template<class Invocable>
-            requires(!std::is_same_v<std::decay_t<Invocable>, Callback>)
+        requires(!std::is_same_v<std::decay_t<Invocable>, Callback>)
         Callback(Invocable&& invocable)
         {
             Assign(std::forward<Invocable>(invocable));
@@ -55,7 +55,7 @@ namespace ui
         }
 
         template<class Invocable>
-            requires(!std::is_same_v<std::decay_t<Invocable>, Callback>)
+        requires(!std::is_same_v<std::decay_t<Invocable>, Callback>)
         Callback& operator=(Invocable&& invocable)
         {
             Reset();

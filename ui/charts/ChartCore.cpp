@@ -65,7 +65,7 @@ namespace ui::charts
         return interaction;
     }
 
-    Rect ChartCore::PlotAreaFor(const Rect& bounds) const
+    Rect ChartCore::PlotAreaFor(const Rect& bounds)
     {
         const auto& metrics = theme::Current().Charts();
 
@@ -196,7 +196,7 @@ namespace ui::charts
         DrawLegend(canvas, layout.plotArea, panel);
     }
 
-    void ChartCore::DrawAxes(Canvas& canvas, const Rect& plotArea) const
+    void ChartCore::DrawAxes(Canvas& canvas, const Rect& plotArea)
     {
         canvas.SetPen(Pen{ theme::Current().Get(theme::ColorRole::Axis) });
         canvas.DrawLine(Point{ plotArea.Left(), plotArea.Bottom() }, Point{ plotArea.Right(), plotArea.Bottom() });
@@ -296,7 +296,7 @@ namespace ui::charts
         canvas.ClearClip();
     }
 
-    void ChartCore::DrawLegend(Canvas& canvas, const Rect& plotArea, const ChartPanel& panel) const
+    void ChartCore::DrawLegend(Canvas& canvas, const Rect& plotArea, const ChartPanel& panel)
     {
         if (panel.series.size() <= 1)
             return;

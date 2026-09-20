@@ -51,14 +51,14 @@ namespace ui::charts
         void ComputeLayouts(const Rect& bounds);
         [[nodiscard]] PanelBounds ComputeBounds(const ChartPanel& panel) const;
         [[nodiscard]] float ValueToX(float value, const Rect& plotArea) const;
-        [[nodiscard]] Rect PlotAreaFor(const Rect& bounds) const;
+        [[nodiscard]] static Rect PlotAreaFor(const Rect& bounds);
 
         void DrawPanel(Canvas& canvas, const PanelLayout& layout);
-        void DrawAxes(Canvas& canvas, const Rect& plotArea) const;
+        static void DrawAxes(Canvas& canvas, const Rect& plotArea);
         void DrawGridLines(Canvas& canvas, const Rect& plotArea) const;
         void DrawYLabels(Canvas& canvas, const Rect& plotArea, const PanelBounds& bounds) const;
         void DrawSeries(Canvas& canvas, const Rect& plotArea, const Series& series, const PanelBounds& bounds);
-        void DrawLegend(Canvas& canvas, const Rect& plotArea, const ChartPanel& panel) const;
+        static void DrawLegend(Canvas& canvas, const Rect& plotArea, const ChartPanel& panel);
         void DrawAxisTitleAndTicks(Canvas& canvas, const Rect& bounds) const;
         void DrawCrosshair(Canvas& canvas) const;
 

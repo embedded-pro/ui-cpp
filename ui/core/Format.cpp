@@ -12,7 +12,7 @@ namespace ui
 
     std::string FormatEngineering(float value, int decimals)
     {
-        static constexpr std::string_view prefixes[]{ "p", "n", "u", "m", "", "k", "M", "G" };
+        static constexpr std::array<std::string_view, 8> prefixes{ "p", "n", "u", "m", "", "k", "M", "G" };
         static constexpr int unityIndex{ 4 };
 
         if (value == 0.0f || !std::isfinite(value))

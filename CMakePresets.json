@@ -1,0 +1,70 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "defaults",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "On"
+      }
+    },
+    {
+      "name": "host",
+      "displayName": "Host build (core only; Qt backend opt-in)",
+      "inherits": "defaults",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "UI_TOOLBOX_BUILD_TESTS": true
+      }
+    },
+    {
+      "name": "host-qt",
+      "displayName": "Host build with the Qt backend",
+      "inherits": "host",
+      "cacheVariables": {
+        "UI_TOOLBOX_BUILD_QT_BACKEND": true
+      }
+    },
+    {
+      "name": "host-single-Debug",
+      "displayName": "Host single-config Debug (no Qt; macOS/Windows CI)",
+      "inherits": "defaults",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "UI_TOOLBOX_BUILD_TESTS": true
+      }
+    },
+    {
+      "name": "coverage",
+      "displayName": "Coverage",
+      "inherits": "defaults",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "UI_TOOLBOX_BUILD_TESTS": true,
+        "UI_TOOLBOX_BUILD_QT_BACKEND": true,
+        "EMIL_ENABLE_COVERAGE": "On"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "host-Debug", "configurePreset": "host", "configuration": "Debug" },
+    { "name": "host-RelWithDebInfo", "configurePreset": "host", "configuration": "RelWithDebInfo" },
+    { "name": "host-qt-Debug", "configurePreset": "host-qt", "configuration": "Debug" },
+    { "name": "host-single-Debug", "configurePreset": "host-single-Debug" },
+    { "name": "coverage", "configurePreset": "coverage" }
+  ],
+  "testPresets": [
+    { "name": "host", "configurePreset": "host", "configuration": "Debug", "output": { "outputOnFailure": true } },
+    { "name": "host-qt", "configurePreset": "host-qt", "configuration": "Debug", "output": { "outputOnFailure": true } },
+    { "name": "host-single-Debug", "configurePreset": "host-single-Debug", "output": { "outputOnFailure": true } },
+    { "name": "coverage", "configurePreset": "coverage", "output": { "outputOnFailure": true } }
+  ]
+}

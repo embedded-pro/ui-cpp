@@ -1,0 +1,58 @@
+name: Guardrails
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tier-1-purity:
+    name: Tier 1 has no Qt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: No Qt includes in Tier 1
+        run: |
+          if grep -rn --include='*.hpp' --include='*.cpp' -E '#include *[<"]Q' \
+               ui/core ui/theme ui/model ui/widgets ui/sim ui/backend/recording ui/backend/svg; then
+            echo "::error::Tier 1 directories must not include Qt headers (AGENTS.md invariant 1)"
+            exit 1
+          fi
+          echo "ok: no Qt includes in Tier 1"
+
+      - name: No Qt links in Tier 1
+        run: |
+          if grep -rn --include='CMakeLists.txt' 'Qt6::' \
+               ui/core ui/theme ui/model ui/widgets ui/sim ui/backend/recording ui/backend/svg; then
+            echo "::error::Tier 1 targets must not link Qt6:: (AGENTS.md invariant 1)"
+            exit 1
+          fi
+          echo "ok: no Qt links in Tier 1"
+
+      - name: setStyleSheet confined to QtTheme.cpp
+        run: |
+          offenders=$(grep -rln 'setStyleSheet' ui | grep -v '^ui/backend/qt/QtTheme.cpp$' || true)
+          if [ -n "$offenders" ]; then
+            echo "::error::setStyleSheet is allowed only in ui/backend/qt/QtTheme.cpp (AGENTS.md invariant 3)"
+            echo "$offenders"
+            exit 1
+          fi
+          echo "ok: setStyleSheet confined"
+
+      - name: No I-prefixed interfaces
+        run: |
+          if grep -rn --include='*.hpp' -E '^\s*class I[A-Z][A-Za-z]*$' ui; then
+            echo "::error::Interfaces use plain role names, no I prefix (AGENTS.md Style)"
+            exit 1
+          fi
+          echo "ok: no I-prefixed interfaces"

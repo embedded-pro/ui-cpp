@@ -77,28 +77,35 @@ namespace ui::scope
 
     std::array<model::FieldSpec, 5> ScopeControls::MakeFields(std::span<const model::OptionSpec> channels)
     {
+        using enum model::FieldKind;
+
         return {
-            model::FieldSpec{ field::timePerDivision, model::noGroup, model::FieldKind::Choice, "Time/div:", "", {}, timeOptions, {}, {} },
-            model::FieldSpec{ field::triggerMode, model::noGroup, model::FieldKind::Choice, "Trigger:", "", {}, modeOptions, {}, {} },
-            model::FieldSpec{ field::triggerEdge, model::noGroup, model::FieldKind::Choice, "Edge:", "", {}, edgeOptions, {}, {} },
-            model::FieldSpec{ field::triggerLevel, model::noGroup, model::FieldKind::Number, "Level:", " A", { -100.0, 100.0, 0.01, 0.0, 3, 0.0 }, {}, {}, {} },
-            model::FieldSpec{ field::triggerChannel, model::noGroup, model::FieldKind::Choice, "Ch:", "", {}, channels, {}, {} }
+            model::FieldSpec{ field::timePerDivision, model::noGroup, Choice, "Time/div:", "", {}, timeOptions, {}, {} },
+            model::FieldSpec{ field::triggerMode, model::noGroup, Choice, "Trigger:", "", {}, modeOptions, {}, {} },
+            model::FieldSpec{ field::triggerEdge, model::noGroup, Choice, "Edge:", "", {}, edgeOptions, {}, {} },
+            model::FieldSpec{ field::triggerLevel, model::noGroup, Number, "Level:", " A", { -100.0, 100.0, 0.01, 0.0, 3, 0.0 }, {}, {}, {} },
+            model::FieldSpec{ field::triggerChannel, model::noGroup, Choice, "Ch:", "", {}, channels, {}, {} }
         };
     }
 
     std::array<model::ActionSpec, 3> ScopeControls::MakeActions()
     {
+        using enum theme::ButtonRole;
+
         return {
-            model::ActionSpec{ field::runStop, stopLabel, theme::ButtonRole::Stop, 0 },
-            model::ActionSpec{ field::single, "Single", theme::ButtonRole::Primary, 0 },
-            model::ActionSpec{ field::force, "Force", theme::ButtonRole::Default, 0 }
+            model::ActionSpec{ field::runStop, stopLabel, Stop, 0 },
+            model::ActionSpec{ field::single, "Single", Primary, 0 },
+            model::ActionSpec{ field::force, "Force", Default, 0 }
         };
     }
 
     ScopeControls::ScopeControls(std::size_t channelCount)
-        : channelOptions(MakeChannelOptions(ChannelsFor(channelCount)))
-        , fields(MakeFields(std::span{ channelOptions }.first(ChannelsFor(channelCount))))
-        , actions(MakeActions())
+        : ScopeControls(ChannelCount{ ChannelsFor(channelCount) })
+    {}
+
+    ScopeControls::ScopeControls(ChannelCount channels)
+        : channelOptions(MakeChannelOptions(channels.value))
+        , fields(MakeFields(std::span{ channelOptions }.first(channels.value)))
         , spec(model::FormSpec{ {}, fields, actions, {} })
         , model(spec, values, {})
     {

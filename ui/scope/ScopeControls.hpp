@@ -39,6 +39,13 @@ namespace ui::scope
         [[nodiscard]] const model::FormSpec& Spec() const;
 
     private:
+        struct ChannelCount
+        {
+            std::size_t value{ 1 };
+        };
+
+        explicit ScopeControls(ChannelCount channels);
+
         [[nodiscard]] static std::size_t ChannelsFor(std::size_t requested);
         [[nodiscard]] static std::array<model::OptionSpec, ScopeCore::maxChannels> MakeChannelOptions(std::size_t channels);
         [[nodiscard]] static std::array<model::FieldSpec, 5> MakeFields(std::span<const model::OptionSpec> channels);
@@ -46,7 +53,7 @@ namespace ui::scope
 
         std::array<model::OptionSpec, ScopeCore::maxChannels> channelOptions;
         std::array<model::FieldSpec, 5> fields;
-        std::array<model::ActionSpec, 3> actions;
+        std::array<model::ActionSpec, 3> actions{ MakeActions() };
         std::array<model::FieldValue, 5> values{};
 
         model::FormSpec spec;

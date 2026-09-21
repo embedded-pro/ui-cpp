@@ -1,6 +1,7 @@
 ui_add_test(ui.scope_test
     SOURCES
         TestRingBuffer.cpp
+        TestScopeControls.cpp
         TestScopeCore.cpp
         TestTrigger.cpp
     LINK

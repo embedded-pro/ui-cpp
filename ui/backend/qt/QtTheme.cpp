@@ -2,6 +2,7 @@
 #include "ui/backend/qt/QtConversions.hpp"
 #include <QAbstractButton>
 #include <QApplication>
+#include <QWidget>
 
 namespace ui::backend::qt
 {
@@ -25,6 +26,27 @@ namespace ui::backend::qt
                 default:
                     return theme::ColorRole::Surface;
             }
+        }
+
+        theme::ColorRole ColourFor(theme::StatusLevel level)
+        {
+            switch (level)
+            {
+                case theme::StatusLevel::Ok:
+                    return theme::ColorRole::Ok;
+                case theme::StatusLevel::Warning:
+                    return theme::ColorRole::Warning;
+                case theme::StatusLevel::Fault:
+                    return theme::ColorRole::Fault;
+                case theme::StatusLevel::Neutral:
+                default:
+                    return theme::ColorRole::Neutral;
+            }
+        }
+
+        QString StatusRule(const QColor& text)
+        {
+            return QStringLiteral("color: %1; font-weight: bold;").arg(text.name(QColor::HexRgb));
         }
 
         // Hover and pressed states were inconsistent across the eighteen inline stylesheets they
@@ -97,5 +119,20 @@ namespace ui::backend::qt
                               : ToQt(theme.Get(theme::ColorRole::TextInverse));
 
         return Rule(fill, text);
+    }
+
+    void StyleStatusLabel(QWidget& label, theme::StatusLevel level)
+    {
+        StyleStatusLabel(label, level, theme::Current());
+    }
+
+    void StyleStatusLabel(QWidget& label, theme::StatusLevel level, const theme::Theme& theme)
+    {
+        label.setStyleSheet(StatusStyleSheet(level, theme));
+    }
+
+    QString StatusStyleSheet(theme::StatusLevel level, const theme::Theme& theme)
+    {
+        return StatusRule(ToQt(theme.Get(ColourFor(level))));
     }
 }

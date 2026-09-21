@@ -1,4 +1,5 @@
 #include "ui/backend/qt/QtTheme.hpp"
+#include <QLabel>
 #include <QPushButton>
 #include <gmock/gmock.h>
 
@@ -90,4 +91,46 @@ TEST_F(QtThemeTest, StylingAButtonWithoutAThemeUsesTheCurrentOne)
     EXPECT_EQ(button.styleSheet(), ui::backend::qt::ButtonStyleSheet(ui::theme::ButtonRole::Primary, ui::theme::Instrument()));
 
     ui::backend::qt::ApplyTheme(ui::theme::Light());
+}
+
+TEST_F(QtThemeTest, EachStatusLevelResolvesToItsSemanticColour)
+{
+    const auto& theme = ui::theme::Light();
+
+    EXPECT_THAT(ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Ok, theme).toStdString(),
+        ::testing::HasSubstr(Colour(ui::theme::ColorRole::Ok, theme).toStdString()));
+    EXPECT_THAT(ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Warning, theme).toStdString(),
+        ::testing::HasSubstr(Colour(ui::theme::ColorRole::Warning, theme).toStdString()));
+    EXPECT_THAT(ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Fault, theme).toStdString(),
+        ::testing::HasSubstr(Colour(ui::theme::ColorRole::Fault, theme).toStdString()));
+    EXPECT_THAT(ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Neutral, theme).toStdString(),
+        ::testing::HasSubstr(Colour(ui::theme::ColorRole::Neutral, theme).toStdString()));
+}
+
+TEST_F(QtThemeTest, AStatusRuleCarriesNoTypeSelectorSoItAppliesToAnyWidget)
+{
+    const auto rule = ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Fault, ui::theme::Light()).toStdString();
+
+    EXPECT_THAT(rule, ::testing::HasSubstr("font-weight: bold"));
+    EXPECT_THAT(rule, ::testing::Not(::testing::HasSubstr("QLabel")));
+    EXPECT_THAT(rule, ::testing::Not(::testing::HasSubstr("{")));
+}
+
+TEST_F(QtThemeTest, StylingAStatusLabelInstallsTheRuleForItsLevel)
+{
+    QLabel label;
+
+    ui::backend::qt::StyleStatusLabel(label, ui::theme::StatusLevel::Warning, ui::theme::Light());
+
+    EXPECT_EQ(label.styleSheet(), ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Warning, ui::theme::Light()));
+}
+
+TEST_F(QtThemeTest, StylingAStatusLabelWithoutAThemeUsesTheCurrentOne)
+{
+    QLabel label;
+    ui::theme::SetCurrent(ui::theme::Instrument());
+
+    ui::backend::qt::StyleStatusLabel(label, ui::theme::StatusLevel::Ok);
+
+    EXPECT_EQ(label.styleSheet(), ui::backend::qt::StatusStyleSheet(ui::theme::StatusLevel::Ok, ui::theme::Instrument()));
 }

@@ -121,3 +121,15 @@ TEST_F(GeometryTest, FormatEngineeringFallsBackForZeroAndNonFinite)
     EXPECT_EQ(ui::FormatEngineering(std::numeric_limits<float>::infinity(), 1),
         ui::FormatFixed(std::numeric_limits<float>::infinity(), 1));
 }
+
+// The motivating case: one read-out column carries values several decades apart, where a fixed
+// count of places is either all zeros at the small end or all noise at the large one.
+TEST_F(GeometryTest, SignificantKeepsDigitsRatherThanPlaces)
+{
+    ui::FormatBuffer<32> buffer;
+
+    EXPECT_EQ(buffer.Significant(0.00022f, 4), "0.00022");
+    EXPECT_EQ(buffer.Significant(1234.5f, 4), "1234");
+    EXPECT_EQ(buffer.Significant(0.5f, 4), "0.5");
+    EXPECT_EQ(buffer.Fixed(0.00022f, 4), "0.0002");
+}

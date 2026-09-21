@@ -18,6 +18,12 @@ namespace ui::model
         ReadOut
     };
 
+    enum class ReadOutStyle : std::uint8_t
+    {
+        Fixed,
+        Significant
+    };
+
     // The defaults are QDoubleSpinBox's own, so a field that states no range behaves exactly as the
     // hand-written panel it replaces did by omission rather than by intent.
     struct NumberTraits
@@ -31,6 +37,11 @@ namespace ui::model
         // Slider only, and zero means no tick marks. It is here rather than on a separate spec so
         // a slider stays a number that happens to be dragged, not a second kind of field.
         double tickInterval{ 0.0 };
+
+        // ReadOut only, and it decides how `decimals` is read: places after the point for Fixed,
+        // significant digits for Significant. An identified motor parameter runs from 2.2e-4 to
+        // 1.2e3 across one panel, and no fixed count of places is right at both ends.
+        ReadOutStyle readOut{ ReadOutStyle::Fixed };
     };
 
     // data defaults to the option's own index, which is what lets one read path serve both the

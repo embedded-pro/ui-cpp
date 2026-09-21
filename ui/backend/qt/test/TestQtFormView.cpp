@@ -231,3 +231,15 @@ TEST_F(QtFormViewTest, AnInlineFormStillBuildsEveryControlAndKeepsItsConditions)
 
     EXPECT_TRUE(inlineView.IsControlEnabled(formspec::cutoffHigh));
 }
+
+TEST_F(QtFormViewTest, ASignificantReadOutKeepsDigitsWhereAFixedOneWouldLoseThem)
+{
+    harness.Model().SetSelection(formspec::filterType, 2);
+    harness.Model().SetNumber(formspec::inertiaReadOut, 0.00022);
+    harness.Model().SetNumber(formspec::gainReadOut, 0.00022);
+    view.Refresh(formspec::inertiaReadOut);
+    view.Refresh(formspec::gainReadOut);
+
+    EXPECT_EQ(ControlAs<QLabel>(formspec::inertiaReadOut)->text(), QString::fromUtf8("0.00022 kg·m²"));
+    EXPECT_EQ(ControlAs<QLabel>(formspec::gainReadOut)->text(), "0.00 dB");
+}

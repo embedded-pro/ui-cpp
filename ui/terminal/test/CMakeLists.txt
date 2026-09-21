@@ -1,0 +1,10 @@
+ui_add_test(ui.terminal_test
+    SOURCES
+        TestAnsiPalette.cpp
+        TestTerminalScreen.cpp
+        TestTerminalTypes.cpp
+        TestVt100Parser.cpp
+        TestVt100Terminal.cpp
+    LINK
+        ui.terminal
+)

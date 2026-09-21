@@ -14,6 +14,9 @@ namespace ui
         : public InputHandler
     {
     public:
+        PaintedView() = default;
+        PaintedView(const PaintedView& other) = delete;
+        PaintedView& operator=(const PaintedView& other) = delete;
         ~PaintedView() override;
 
         virtual void Paint(Canvas& canvas, const Rect& bounds) = 0;

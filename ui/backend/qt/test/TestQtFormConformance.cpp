@@ -2,9 +2,9 @@
 #include "ui/backend/qt/QtTheme.hpp"
 #include "ui/backend/qt/test/FormTestSpec.hpp"
 #include "ui/backend/recording/RecordingFormView.hpp"
+#include <QAbstractButton>
 #include <QComboBox>
 #include <QDoubleSpinBox>
-#include <QAbstractButton>
 #include <QSlider>
 #include <algorithm>
 #include <gmock/gmock.h>

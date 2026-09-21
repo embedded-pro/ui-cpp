@@ -14,6 +14,7 @@ namespace ui::backend::recording
         EndGroup,
         CreateNumber,
         CreateInteger,
+        CreateSlider,
         CreateChoice,
         CreateToggle,
         CreateReadOut,
@@ -39,6 +40,7 @@ namespace ui::backend::recording
         double minimum{ 0.0 };
         double maximum{ 0.0 };
         double step{ 0.0 };
+        double tickInterval{ 0.0 };
         std::uint8_t decimals{ 0 };
         std::size_t index{ 0 };
         std::size_t count{ 0 };

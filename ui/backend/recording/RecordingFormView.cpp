@@ -9,20 +9,21 @@ namespace ui::backend::recording
         FormCommandKind CreateKindFor(model::FieldKind kind)
         {
             using enum model::FieldKind;
+            using enum FormCommandKind;
 
             switch (kind)
             {
                 case Integer:
-                    return FormCommandKind::CreateInteger;
+                    return CreateInteger;
                 case Choice:
-                    return FormCommandKind::CreateChoice;
+                    return CreateChoice;
                 case Toggle:
-                    return FormCommandKind::CreateToggle;
+                    return CreateToggle;
                 case ReadOut:
-                    return FormCommandKind::CreateReadOut;
+                    return CreateReadOut;
                 case Number:
                 default:
-                    return FormCommandKind::CreateNumber;
+                    return CreateNumber;
             }
         }
     }

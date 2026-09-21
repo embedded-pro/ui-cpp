@@ -8,6 +8,7 @@
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QSlider>
@@ -19,13 +20,13 @@ namespace ui::backend::qt
 {
     QtFormView::QtFormView(QWidget* parent)
         : QWidget(parent)
+        , outerLayout(new QVBoxLayout{ this })
         , rootLayout(new QFormLayout{})
     {
-        auto* outer = new QVBoxLayout{ this };
-        outer->setContentsMargins(0, 0, 0, 0);
+        outerLayout->setContentsMargins(0, 0, 0, 0);
 
-        outer->addLayout(rootLayout);
-        outer->addStretch();
+        outerLayout->addLayout(rootLayout);
+        outerLayout->addStretch();
     }
 
     QtFormView::~QtFormView()
@@ -59,7 +60,26 @@ namespace ui::backend::qt
         return *rootLayout;
     }
 
-    void QtFormView::CreateField(const model::FieldSpec& field, QFormLayout& layout)
+    void QtFormView::AddRow(model::GroupId group, QWidget* label, QWidget* editor)
+    {
+        if (group == model::noGroup && inlineLayout != nullptr)
+        {
+            if (label != nullptr)
+                inlineLayout->addWidget(label);
+
+            inlineLayout->addWidget(editor);
+            return;
+        }
+
+        auto& layout = LayoutFor(group);
+
+        if (label != nullptr)
+            layout.addRow(label, editor);
+        else
+            layout.addRow(editor);
+    }
+
+    void QtFormView::CreateField(const model::FieldSpec& field)
     {
         Control control{};
         control.field = field.id;
@@ -175,15 +195,10 @@ namespace ui::backend::qt
 
         // A toggle carries its own text, so giving it a second label beside the box would state the
         // same thing twice.
-        if (field.kind == model::FieldKind::Toggle)
-        {
-            layout.addRow(control.editor);
-        }
-        else
-        {
+        if (field.kind != model::FieldKind::Toggle)
             control.label = new QLabel{ ToQt(field.label), this };
-            layout.addRow(control.label, control.editor);
-        }
+
+        AddRow(field.group, control.label, control.editor);
 
         controls.push_back(control);
     }
@@ -193,21 +208,32 @@ namespace ui::backend::qt
         model = &formModel;
         Clear();
 
+        if (formModel.Spec().layout == model::FormLayout::Inline)
+        {
+            inlineLayout = new QHBoxLayout{};
+            inlineLayout->setContentsMargins(0, 0, 0, 0);
+            outerLayout->insertLayout(0, inlineLayout);
+
+            // One row is exactly as tall as it needs to be. Without this the strip keeps the
+            // vertical policy a stacked form wants and takes height from whatever it sits above.
+            setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+        }
+
         for (const auto& group : formModel.Spec().groups)
         {
             auto* box = new QGroupBox{ ToQt(group.title), this };
             new QFormLayout{ box };
-            rootLayout->addRow(box);
+            AddRow(model::noGroup, nullptr, box);
             groups.emplace_back(group.id, box);
         }
 
         for (const auto& field : formModel.Spec().fields)
-            CreateField(field, LayoutFor(field.group));
+            CreateField(field);
 
         for (std::size_t i = 0; i < formModel.TableCount(); ++i)
         {
             auto* table = new QtFormTable{ formModel, i, this };
-            LayoutFor(formModel.Table(i).Spec().group).addRow(table);
+            AddRow(formModel.Table(i).Spec().group, nullptr, table);
             tables.push_back(table);
         }
 
@@ -224,9 +250,14 @@ namespace ui::backend::qt
                     model->TriggerAction(id);
                 });
 
-            rootLayout->addRow(button);
+            AddRow(model::noGroup, nullptr, button);
             actions.push_back(Action{ action.id, button });
         }
+
+        // Without it the row shares its spare width between the controls, stretching a combo box
+        // across the panel; an instrument strip wants them at their natural size, packed left.
+        if (inlineLayout != nullptr)
+            inlineLayout->addStretch();
 
         formModel.onFieldChanged = [this](model::FieldId field)
         {

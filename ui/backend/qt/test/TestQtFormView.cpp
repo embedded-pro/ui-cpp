@@ -203,3 +203,31 @@ TEST_F(QtFormViewTest, DestroyingTheViewClearsTheModelsCallbacks)
 
     EXPECT_FALSE(static_cast<bool>(local.Model().onFieldChanged));
 }
+
+TEST_F(QtFormViewTest, AnInlineFormPacksItsControlsIntoOneRowRatherThanStackingThem)
+{
+    formspec::Harness inlineHarness{ ui::model::FormLayout::Inline };
+    QtFormView inlineView;
+    inlineView.Build(inlineHarness.Model());
+
+    EXPECT_GT(inlineView.sizeHint().width(), view.sizeHint().width());
+    EXPECT_LT(inlineView.sizeHint().height(), view.sizeHint().height());
+}
+
+TEST_F(QtFormViewTest, AnInlineFormStillBuildsEveryControlAndKeepsItsConditions)
+{
+    formspec::Harness inlineHarness{ ui::model::FormLayout::Inline };
+    QtFormView inlineView;
+    inlineView.Build(inlineHarness.Model());
+
+    EXPECT_NE(qobject_cast<QDoubleSpinBox*>(inlineView.ControlFor(formspec::cutoff)), nullptr);
+    EXPECT_NE(qobject_cast<QComboBox*>(inlineView.ControlFor(formspec::filterType)), nullptr);
+    EXPECT_NE(qobject_cast<QCheckBox*>(inlineView.ControlFor(formspec::normalise)), nullptr);
+    EXPECT_NE(inlineView.ButtonFor(formspec::compute), nullptr);
+
+    EXPECT_FALSE(inlineView.IsControlEnabled(formspec::cutoffHigh));
+
+    inlineHarness.Model().SetSelection(formspec::filterType, 2);
+
+    EXPECT_TRUE(inlineView.IsControlEnabled(formspec::cutoffHigh));
+}

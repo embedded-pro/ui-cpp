@@ -6,7 +6,9 @@
 #include "ui/core/PaintedView.hpp"
 #include "ui/theme/Theme.hpp"
 #include <array>
+#include <cstdint>
 #include <span>
+#include <string_view>
 #include <vector>
 
 namespace ui::charts
@@ -61,7 +63,9 @@ namespace ui::charts
         static void DrawLegend(Canvas& canvas, const Rect& plotArea, const ChartPanel& panel);
         void DrawAxisTitleAndTicks(Canvas& canvas, const Rect& bounds) const;
         void DrawCrosshair(Canvas& canvas) const;
+        void DrawCursorReadout(Canvas& canvas, const PanelLayout& layout, float viewPosition) const;
 
+        [[nodiscard]] std::size_t BuildCursorReadout(const ChartPanel& panel, float viewPosition) const;
         [[nodiscard]] std::size_t NearestSampleIndex(float viewPosition, std::size_t count) const;
 
         const AxisTransform* axis;
@@ -74,9 +78,24 @@ namespace ui::charts
         std::vector<PanelLayout> layouts;
         std::vector<Point> polylineScratch;
 
+        // The cursor readout is built during Paint, which must not allocate, so its lines live in
+        // fixed storage: one for the axis value plus one per series the theme can colour.
+        struct ReadoutLine
+        {
+            std::array<char, 48> text{};
+            std::uint8_t length{ 0 };
+
+            [[nodiscard]] std::string_view Label() const
+            {
+                return std::string_view{ text.data(), length };
+            }
+        };
+
         static constexpr std::size_t maximumTicks{ 32 };
         static constexpr std::size_t maximumGridLines{ 128 };
+        static constexpr std::size_t maximumReadoutLines{ 9 };
         mutable std::array<Tick, maximumTicks> ticks{};
         mutable std::array<GridLine, maximumGridLines> gridLines{};
+        mutable std::array<ReadoutLine, maximumReadoutLines> readoutLines{};
     };
 }

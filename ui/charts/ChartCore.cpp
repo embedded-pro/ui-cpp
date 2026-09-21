@@ -18,6 +18,16 @@ namespace ui::charts
         constexpr float tickLabelOffset{ 2.0f };
         constexpr float tickLabelHeight{ 14.0f };
         constexpr float tickLabelWidth{ 50.0f };
+
+        constexpr float readoutCornerRadius{ 3.0f };
+        constexpr float readoutCursorOffset{ 12.0f };
+        constexpr float readoutFlipMargin{ 20.0f };
+        constexpr float readoutPaddingX{ 4.0f };
+        constexpr float readoutPaddingY{ 2.0f };
+        constexpr float readoutExtraWidth{ 12.0f };
+        constexpr float readoutExtraHeight{ 8.0f };
+        constexpr float readoutLineHeight{ 13.0f };
+        constexpr std::uint8_t readoutBackgroundAlpha{ 230 };
     }
 
     ChartCore::ChartCore(const AxisTransform& axis, ChartConfig config)
@@ -376,15 +386,100 @@ namespace ui::charts
 
     void ChartCore::DrawCrosshair(Canvas& canvas) const
     {
-        if (!interaction.CrosshairVisible() || layouts.empty())
+        if (!interaction.CrosshairVisible() || layouts.empty() || axisValues.empty())
+            return;
+
+        const auto cursor = interaction.CursorPosition();
+
+        const PanelLayout* hovered = nullptr;
+        for (const auto& layout : layouts)
+            if (layout.plotArea.Contains(cursor))
+            {
+                hovered = &layout;
+                break;
+            }
+
+        if (hovered == nullptr)
             return;
 
         const auto& theme = theme::Current();
-        canvas.SetPen(Pen{ theme.Get(theme::ColorRole::Crosshair), 1.0f, LineStyle::Dash });
+        const auto& plotArea = hovered->plotArea;
 
-        for (const auto& layout : layouts)
-            canvas.DrawLine(Point{ interaction.CursorPosition().x, layout.plotArea.Top() },
-                Point{ interaction.CursorPosition().x, layout.plotArea.Bottom() });
+        canvas.SetPen(Pen{ theme.Get(theme::ColorRole::Crosshair), 1.0f, LineStyle::Dash });
+        canvas.DrawLine(Point{ cursor.x, plotArea.Top() }, Point{ cursor.x, plotArea.Bottom() });
+        canvas.DrawLine(Point{ plotArea.Left(), cursor.y }, Point{ plotArea.Right(), cursor.y });
+
+        const auto span = interaction.ViewSpan();
+        if (span <= 0.0f || plotArea.width <= 0.0f)
+            return;
+
+        const auto ratio = (cursor.x - plotArea.Left()) / plotArea.width;
+        DrawCursorReadout(canvas, *hovered, interaction.ViewMinimum() + ratio * span);
+    }
+
+    std::size_t ChartCore::BuildCursorReadout(const ChartPanel& panel, float viewPosition) const
+    {
+        auto lines = std::size_t{ 0 };
+
+        readoutLines[lines].length = static_cast<std::uint8_t>(axis->FormatCursorValue(axis->FromView(viewPosition), readoutLines[lines].text));
+        ++lines;
+
+        for (const auto& series : panel.series)
+        {
+            if (lines == maximumReadoutLines)
+                break;
+
+            const auto count = std::min(axisValues.size(), series.data.size());
+            if (count == 0)
+                continue;
+
+            const auto sample = series.data[NearestSampleIndex(viewPosition, count)];
+            readoutLines[lines].length = static_cast<std::uint8_t>(FormatInto(readoutLines[lines].text, "{} = {:.{}f}", series.name, sample, config.cursorValueDecimals));
+            ++lines;
+        }
+
+        return lines;
+    }
+
+    void ChartCore::DrawCursorReadout(Canvas& canvas, const PanelLayout& layout, float viewPosition) const
+    {
+        const auto& theme = theme::Current();
+        const auto& panel = chartPanels[layout.panelIndex];
+
+        canvas.SetFont(theme.Get(theme::FontRole::Small));
+
+        const auto lines = BuildCursorReadout(panel, viewPosition);
+
+        auto textWidth = 0.0f;
+        for (std::size_t i = 0; i < lines; ++i)
+            textWidth = std::max(textWidth, canvas.MeasureText(readoutLines[i].Label()).width);
+
+        const auto textHeight = static_cast<float>(lines) * readoutLineHeight;
+        const auto cursor = interaction.CursorPosition();
+        const auto& plotArea = layout.plotArea;
+
+        auto originX = cursor.x + readoutCursorOffset;
+        auto originY = cursor.y - textHeight - readoutExtraHeight;
+
+        if (originX + textWidth + readoutExtraWidth > plotArea.Right())
+            originX = cursor.x - textWidth - readoutFlipMargin;
+
+        if (originY < plotArea.Top())
+            originY = cursor.y + readoutCursorOffset;
+
+        const Rect background{ originX - readoutPaddingX, originY - readoutPaddingY,
+            textWidth + readoutExtraWidth, textHeight + readoutExtraHeight };
+
+        canvas.SetPen(Pen{ theme.Get(theme::ColorRole::Neutral) });
+        canvas.SetBrush(Brush{ theme.Get(theme::ColorRole::Surface).WithAlpha(readoutBackgroundAlpha) });
+        canvas.DrawRoundedRect(background, readoutCornerRadius, readoutCornerRadius);
+
+        canvas.SetPen(Pen{ theme.Get(theme::ColorRole::Text) });
+
+        for (std::size_t i = 0; i < lines; ++i)
+            canvas.DrawText(Point{ originX + readoutPaddingX, originY + readoutPaddingY + static_cast<float>(i + 1) * readoutLineHeight }, readoutLines[i].Label());
+
+        canvas.SetBrush(Brush{});
     }
 
     void ChartCore::OnWheel(const WheelEvent& event)

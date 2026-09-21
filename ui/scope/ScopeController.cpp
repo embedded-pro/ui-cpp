@@ -61,6 +61,7 @@ namespace ui::scope
         else if (triggered == field::single)
         {
             model->SetSelection(field::triggerMode, static_cast<std::size_t>(TriggerMode::Single));
+            view->Refresh(field::triggerMode);
             scope->SetTriggerMode(TriggerMode::Single);
             scope->SetRunning(true);
             ApplyRunState();

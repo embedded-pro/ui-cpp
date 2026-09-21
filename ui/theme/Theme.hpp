@@ -35,6 +35,10 @@ namespace ui::theme
         Ok,
         Neutral,
         Accent,
+        SceneBackground,
+        SceneAxisX,
+        SceneAxisY,
+        SceneAxisZ,
         Count
     };
 

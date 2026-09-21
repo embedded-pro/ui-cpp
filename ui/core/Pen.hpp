@@ -12,11 +12,21 @@ namespace ui
         Dot
     };
 
+    // Square is the default because it is what QPen already does, so adding this changes no
+    // existing widget's output.
+    enum class LineCap : std::uint8_t
+    {
+        Square,
+        Flat,
+        Round
+    };
+
     struct Pen
     {
         Color color{ colors::black };
         float width{ 1.0f };
         LineStyle style{ LineStyle::Solid };
+        LineCap cap{ LineCap::Square };
 
         [[nodiscard]] constexpr bool operator==(const Pen& other) const = default;
     };

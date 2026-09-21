@@ -60,11 +60,26 @@ namespace ui::backend::qt
         }
     }
 
+    [[nodiscard]] inline ::Qt::PenCapStyle ToQt(LineCap cap)
+    {
+        switch (cap)
+        {
+            case LineCap::Flat:
+                return ::Qt::FlatCap;
+            case LineCap::Round:
+                return ::Qt::RoundCap;
+            case LineCap::Square:
+            default:
+                return ::Qt::SquareCap;
+        }
+    }
+
     [[nodiscard]] inline QPen ToQt(const Pen& pen)
     {
         QPen converted{ ToQt(pen.color) };
         converted.setWidthF(pen.width);
         converted.setStyle(ToQt(pen.style));
+        converted.setCapStyle(ToQt(pen.cap));
 
         return converted;
     }

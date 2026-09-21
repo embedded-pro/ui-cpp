@@ -25,6 +25,11 @@ define the behaviour, and any other backend has to match it.
 `ClearClip` removes clipping entirely rather than popping one level. Nested clips are not part of
 the contract.
 
+`LineStyle::None` draws no outline at all, leaving the brush to fill the shape. A transparent pen
+colour renders identically, but the two are not interchangeable: only `LineStyle::None` is
+distinguishable in a recorded command stream from a stroke that was meant to be visible and was
+given the wrong colour.
+
 ## Text
 
 `DrawText` has two overloads. The `Point` overload places the text **baseline** at that point, which
@@ -39,7 +44,11 @@ reason; the `const char*` overload would read past the end.
 
 `MeasureText` is the one question the portable layer asks the backend, because chart margins are
 sized from label widths. It reports the advance width and the line height of the *currently set*
-font, so `SetFont` precedes it.
+font, so `SetFont` precedes it. `LineHeight` reports that same line height without a string, for
+laying out stacked rows where the advance is irrelevant; `MeasureText(t).height == LineHeight()`
+holds for every `t`, and both backends are held to it by a conformance test. Measuring the empty
+string is not a substitute — `RecordingCanvas` reports zero width for it, and a backend is free to
+return an ink box rather than a line box.
 
 ## Batching
 

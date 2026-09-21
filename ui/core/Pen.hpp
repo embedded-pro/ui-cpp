@@ -9,7 +9,8 @@ namespace ui
     {
         Solid,
         Dash,
-        Dot
+        Dot,
+        None
     };
 
     // Square is the default because it is what QPen already does, so adding this changes no

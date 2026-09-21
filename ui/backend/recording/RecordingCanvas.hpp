@@ -81,6 +81,7 @@ namespace ui::backend::recording
         void DrawText(const Rect& rect, TextAlign align, TextVerticalAlign verticalAlign, std::string_view text) override;
 
         [[nodiscard]] Size MeasureText(std::string_view text) const override;
+        [[nodiscard]] float LineHeight() const override;
 
         [[nodiscard]] const std::vector<Command>& Commands() const;
         [[nodiscard]] std::size_t CountOf(CommandKind kind) const;

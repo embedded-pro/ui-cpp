@@ -155,3 +155,20 @@ TEST_F(RecordingCanvasTest, StateGuardEmitsSaveAndRestore)
     EXPECT_EQ(canvas.Commands().front().kind, CommandKind::Save);
     EXPECT_EQ(canvas.Commands().back().kind, CommandKind::Restore);
 }
+
+TEST_F(RecordingCanvasTest, LineStyleNoneIsRecordedRatherThanInferredFromAnInvisibleColour)
+{
+    canvas.SetPen(ui::Pen{ ui::colors::black, 2.0f, ui::LineStyle::None });
+    canvas.DrawRect(ui::Rect{ 0.0f, 0.0f, 4.0f, 4.0f });
+
+    EXPECT_EQ(canvas.Commands().back().pen.style, ui::LineStyle::None);
+    EXPECT_EQ(canvas.Commands().back().pen.color, ui::colors::black);
+}
+
+TEST_F(RecordingCanvasTest, LineHeightMatchesTheHeightMeasureTextReports)
+{
+    canvas.SetFont(ui::FontSpec{ ui::FontFamily::Monospace, 14, false, false });
+
+    EXPECT_NEAR(canvas.LineHeight(), 14.0f, 1e-3f);
+    EXPECT_NEAR(canvas.MeasureText("any text at all").height, canvas.LineHeight(), 1e-3f);
+}

@@ -54,6 +54,8 @@ namespace ui::backend::qt
                 return ::Qt::DashLine;
             case LineStyle::Dot:
                 return ::Qt::DotLine;
+            case LineStyle::None:
+                return ::Qt::NoPen;
             case LineStyle::Solid:
             default:
                 return ::Qt::SolidLine;

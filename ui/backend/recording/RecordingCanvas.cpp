@@ -147,6 +147,11 @@ namespace ui::backend::recording
         return Size{ static_cast<float>(text.size()) * pointSize * advancePerCharacter, pointSize };
     }
 
+    float RecordingCanvas::LineHeight() const
+    {
+        return static_cast<float>(font.pointSize);
+    }
+
     const std::vector<Command>& RecordingCanvas::Commands() const
     {
         return commands;

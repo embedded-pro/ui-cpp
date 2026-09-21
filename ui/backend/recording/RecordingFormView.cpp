@@ -74,6 +74,7 @@ namespace ui::backend::recording
             auto& command = Append(FormCommandKind::CreateAction);
             command.action = action.id;
             command.label = std::string{ action.label };
+            command.buttonRole = action.buttonRole;
         }
 
         for (std::size_t i = 0; i < formModel.Spec().tables.size(); ++i)
@@ -188,6 +189,15 @@ namespace ui::backend::recording
         auto& command = Append(FormCommandKind::SetActionEnabled);
         command.action = action;
         command.flag = isEnabled;
+    }
+
+    void RecordingFormView::SetAction(model::ActionId action, const model::ActionSpec& spec)
+    {
+        auto& command = Append(FormCommandKind::SetActionSpec);
+        command.action = action;
+        command.label = std::string{ spec.label };
+        command.buttonRole = spec.buttonRole;
+        command.number = static_cast<double>(spec.minimumHeight);
     }
 
     bool RecordingFormView::IsControlVisible(model::FieldId field) const

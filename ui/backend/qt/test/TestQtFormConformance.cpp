@@ -1,8 +1,10 @@
 #include "ui/backend/qt/QtFormView.hpp"
+#include "ui/backend/qt/QtTheme.hpp"
 #include "ui/backend/qt/test/FormTestSpec.hpp"
 #include "ui/backend/recording/RecordingFormView.hpp"
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QAbstractButton>
 #include <QSlider>
 #include <algorithm>
 #include <gmock/gmock.h>
@@ -30,6 +32,18 @@ namespace
         [[nodiscard]] QComboBox* NativeChoice() const
         {
             return qobject_cast<QComboBox*>(native.ControlFor(formspec::filterType));
+        }
+
+        [[nodiscard]] const ui::backend::recording::FormCommand* LastRecorded(FormCommandKind kind) const
+        {
+            const auto& commands = recorded.Commands();
+            const auto match = std::find_if(commands.rbegin(), commands.rend(),
+                [kind](const auto& command)
+                {
+                    return command.kind == kind;
+                });
+
+            return match == commands.rend() ? nullptr : &*match;
         }
 
         formspec::Harness nativeHarness;
@@ -161,4 +175,40 @@ TEST_F(QtFormConformanceTest, ASliderRefreshedFromTheModelDoesNotEchoBackAsAnEdi
 
     EXPECT_EQ(changes, 0);
     EXPECT_EQ(qobject_cast<QSlider*>(native.ControlFor(formspec::torque))->value(), 120);
+}
+
+TEST_F(QtFormConformanceTest, BothCarryTheActionsRoleFromItsSpec)
+{
+    const auto* created = LastRecorded(FormCommandKind::CreateAction);
+    ASSERT_NE(created, nullptr);
+
+    EXPECT_EQ(created->buttonRole, ui::theme::ButtonRole::Primary);
+    EXPECT_EQ(created->label, "Compute");
+    EXPECT_EQ(native.ButtonFor(formspec::compute)->text().toStdString(), created->label);
+}
+
+TEST_F(QtFormConformanceTest, BothReportAnActionsNewLabelAfterTheSameFlip)
+{
+    static constexpr ui::model::ActionSpec stopped{ formspec::compute, "Stop", ui::theme::ButtonRole::Stop, 40 };
+
+    native.SetAction(formspec::compute, stopped);
+    recorded.SetAction(formspec::compute, stopped);
+
+    const auto* applied = LastRecorded(FormCommandKind::SetActionSpec);
+    ASSERT_NE(applied, nullptr);
+
+    EXPECT_EQ(applied->label, "Stop");
+    EXPECT_EQ(native.ButtonFor(formspec::compute)->text().toStdString(), applied->label);
+}
+
+TEST_F(QtFormConformanceTest, BothCarryAnActionsNewRoleAfterTheSameFlip)
+{
+    static constexpr ui::model::ActionSpec stopped{ formspec::compute, "Stop", ui::theme::ButtonRole::Stop, 40 };
+
+    native.SetAction(formspec::compute, stopped);
+    recorded.SetAction(formspec::compute, stopped);
+
+    EXPECT_EQ(LastRecorded(FormCommandKind::SetActionSpec)->buttonRole, ui::theme::ButtonRole::Stop);
+    EXPECT_EQ(native.ButtonFor(formspec::compute)->styleSheet(),
+        ui::backend::qt::ButtonStyleSheet(ui::theme::ButtonRole::Stop, ui::theme::Light()));
 }

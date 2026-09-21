@@ -25,7 +25,8 @@ namespace ui::backend::recording
         SetFlag,
         SetVisible,
         SetEnabled,
-        SetActionEnabled
+        SetActionEnabled,
+        SetActionSpec
     };
 
     struct FormCommand
@@ -41,6 +42,7 @@ namespace ui::backend::recording
         double maximum{ 0.0 };
         double step{ 0.0 };
         double tickInterval{ 0.0 };
+        theme::ButtonRole buttonRole{ theme::ButtonRole::Default };
         std::uint8_t decimals{ 0 };
         std::size_t index{ 0 };
         std::size_t count{ 0 };
@@ -58,6 +60,7 @@ namespace ui::backend::recording
         void Refresh() override;
         void Refresh(model::FieldId field) override;
         void SetActionEnabled(model::ActionId action, bool enabled) override;
+        void SetAction(model::ActionId action, const model::ActionSpec& spec) override;
 
         [[nodiscard]] bool IsControlVisible(model::FieldId field) const override;
         [[nodiscard]] bool IsControlEnabled(model::FieldId field) const override;

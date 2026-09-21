@@ -35,6 +35,7 @@ namespace ui::backend::qt
         void Refresh() override;
         void Refresh(model::FieldId field) override;
         void SetActionEnabled(model::ActionId action, bool enabled) override;
+        void SetAction(model::ActionId action, const model::ActionSpec& spec) override;
 
         [[nodiscard]] bool IsControlVisible(model::FieldId field) const override;
         [[nodiscard]] bool IsControlEnabled(model::FieldId field) const override;

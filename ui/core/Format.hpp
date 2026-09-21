@@ -30,6 +30,12 @@ namespace ui
             return Write("{:.{}f}", value, decimals);
         }
 
+        // Precision here is significant digits rather than places, which is what {:g} means by it.
+        [[nodiscard]] std::string_view Significant(float value, int digits)
+        {
+            return Write("{:.{}g}", value, digits);
+        }
+
         [[nodiscard]] std::string_view Scientific(float value, int decimals)
         {
             return Write("{:.{}e}", value, decimals);

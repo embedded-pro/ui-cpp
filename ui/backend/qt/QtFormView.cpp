@@ -328,7 +328,11 @@ namespace ui::backend::qt
         {
             FormatBuffer<48> buffer;
             const auto& spec = model->Field(field);
-            readOut->setText(ToQt(buffer.Fixed(static_cast<float>(model->Number(field)), spec.number.decimals)) + ToQt(spec.suffix));
+            const auto value = static_cast<float>(model->Number(field));
+            const auto digits = spec.number.decimals;
+            const auto text = spec.number.readOut == model::ReadOutStyle::Significant ? buffer.Significant(value, digits) : buffer.Fixed(value, digits);
+
+            readOut->setText(ToQt(text) + ToQt(spec.suffix));
         }
 
         applying = false;

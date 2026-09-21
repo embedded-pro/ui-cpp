@@ -14,6 +14,7 @@ namespace formspec
     inline constexpr ui::model::FieldId normalise{ 5 };
     inline constexpr ui::model::FieldId gainReadOut{ 6 };
     inline constexpr ui::model::FieldId torque{ 7 };
+    inline constexpr ui::model::FieldId inertiaReadOut{ 8 };
     inline constexpr ui::model::GroupId plant{ 10 };
     inline constexpr ui::model::ActionId compute{ 1 };
 
@@ -29,14 +30,15 @@ namespace formspec
 
     // The label carries a multi-byte glyph deliberately: it is how the UTF-8 path from a literal
     // through to a Qt control stays covered on every platform the tests run on.
-    inline constexpr std::array<ui::model::FieldSpec, 7> fields{
+    inline constexpr std::array<ui::model::FieldSpec, 8> fields{
         ui::model::FieldSpec{ cutoff, ui::model::noGroup, ui::model::FieldKind::Number, "Cutoff (λ)", " Hz", { 1.0, 22050.0, 10.0, 1000.0, 1 }, {}, {}, {} },
         ui::model::FieldSpec{ order, ui::model::noGroup, ui::model::FieldKind::Integer, "Order", "", { 3.0, 127.0, 2.0, 31.0, 0 }, {}, {}, {} },
         ui::model::FieldSpec{ filterType, ui::model::noGroup, ui::model::FieldKind::Choice, "Type", "", {}, filterOptions, {}, {} },
         ui::model::FieldSpec{ cutoffHigh, ui::model::noGroup, ui::model::FieldKind::Number, "Cutoff High", " Hz", { 1.0, 22050.0, 10.0, 4000.0, 1 }, {}, {}, ui::model::Condition{ filterType, 0b100u } },
         ui::model::FieldSpec{ normalise, ui::model::noGroup, ui::model::FieldKind::Toggle, "Normalise", "", {}, {}, {}, {} },
         ui::model::FieldSpec{ gainReadOut, plant, ui::model::FieldKind::ReadOut, "Gain", " dB", { 0.0, 100.0, 0.0, 0.0, 2 }, {}, {}, {} },
-        ui::model::FieldSpec{ torque, ui::model::noGroup, ui::model::FieldKind::Slider, "Torque", "", { -200.0, 200.0, 1.0, 0.0, 0, 50.0 }, {}, {}, {} }
+        ui::model::FieldSpec{ torque, ui::model::noGroup, ui::model::FieldKind::Slider, "Torque", "", { -200.0, 200.0, 1.0, 0.0, 0, 50.0 }, {}, {}, {} },
+        ui::model::FieldSpec{ inertiaReadOut, plant, ui::model::FieldKind::ReadOut, "Inertia", " kg\u00b7m\u00b2", { 0.0, 1.0, 0.0, 0.0, 4, 0.0, ui::model::ReadOutStyle::Significant }, {}, {}, {} }
     };
 
     inline constexpr std::array<ui::model::ActionSpec, 1> actions{
@@ -71,7 +73,7 @@ namespace formspec
 
         std::array<double, 8> cells{};
         std::array<ui::model::TableModel, 1> tables{ ui::model::TableModel{ tableSpecs[0], cells } };
-        std::array<ui::model::FieldValue, 7> values{};
+        std::array<ui::model::FieldValue, 8> values{};
 
         ui::model::FormSpec spec;
         ui::model::FormModel model;

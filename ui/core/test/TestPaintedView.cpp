@@ -1,8 +1,27 @@
 #include "ui/core/PaintedView.hpp"
 #include <gmock/gmock.h>
+#include <memory>
 
 namespace
 {
+    class CountingHost
+        : public ui::PaintedViewHost
+    {
+    public:
+        void Invalidate() override
+        {
+            ++invalidates;
+        }
+
+        void OnViewDestroyed() override
+        {
+            viewDestroyed = true;
+        }
+
+        int invalidates{ 0 };
+        bool viewDestroyed{ false };
+    };
+
     class MinimalView
         : public ui::PaintedView
     {
@@ -40,6 +59,7 @@ namespace
     protected:
         MinimalView view;
         WheelOnlyView wheelView;
+        CountingHost host;
     };
 }
 
@@ -48,24 +68,103 @@ TEST_F(PaintedViewTest, MinimumSizeDefaultsToEmpty)
     EXPECT_TRUE(view.MinimumSize().IsEmpty());
 }
 
-TEST_F(PaintedViewTest, RepaintWithoutASubscriberIsHarmless)
+TEST_F(PaintedViewTest, RepaintWithoutAHostIsHarmless)
 {
+    EXPECT_FALSE(view.HasHost());
+
     view.Repaint();
 
     EXPECT_EQ(view.paints, 0);
 }
 
-TEST_F(PaintedViewTest, RepaintNotifiesTheSubscriber)
+TEST_F(PaintedViewTest, RepaintInvalidatesTheAttachedHost)
 {
-    auto repaints = 0;
-    view.onRepaintRequested = [&repaints]
-    {
-        ++repaints;
-    };
+    view.AttachHost(host);
 
     view.Repaint();
 
-    EXPECT_EQ(repaints, 1);
+    EXPECT_TRUE(view.HasHost());
+    EXPECT_EQ(host.invalidates, 1);
+}
+
+TEST_F(PaintedViewTest, ADetachedHostIsNoLongerInvalidated)
+{
+    view.AttachHost(host);
+    view.DetachHost(host);
+
+    view.Repaint();
+
+    EXPECT_FALSE(view.HasHost());
+    EXPECT_EQ(host.invalidates, 0);
+}
+
+TEST_F(PaintedViewTest, DetachingAHostThatIsNotAttachedChangesNothing)
+{
+    CountingHost other;
+    view.AttachHost(host);
+
+    view.DetachHost(other);
+
+    EXPECT_TRUE(view.HasHost());
+}
+
+TEST_F(PaintedViewTest, ADestroyedViewTellsItsHost)
+{
+    auto destroyed = std::make_unique<MinimalView>();
+    destroyed->AttachHost(host);
+
+    destroyed.reset();
+
+    EXPECT_TRUE(host.viewDestroyed);
+}
+
+TEST_F(PaintedViewTest, ADestroyedViewThatDetachedFirstTellsNobody)
+{
+    auto destroyed = std::make_unique<MinimalView>();
+    destroyed->AttachHost(host);
+    destroyed->DetachHost(host);
+
+    destroyed.reset();
+
+    EXPECT_FALSE(host.viewDestroyed);
+}
+
+TEST_F(PaintedViewTest, ARehostedViewInvalidatesOnlyItsNewHost)
+{
+    CountingHost second;
+    view.AttachHost(host);
+
+    view.AttachHost(second);
+    view.Repaint();
+
+    EXPECT_EQ(host.invalidates, 0);
+    EXPECT_EQ(second.invalidates, 1);
+}
+
+TEST_F(PaintedViewTest, AHostDestroyedFirstUnlinksItself)
+{
+    {
+        CountingHost scoped;
+        view.AttachHost(scoped);
+        EXPECT_TRUE(view.HasHost());
+    }
+
+    EXPECT_FALSE(view.HasHost());
+
+    view.Repaint();
+
+    SUCCEED();
+}
+
+TEST_F(PaintedViewTest, AttachingOneHostToASecondViewReleasesTheFirst)
+{
+    MinimalView second;
+    view.AttachHost(host);
+
+    second.AttachHost(host);
+
+    EXPECT_FALSE(view.HasHost());
+    EXPECT_TRUE(second.HasHost());
 }
 
 // The default handlers exist so a widget overrides only the events it cares about; a view that

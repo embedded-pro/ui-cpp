@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ui/core/Callback.hpp"
 #include "ui/core/Canvas.hpp"
 #include "ui/core/Geometry.hpp"
 #include "ui/core/Input.hpp"
+#include "ui/core/PaintedViewHost.hpp"
 
 namespace ui
 {
@@ -14,13 +14,23 @@ namespace ui
         : public InputHandler
     {
     public:
+        PaintedView() = default;
+        PaintedView(const PaintedView& other) = delete;
+        PaintedView& operator=(const PaintedView& other) = delete;
+        ~PaintedView() override;
+
         virtual void Paint(Canvas& canvas, const Rect& bounds) = 0;
 
         [[nodiscard]] virtual Size MinimumSize() const;
 
-        Callback<void()> onRepaintRequested;
+        void AttachHost(PaintedViewHost& newHost);
+        void DetachHost(PaintedViewHost& formerHost);
+        [[nodiscard]] bool HasHost() const;
 
     protected:
         void RequestRepaint() const;
+
+    private:
+        PaintedViewHost* host{ nullptr };
     };
 }

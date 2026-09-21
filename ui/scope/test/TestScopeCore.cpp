@@ -1,4 +1,5 @@
 #include "ui/backend/recording/RecordingCanvas.hpp"
+#include "ui/backend/recording/RecordingPaintedHost.hpp"
 #include "ui/scope/ScopeCore.hpp"
 #include "ui/theme/Theme.hpp"
 #include <cmath>
@@ -269,16 +270,21 @@ TEST_F(ScopeCoreTest, PaintingDoesNotGrowTheScratchBufferEveryFrame)
 
 TEST_F(ScopeCoreTest, TheViewRequestsARepaintWhenTheTimebaseChanges)
 {
-    auto repaints = 0;
-    scope.onRepaintRequested = [&repaints]
-    {
-        ++repaints;
-    };
+    ui::backend::recording::RecordingPaintedHost host{ scope };
 
     scope.SetTimePerDivision(5e-3f);
     scope.SetTriggerLevel(1.0f);
 
-    EXPECT_EQ(repaints, 2);
+    EXPECT_EQ(host.InvalidateCount(), 2u);
+}
+
+TEST_F(ScopeCoreTest, AcquiringSamplesDoesNotRequestARepaint)
+{
+    ui::backend::recording::RecordingPaintedHost host{ scope };
+
+    FeedSine(100);
+
+    EXPECT_EQ(host.InvalidateCount(), 0u);
 }
 
 // FindTriggerPoint is the render-time sweep alignment, not the acquisition trigger that

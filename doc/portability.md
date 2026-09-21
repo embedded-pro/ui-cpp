@@ -15,8 +15,17 @@ which never configures a Qt target.
 ## Tier 2 — abstracted, currently only a Qt implementation
 
 `ui/backend/qt/QtCanvas` implements `ui::Canvas`; `ui/backend/qt/QtPaintedWidget` hosts any
-`ui::PaintedView` in a `QWidget`. Both are replaceable: a second toolkit needs one class each, and
-no widget changes.
+`ui::PaintedView` in a `QWidget` by implementing `ui::PaintedViewHost`. Both are replaceable: a
+second toolkit needs one class each, and no widget changes.
+
+The view and its host link in both directions, and whichever is destroyed first clears the other
+end. That matters because a window destroys its view members before the toolkit deletes the child
+widgets hosting them, so a one-way link leaves the adapter reaching into freed storage.
+
+**Repaint cadence belongs to the host, not to the view.** A view calls `RequestRepaint()` when its
+own configuration changes, never when data arrives: `ScopeCore::AddSample` accepts samples at tens
+of kilohertz while a display follows at tens of hertz, so a host that wants a live trace drives its
+own timer. `RecordingPaintedHost` exists partly to keep that assertable from Tier 1.
 
 `ui/shell/FormView` is implemented by `ui/backend/qt/QtFormView` and by
 `ui/backend/recording/RecordingFormView`; `ui/shell/ShellView` by `ui/backend/qt/QtAppShell` and by

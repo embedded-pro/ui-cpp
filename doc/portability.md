@@ -84,6 +84,14 @@ A repeating group is a fixed set of numeric columns with add and remove, and not
 selection models, per-cell delegates and mixed column types are a spreadsheet rather than a form,
 and are out of scope permanently.
 
+`FormSpec::layout` sits on the composition side of that line, not the manipulation side. It says
+whether a form reads as a column of labelled rows (`Stacked`) or as a single strip of controls
+(`Inline`) — the shape an instrument toolbar wants — and a backend with no rows and columns at all
+is still free to decide what that means. It is deliberately two named intents rather than a
+stretch factor, an alignment flag or a margin: those describe a Qt layout, and describing a Qt
+layout is what this section forbids. A group keeps its own stacked rows under either setting, so
+`Inline` arranges the top level and never reaches inside a group.
+
 ## Verifying a change
 
 Build the `host` preset (no Qt) and the `host-qt` preset (Qt backend and its tests) before pushing.

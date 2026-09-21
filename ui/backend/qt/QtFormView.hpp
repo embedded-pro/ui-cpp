@@ -11,8 +11,10 @@ class QComboBox;
 class QDoubleSpinBox;
 class QFormLayout;
 class QGroupBox;
+class QHBoxLayout;
 class QLabel;
 class QSpinBox;
+class QVBoxLayout;
 
 namespace ui::backend::qt
 {
@@ -59,14 +61,20 @@ namespace ui::backend::qt
         };
 
         void Clear();
-        void CreateField(const model::FieldSpec& field, QFormLayout& layout);
+        void CreateField(const model::FieldSpec& field);
+        void AddRow(model::GroupId group, QWidget* label, QWidget* editor);
         [[nodiscard]] QFormLayout& LayoutFor(model::GroupId group);
         void ApplyConditions();
         void OnFieldChanged(model::FieldId field);
         [[nodiscard]] const Control* Find(model::FieldId field) const;
 
         model::FormModel* model{ nullptr };
+        QVBoxLayout* outerLayout{ nullptr };
         QFormLayout* rootLayout{ nullptr };
+
+        // Non-null only for FormLayout::Inline, where it replaces rootLayout as the destination for
+        // ungrouped controls; a group keeps its own stacked rows either way.
+        QHBoxLayout* inlineLayout{ nullptr };
 
         std::vector<Control> controls;
         std::vector<Action> actions;

@@ -249,3 +249,12 @@ TEST_F(FormModelTest, WritingAnUnknownFieldIsIgnoredRatherThanFatal)
     EXPECT_EQ(notified, 0);
     EXPECT_NEAR(model.Number(FieldId{ 999 }), 0.0, 1e-9);
 }
+
+TEST_F(FormModelTest, AFormIsStackedUnlessItAsksNotToBe)
+{
+    EXPECT_EQ(model.Spec().layout, ui::model::FormLayout::Stacked);
+
+    const FormSpec inlineSpec{ groups, fields, {}, {}, ui::model::FormLayout::Inline };
+
+    EXPECT_EQ(inlineSpec.layout, ui::model::FormLayout::Inline);
+}

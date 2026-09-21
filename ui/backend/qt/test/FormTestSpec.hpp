@@ -52,7 +52,9 @@ namespace formspec
     class Harness
     {
     public:
-        Harness()
+        explicit Harness(ui::model::FormLayout layout = ui::model::FormLayout::Stacked)
+            : spec{ groups, fields, actions, tableSpecs, layout }
+            , model{ spec, values, tables }
         {
             model.Table(0).AddRow();
         }
@@ -71,7 +73,7 @@ namespace formspec
         std::array<ui::model::TableModel, 1> tables{ ui::model::TableModel{ tableSpecs[0], cells } };
         std::array<ui::model::FieldValue, 7> values{};
 
-        ui::model::FormSpec spec{ groups, fields, actions, tableSpecs };
-        ui::model::FormModel model{ spec, values, tables };
+        ui::model::FormSpec spec;
+        ui::model::FormModel model;
     };
 }

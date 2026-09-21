@@ -106,7 +106,7 @@ namespace ui::scope
     ScopeControls::ScopeControls(ChannelCount channels)
         : channelOptions(MakeChannelOptions(channels.value))
         , fields(MakeFields(std::span{ channelOptions }.first(channels.value)))
-        , spec(model::FormSpec{ {}, fields, actions, {} })
+        , spec(model::FormSpec{ {}, fields, actions, {}, model::FormLayout::Inline })
         , model(spec, values, {})
     {
         model.SetSelection(field::timePerDivision, defaultTimePerDivision);

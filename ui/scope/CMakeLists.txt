@@ -2,11 +2,17 @@ ui_add_library(ui.scope
     SOURCES
         RingBuffer.cpp
         RingBuffer.hpp
+        ScopeControls.cpp
+        ScopeControls.hpp
+        ScopeController.cpp
+        ScopeController.hpp
         ScopeCore.cpp
         ScopeCore.hpp
         Trigger.hpp
     LINK
         ui.core
+        ui.model
+        ui.shell
         ui.theme
 )
 

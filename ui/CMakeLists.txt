@@ -1,5 +1,7 @@
 add_subdirectory(core)
 add_subdirectory(theme)
+add_subdirectory(model)
+add_subdirectory(shell)
 add_subdirectory(charts)
 add_subdirectory(scope)
 add_subdirectory(scene)

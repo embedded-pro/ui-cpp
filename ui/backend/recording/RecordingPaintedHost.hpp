@@ -5,8 +5,6 @@
 
 namespace ui::backend::recording
 {
-    // The second PaintedViewHost, and the only way a Tier 1 test can assert that a view asked to
-    // be repainted or that it announced its own destruction.
     class RecordingPaintedHost
         : public PaintedViewHost
     {

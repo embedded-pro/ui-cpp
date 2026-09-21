@@ -98,8 +98,6 @@ TEST_F(PaintedViewTest, ADetachedHostIsNoLongerInvalidated)
     EXPECT_EQ(host.invalidates, 0);
 }
 
-// Detaching is idempotent so a host that has already been told the view is gone can still run its
-// own destructor without reaching back into freed storage.
 TEST_F(PaintedViewTest, DetachingAHostThatIsNotAttachedChangesNothing)
 {
     CountingHost other;
@@ -143,8 +141,6 @@ TEST_F(PaintedViewTest, ARehostedViewInvalidatesOnlyItsNewHost)
     EXPECT_EQ(second.invalidates, 1);
 }
 
-// A host destroyed while still linked clears the view's pointer itself, so the view does not call
-// OnViewDestroyed on a base whose derived part has already unwound.
 TEST_F(PaintedViewTest, AHostDestroyedFirstUnlinksItself)
 {
     {
@@ -160,8 +156,6 @@ TEST_F(PaintedViewTest, AHostDestroyedFirstUnlinksItself)
     SUCCEED();
 }
 
-// One host hosts one view: re-pointing a host at a second view has to unlink the first, or the
-// first view would notify a host that no longer refers to it.
 TEST_F(PaintedViewTest, AttachingOneHostToASecondViewReleasesTheFirst)
 {
     MinimalView second;

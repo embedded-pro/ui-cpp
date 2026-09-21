@@ -20,9 +20,6 @@ namespace ui
 
         [[nodiscard]] virtual Size MinimumSize() const;
 
-        // The link is two-way so that neither side outlives the other's knowledge of it. A window
-        // destroys its view members before ~QMainWindow deletes the child widgets hosting them, so
-        // without the destroyed-view notification the adapter would reach into freed storage.
         void AttachHost(PaintedViewHost& newHost);
         void DetachHost(PaintedViewHost& formerHost);
         [[nodiscard]] bool HasHost() const;

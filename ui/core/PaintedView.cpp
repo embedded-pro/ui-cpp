@@ -7,8 +7,6 @@ namespace ui
         if (host == nullptr)
             return;
 
-        // Clear both ends before the notification: the host may destroy itself in response, and
-        // ~PaintedViewHost would otherwise reach back into a view that is already unwinding.
         auto* departing = host;
         host = nullptr;
         departing->view = nullptr;

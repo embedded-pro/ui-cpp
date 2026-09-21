@@ -72,8 +72,6 @@ TEST_F(RecordingPaintedHostTest, AHostDestroyedFirstLeavesTheViewUnhosted)
     SUCCEED();
 }
 
-// The ordering the link exists for: a window destroys its view members before ~QMainWindow deletes
-// the child widgets hosting them, so the host must survive the view going first.
 TEST_F(RecordingPaintedHostTest, AViewDestroyedFirstIsReportedAndClearsThePointer)
 {
     auto owned = std::make_unique<CountingView>();

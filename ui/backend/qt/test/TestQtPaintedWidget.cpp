@@ -216,14 +216,9 @@ TEST_F(QtPaintedWidgetTest, DestroyingTheWidgetDetachesItFromTheView)
         EXPECT_TRUE(view.HasHost());
     }
 
-    // The fixture's own widget re-attached itself first, so the view stays hosted; what matters is
-    // that the destroyed widget is no longer the one it points at.
     view.Repaint();
 }
 
-// The ordering this link exists for. A window destroys its chart and scene members before
-// ~QMainWindow deletes the child widgets hosting them, so the widget must tolerate its view
-// vanishing underneath it.
 TEST_F(QtPaintedWidgetTest, AViewDestroyedBeforeItsWidgetLeavesTheWidgetInert)
 {
     auto owned = std::make_unique<::testing::StrictMock<PaintedViewMock>>();

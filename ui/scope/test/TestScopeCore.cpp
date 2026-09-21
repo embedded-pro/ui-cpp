@@ -278,8 +278,6 @@ TEST_F(ScopeCoreTest, TheViewRequestsARepaintWhenTheTimebaseChanges)
     EXPECT_EQ(host.InvalidateCount(), 2u);
 }
 
-// Acquisition deliberately does not invalidate: samples arrive far faster than any display can
-// follow, so the repaint cadence belongs to the host rather than to the sample rate.
 TEST_F(ScopeCoreTest, AcquiringSamplesDoesNotRequestARepaint)
 {
     ui::backend::recording::RecordingPaintedHost host{ scope };

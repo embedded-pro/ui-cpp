@@ -18,8 +18,6 @@ namespace ui::backend::qt
     public:
         explicit QtPaintedWidget(PaintedView& view, QWidget* parent = nullptr);
 
-        // ~PaintedViewHost clears the link, so a view outliving this widget stops repainting a
-        // destroyed QWidget without any explicit teardown here.
         ~QtPaintedWidget() override;
 
         // A view that paints its own opaque background (the oscilloscope) selects

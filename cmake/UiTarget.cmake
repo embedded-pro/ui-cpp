@@ -66,7 +66,9 @@ endfunction()
 
 function(ui_set_warnings target)
     if (MSVC)
-        target_compile_options(${target} PRIVATE /W4)
+        # /utf-8 is not cosmetic here: field labels carry theta, omega, lambda and a degree sign,
+        # and without it MSVC reads those literals in the host code page and mangles them.
+        target_compile_options(${target} PRIVATE /W4 /utf-8)
     else()
         target_compile_options(${target} PRIVATE -Wall -Wextra)
     endif()

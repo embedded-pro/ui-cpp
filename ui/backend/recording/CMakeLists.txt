@@ -2,6 +2,11 @@ ui_add_library(ui.backend.recording
     SOURCES
         RecordingCanvas.cpp
         RecordingCanvas.hpp
+        RecordingFormView.cpp
+        RecordingFormView.hpp
+        RecordingShell.cpp
+        RecordingShell.hpp
     LINK
         ui.core
+        ui.shell
 )

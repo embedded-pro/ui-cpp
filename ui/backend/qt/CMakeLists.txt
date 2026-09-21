@@ -4,9 +4,15 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS Core Gui Widgets)
 
 ui_add_library(ui.backend.qt QT
     SOURCES
+        QtAppShell.cpp
+        QtAppShell.hpp
         QtCanvas.cpp
         QtCanvas.hpp
         QtConversions.hpp
+        QtFormTable.cpp
+        QtFormTable.hpp
+        QtFormView.cpp
+        QtFormView.hpp
         QtPaintedWidget.cpp
         QtPaintedWidget.hpp
         QtTheme.cpp
@@ -14,6 +20,7 @@ ui_add_library(ui.backend.qt QT
     LINK
         ui.core
         ui.theme
+        ui.shell
         Qt6::Widgets
 )
 

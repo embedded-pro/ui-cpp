@@ -214,3 +214,37 @@ TEST_F(QtConformanceTest, ClippingKeepsTheTraceInsideTheRecordedPlotArea)
                 EXPECT_LE(static_cast<float>(x), clip->rect.Right() + 1.0f);
             }
 }
+
+TEST_F(QtConformanceTest, BothBackendsAgreeOnASuppressedOutline)
+{
+    QPainter painter{ &image };
+    ui::backend::qt::QtCanvas canvas{ painter };
+
+    for (auto* target : std::initializer_list<ui::Canvas*>{ &recording, &canvas })
+    {
+        target->SetPen(ui::Pen{ ui::colors::black, 8.0f, ui::LineStyle::None });
+        target->SetBrush(ui::Brush{ ui::Color::Rgb(0x2980B9) });
+        target->DrawEllipse(ui::Point{ 320.0f, 240.0f }, 40.0f, 40.0f);
+    }
+
+    painter.end();
+
+    EXPECT_EQ(recording.Commands().back().pen.style, ui::LineStyle::None);
+    EXPECT_EQ(image.pixel(320, 240), qRgb(0x29, 0x80, 0xB9));
+    EXPECT_FALSE(HasInk(image, QRect{ 0, 0, 640, 160 }, background));
+}
+
+TEST_F(QtConformanceTest, BothBackendsReportLineHeightAsTheHeightTheyMeasure)
+{
+    QPainter painter{ &image };
+    ui::backend::qt::QtCanvas canvas{ painter };
+
+    const ui::FontSpec font{ ui::FontFamily::UiDefault, 10, false, false };
+    recording.SetFont(font);
+    canvas.SetFont(font);
+
+    EXPECT_NEAR(recording.MeasureText("readout").height, recording.LineHeight(), 1e-3f);
+    EXPECT_NEAR(canvas.MeasureText("readout").height, canvas.LineHeight(), 1e-3f);
+
+    painter.end();
+}

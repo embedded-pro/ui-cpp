@@ -120,6 +120,11 @@ namespace ui::backend::qt
         return Size{ static_cast<float>(metrics.horizontalAdvance(ToQt(text))), static_cast<float>(metrics.height()) };
     }
 
+    float QtCanvas::LineHeight() const
+    {
+        return static_cast<float>(QFontMetricsF{ painter->font() }.height());
+    }
+
     void QtCanvas::CopyInto(std::span<const Point> points)
     {
         scratch.resize(static_cast<qsizetype>(points.size()));

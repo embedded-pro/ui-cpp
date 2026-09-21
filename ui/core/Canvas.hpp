@@ -46,6 +46,7 @@ namespace ui
         virtual void DrawText(const Rect& rect, TextAlign align, TextVerticalAlign verticalAlign, std::string_view text) = 0;
 
         [[nodiscard]] virtual Size MeasureText(std::string_view text) const = 0;
+        [[nodiscard]] virtual float LineHeight() const = 0;
     };
 
     class CanvasStateGuard

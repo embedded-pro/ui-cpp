@@ -46,6 +46,7 @@ namespace ui::backend::qt
         void DrawText(const Rect& rect, TextAlign align, TextVerticalAlign verticalAlign, std::string_view text) override;
 
         [[nodiscard]] Size MeasureText(std::string_view text) const override;
+        [[nodiscard]] float LineHeight() const override;
 
     private:
         void CopyInto(std::span<const Point> points);

@@ -207,3 +207,32 @@ TEST_F(QtCanvasTest, MeasureTextIsEmptyForEmptyText)
 {
     EXPECT_NEAR(canvas.MeasureText("").width, 0.0f, 1e-3f);
 }
+
+TEST_F(QtCanvasTest, LineStyleNoneSuppressesTheOutlineButKeepsTheFill)
+{
+    canvas.SetPen(ui::Pen{ ui::colors::black, 6.0f, ui::LineStyle::None });
+    canvas.SetBrush(ui::Brush{ ui::Color::Rgb(0x27AE60) });
+    canvas.DrawEllipse(ui::Point{ 100.0f, 80.0f }, 30.0f, 30.0f);
+    Finish();
+
+    EXPECT_EQ(image.pixel(100, 80), qRgb(0x27, 0xAE, 0x60));
+    EXPECT_FALSE(HasInk(image, QRect{ 0, 0, 200, 40 }, background));
+}
+
+TEST_F(QtCanvasTest, LineHeightMatchesTheHeightMeasureTextReports)
+{
+    canvas.SetFont(ui::FontSpec{ ui::FontFamily::UiDefault, 12, false, false });
+
+    for (const auto* text : { "", "x", "Mg", "a much longer run of text" })
+        EXPECT_NEAR(canvas.MeasureText(text).height, canvas.LineHeight(), 1e-3f);
+}
+
+TEST_F(QtCanvasTest, LineHeightGrowsWithThePointSize)
+{
+    canvas.SetFont(ui::FontSpec{ ui::FontFamily::UiDefault, 8, false, false });
+    const auto small = canvas.LineHeight();
+
+    canvas.SetFont(ui::FontSpec{ ui::FontFamily::UiDefault, 20, false, false });
+
+    EXPECT_GT(canvas.LineHeight(), small);
+}

@@ -1,5 +1,6 @@
 add_subdirectory(core)
 add_subdirectory(theme)
+add_subdirectory(terminal)
 add_subdirectory(model)
 add_subdirectory(shell)
 add_subdirectory(charts)

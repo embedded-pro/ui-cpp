@@ -32,7 +32,8 @@ Every component is Tier 1, 2 or 3. The tier is not advisory — it is enforced i
 **Tier 1 — genuinely backend-agnostic.** No `<Q...>` include, no `Qt6::` link, builds and tests
 on Linux, macOS and Windows with no Qt installed.
 Everything under `ui/` **except** the toolkit backends — today `ui/core/`, `ui/theme/`, `ui/model/`,
-`ui/shell/`, `ui/charts/`, `ui/scope/`, `ui/scene/` and `ui/backend/recording/`. The CI check is
+`ui/shell/`, `ui/charts/`, `ui/scope/`, `ui/scene/`, `ui/widgets/`, `ui/terminal/` and
+`ui/backend/recording/`. The CI check is
 phrased as that exclusion, so a directory added later
 is policed without anyone remembering to list it.
 

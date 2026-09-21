@@ -12,6 +12,11 @@ These compile and their tests run on Linux, macOS and Windows with no Qt install
 CI proves it: the `macos-latest` and `windows-latest` jobs build the `host-single-Debug` preset,
 which never configures a Qt target.
 
+`ui/terminal/` is Tier 1 but is deliberately **not** on the allocation-free list. A VT100
+scrollback is unbounded by definition, and `Vt100Terminal::TakeOutgoing` returns a string; pinning
+either would mean a fixed history nobody asked for. Neither the parser nor the screen sits on a
+per-sample path, so the rule that exists to keep `Paint` allocation-free does not apply to them.
+
 ## Tier 2 — abstracted, currently only a Qt implementation
 
 `ui/backend/qt/QtCanvas` implements `ui::Canvas`; `ui/backend/qt/QtPaintedWidget` hosts any

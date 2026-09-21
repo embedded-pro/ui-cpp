@@ -174,6 +174,21 @@ TEST_F(ScopeControlsTest, SingleAlsoMovesTheTriggerModeChoiceToMatch)
         static_cast<std::size_t>(ui::scope::TriggerMode::Single));
 }
 
+TEST_F(ScopeControlsTest, SingleTellsTheViewToRedrawTheTriggerModeChoice)
+{
+    view.PressAction(ui::scope::field::single);
+
+    const auto& commands = view.Commands();
+    const auto refreshed = std::find_if(commands.rbegin(), commands.rend(),
+        [](const auto& command)
+        {
+            return command.kind == FormCommandKind::SetSelection && command.field == ui::scope::field::triggerMode;
+        });
+
+    ASSERT_NE(refreshed, commands.rend());
+    EXPECT_EQ(refreshed->index, static_cast<std::size_t>(ui::scope::TriggerMode::Single));
+}
+
 TEST_F(ScopeControlsTest, ForceTriggersTheSweepWithoutChangingTheMode)
 {
     const auto before = scope.CurrentTriggerMode();

@@ -5,6 +5,7 @@ add_subdirectory(shell)
 add_subdirectory(charts)
 add_subdirectory(scope)
 add_subdirectory(scene)
+add_subdirectory(widgets)
 add_subdirectory(backend/recording)
 
 if (UI_BUILD_QT_BACKEND)

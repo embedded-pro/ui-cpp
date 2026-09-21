@@ -19,13 +19,24 @@ namespace ui::widgets
 
         constexpr std::size_t corners{ 6 };
 
+        int LabelDecimals(float stepVolts)
+        {
+            if (stepVolts >= 1.0f)
+                return 0;
+
+            if (stepVolts >= 0.1f)
+                return 1;
+
+            return 2;
+        }
+
         Point ToScreen(Point centre, float vx, float vy, float scale)
         {
             return Point{ centre.x + vx * scale, centre.y - vy * scale };
         }
     }
 
-    HexagonCore::HexagonCore(HexagonConfig config)
+    HexagonCore::HexagonCore(const HexagonConfig& config)
         : config(config)
     {}
 
@@ -143,14 +154,10 @@ namespace ui::widgets
         DrawReadOut(canvas, plotArea);
     }
 
-    void HexagonCore::DrawAxes(Canvas& canvas, const Rect& plotArea, Point centre, float scale) const
+    void HexagonCore::DrawTicks(Canvas& canvas, const Rect& plotArea, Point centre, float scale, float stepVolts) const
     {
         const auto axisHalfRange = (plotArea.width / 2.0f) / scale;
-        const auto stepVolts = TickStep(axisHalfRange, config.targetTicks);
-        const auto decimals = stepVolts >= 1.0f ? 0 : (stepVolts >= 0.1f ? 1 : 2);
-
-        canvas.SetFont(FontSpec{ FontFamily::UiDefault, config.axisLabelPointSize });
-
+        const auto decimals = LabelDecimals(stepVolts);
         const auto firstTick = static_cast<int>(std::floor(-axisHalfRange / stepVolts)) + 1;
         const auto lastTick = static_cast<int>(std::floor(axisHalfRange / stepVolts));
 
@@ -165,23 +172,31 @@ namespace ui::widgets
             const auto x = centre.x + volts * scale;
             const auto y = centre.y - volts * scale;
 
-            canvas.SetPen(Pen{ config.grid, 1.0f, LineStyle::Dot });
+            canvas.SetPen(Pen{ config.palette.grid, 1.0f, LineStyle::Dot });
             canvas.DrawLine(Point{ x, plotArea.Top() }, Point{ x, plotArea.Bottom() });
             canvas.DrawLine(Point{ plotArea.Left(), y }, Point{ plotArea.Right(), y });
 
-            canvas.SetPen(Pen{ config.tickLabel });
+            canvas.SetPen(Pen{ config.palette.tickLabel });
             const auto label = buffer.Fixed(volts, decimals);
             canvas.DrawText(Point{ x - 12.0f, plotArea.Bottom() + 14.0f }, label);
             canvas.DrawText(Point{ plotArea.Left() - 34.0f, y + 4.0f }, label);
         }
+    }
 
-        canvas.SetPen(Pen{ config.axis });
+    void HexagonCore::DrawAxes(Canvas& canvas, const Rect& plotArea, Point centre, float scale) const
+    {
+        const auto axisHalfRange = (plotArea.width / 2.0f) / scale;
+
+        canvas.SetFont(FontSpec{ FontFamily::UiDefault, config.axisLabelPointSize });
+        DrawTicks(canvas, plotArea, centre, scale, TickStep(axisHalfRange, config.targetTicks));
+
+        canvas.SetPen(Pen{ config.palette.axis });
         canvas.DrawLine(Point{ plotArea.Left(), centre.y }, Point{ plotArea.Right(), centre.y });
         canvas.DrawLine(Point{ centre.x, plotArea.Top() }, Point{ centre.x, plotArea.Bottom() });
 
-        canvas.SetPen(Pen{ config.axisLabel });
-        canvas.DrawText(Point{ centre.x + 6.0f, plotArea.Top() - 8.0f }, "β (V)");
-        canvas.DrawText(Point{ plotArea.Right() + 6.0f, centre.y + 4.0f }, "α (V)");
+        canvas.SetPen(Pen{ config.palette.axisLabel });
+        canvas.DrawText(Point{ centre.x + 6.0f, plotArea.Top() - 8.0f }, "\u03b2 (V)");
+        canvas.DrawText(Point{ plotArea.Right() + 6.0f, centre.y + 4.0f }, "\u03b1 (V)");
     }
 
     void HexagonCore::DrawHexagon(Canvas& canvas, Point centre, float scale) const
@@ -195,16 +210,16 @@ namespace ui::widgets
             hexagon[k] = Point{ centre.x + offset.x, centre.y + offset.y };
         }
 
-        canvas.SetPen(Pen{ config.outline });
+        canvas.SetPen(Pen{ config.palette.outline });
         canvas.SetBrush(Brush{ colors::transparent });
         canvas.DrawPolygon(hexagon);
 
-        canvas.SetPen(Pen{ config.sector, 1.0f, LineStyle::Dash });
+        canvas.SetPen(Pen{ config.palette.sector, 1.0f, LineStyle::Dash });
         for (const auto& corner : hexagon)
             canvas.DrawLine(centre, corner);
 
-        canvas.SetPen(Pen{ config.vertex, 1.0f, LineStyle::None });
-        canvas.SetBrush(Brush{ config.vertex });
+        canvas.SetPen(Pen{ config.palette.vertex, 1.0f, LineStyle::None });
+        canvas.SetBrush(Brush{ config.palette.vertex });
         for (const auto& corner : hexagon)
             canvas.DrawEllipse(corner, config.vertexRadius, config.vertexRadius);
     }
@@ -213,7 +228,7 @@ namespace ui::widgets
     {
         const auto radius = invSqrt3 * dcLinkVolts * scale;
 
-        canvas.SetPen(Pen{ config.inscribedCircle, 2.0f });
+        canvas.SetPen(Pen{ config.palette.inscribedCircle, 2.0f });
         canvas.SetBrush(Brush{ colors::transparent });
         canvas.DrawEllipse(centre, radius, radius);
     }
@@ -229,11 +244,11 @@ namespace ui::widgets
             const auto normalised = (magnitudes[i] / peak) * circleRadius;
             const auto tip = ToScreen(centre, normalised * std::cos(phaseAngles[i]), normalised * std::sin(phaseAngles[i]), scale);
 
-            canvas.SetPen(Pen{ config.phase[i], 2.0f });
+            canvas.SetPen(Pen{ config.palette.phase[i], 2.0f });
             canvas.DrawLine(centre, tip);
 
-            canvas.SetPen(Pen{ config.phasorTip, 1.0f, LineStyle::None });
-            canvas.SetBrush(Brush{ config.phasorTip });
+            canvas.SetPen(Pen{ config.palette.phasorTip, 1.0f, LineStyle::None });
+            canvas.SetBrush(Brush{ config.palette.phasorTip });
             canvas.DrawEllipse(tip, config.phasorTipRadius, config.phasorTipRadius);
         }
     }
@@ -248,7 +263,7 @@ namespace ui::widgets
         const auto scaleFactor = InscribedRadius() / magnitude;
         const auto tip = ToScreen(centre, vAlphaSample * scaleFactor, vBetaSample * scaleFactor, scale);
 
-        canvas.SetPen(Pen{ config.resultant, 3.0f });
+        canvas.SetPen(Pen{ config.palette.resultant, 3.0f });
         canvas.DrawLine(centre, tip);
 
         const auto angle = std::atan2(vBetaSample, vAlphaSample);
@@ -260,8 +275,8 @@ namespace ui::widgets
                 tip.y + config.arrowHeadLength * std::sin(angle + config.arrowHeadHalfAngle) }
         };
 
-        canvas.SetPen(Pen{ config.resultant, 1.0f, LineStyle::None });
-        canvas.SetBrush(Brush{ config.resultant });
+        canvas.SetPen(Pen{ config.palette.resultant, 1.0f, LineStyle::None });
+        canvas.SetBrush(Brush{ config.palette.resultant });
         canvas.DrawPolygon(arrow);
     }
 
@@ -291,11 +306,11 @@ namespace ui::widgets
         const Rect box{ plotArea.Right() - boxWidth - 2.0f * padding, plotArea.Top() + padding,
             boxWidth + 2.0f * padding, lineHeight * static_cast<float>(lines.size()) + 2.0f * padding };
 
-        canvas.SetPen(Pen{ config.readOutFill, 1.0f, LineStyle::None });
-        canvas.SetBrush(Brush{ config.readOutFill });
+        canvas.SetPen(Pen{ config.palette.readOutFill, 1.0f, LineStyle::None });
+        canvas.SetBrush(Brush{ config.palette.readOutFill });
         canvas.DrawRect(box);
 
-        canvas.SetPen(Pen{ config.readOutText });
+        canvas.SetPen(Pen{ config.palette.readOutText });
         for (std::size_t i = 0; i != lines.size(); ++i)
             canvas.DrawText(Point{ box.Left() + padding, box.Top() + padding + static_cast<float>(i + 1) * lineHeight - 4.0f }, lines[i]);
     }

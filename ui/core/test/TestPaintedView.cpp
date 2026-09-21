@@ -90,3 +90,13 @@ TEST_F(PaintedViewTest, AnOverriddenHandlerStillReceivesItsEvent)
 
     EXPECT_NEAR(wheelView.lastDelta, 1.5f, 1e-5f);
 }
+
+// wheelView overrides OnWheel, so the base implementation it shadows needs a view that overrides
+// nothing at all to be exercised.
+TEST_F(PaintedViewTest, TheDefaultWheelHandlerIgnoresItsEvent)
+{
+    view.OnWheel(ui::WheelEvent{ ui::Point{ 3.0f, 4.0f }, 2.5f, {} });
+    view.OnMouseLeave();
+
+    SUCCEED();
+}

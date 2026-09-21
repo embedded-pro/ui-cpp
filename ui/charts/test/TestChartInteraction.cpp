@@ -167,3 +167,31 @@ TEST_F(ChartInteractionTest, ZeroWidthPanIsIgnored)
 
     EXPECT_NEAR(interaction.ViewMinimum(), before, tolerance);
 }
+
+// Zooming out further than the data spans must snap back to the data range rather than leaving
+// the chart showing empty space either side of the trace.
+TEST_F(ChartInteractionTest, ZoomingOutPastTheDataSnapsBackToIt)
+{
+    for (auto i = 0; i < 20; ++i)
+        interaction.Zoom(scrollDown, 0.5f);
+
+    EXPECT_NEAR(interaction.ViewMinimum(), 0.0f, tolerance);
+    EXPECT_NEAR(interaction.ViewMaximum(), 10.0f, tolerance);
+    EXPECT_FALSE(interaction.IsZoomed());
+}
+
+// Zooming about the left edge drives the view minimum below the data, and the clamp has to shift
+// the whole window right rather than just raising the minimum and shrinking the span.
+TEST_F(ChartInteractionTest, ClampingAtTheLowerEdgePreservesTheSpan)
+{
+    interaction.Zoom(scrollUp, 0.0f);
+    interaction.Zoom(scrollUp, 0.0f);
+
+    const auto span = interaction.ViewSpan();
+
+    interaction.StartPan(ui::Point{ 100.0f, 0.0f });
+    interaction.UpdatePan(ui::Point{ 900.0f, 0.0f }, 800.0f);
+
+    EXPECT_NEAR(interaction.ViewMinimum(), 0.0f, tolerance);
+    EXPECT_NEAR(interaction.ViewSpan(), span, tolerance);
+}

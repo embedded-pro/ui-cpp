@@ -12,7 +12,6 @@ namespace ui::scope
         constexpr float traceLineWidth{ 2.0f };
         constexpr float verticalMarginFraction{ 0.1f };
         constexpr float fallbackVerticalRange{ 1.0f };
-        constexpr float degenerateRange{ 1e-12f };
         constexpr float labelInset{ 55.0f };
         constexpr float readoutInset{ 120.0f };
         constexpr float arrowSize{ 6.0f };
@@ -454,13 +453,11 @@ namespace ui::scope
             return;
 
         const auto startSample = SweepStartSample();
-        auto range = ComputeVerticalRange(startSample, sweep);
 
-        if (range.Span() < degenerateRange)
-        {
-            range.minimum -= fallbackVerticalRange / 2.0f;
-            range.maximum += fallbackVerticalRange / 2.0f;
-        }
+        // No degenerate-span guard here: ComputeVerticalRange already floors its margin at
+        // fallbackVerticalRange * verticalMarginFraction, so the span it returns is never smaller
+        // than 0.2. The guard this replaced tested for less than 1e-12 and could never fire.
+        const auto range = ComputeVerticalRange(startSample, sweep);
 
         for (std::size_t channel = 0; channel < channelCount; ++channel)
             if (channelConfigs[channel].enabled)

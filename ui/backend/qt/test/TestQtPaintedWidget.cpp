@@ -212,3 +212,47 @@ TEST_F(QtPaintedWidgetTest, DestroyingTheWidgetClearsTheViewsRepaintCallback)
 
     EXPECT_FALSE(static_cast<bool>(view.onRepaintRequested));
 }
+
+TEST_F(QtPaintedWidgetTest, TheBackgroundRoleSelectsTheFillColour)
+{
+    EXPECT_CALL(view, Paint(::testing::_, ::testing::_));
+
+    widget.SetBackgroundRole(ui::theme::ColorRole::ScopeBackground);
+
+    QImage image{ 200, 160, QImage::Format_ARGB32 };
+    image.fill(qRgb(255, 0, 0));
+    widget.render(&image);
+
+    const auto expected = ui::theme::Light().Get(ui::theme::ColorRole::ScopeBackground);
+    EXPECT_EQ(image.pixel(100, 80), qRgb(expected.red, expected.green, expected.blue));
+}
+
+// The grab cursor is opt-in: a chart wants it while panning, a 3D scene that orbits does not.
+TEST_F(QtPaintedWidgetTest, ThePanCursorIsOnlyShownWhenEnabled)
+{
+    EXPECT_CALL(view, OnMousePress(::testing::_)).Times(2);
+    EXPECT_CALL(view, OnMouseRelease(::testing::_));
+
+    auto press = Mouse(QEvent::MouseButtonPress, QPointF{ 10.0f, 10.0f }, ::Qt::LeftButton);
+    Send(press);
+    EXPECT_NE(widget.cursor().shape(), ::Qt::ClosedHandCursor);
+
+    widget.SetPanCursorEnabled(true);
+    Send(press);
+    EXPECT_EQ(widget.cursor().shape(), ::Qt::ClosedHandCursor);
+
+    auto release = Mouse(QEvent::MouseButtonRelease, QPointF{ 10.0f, 10.0f }, ::Qt::LeftButton);
+    Send(release);
+    EXPECT_NE(widget.cursor().shape(), ::Qt::ClosedHandCursor);
+}
+
+TEST_F(QtPaintedWidgetTest, AViewRepaintRequestReachesTheWidget)
+{
+    EXPECT_CALL(view, Paint(::testing::_, ::testing::_)).Times(::testing::AtLeast(1));
+
+    widget.show();
+    QCoreApplication::processEvents();
+
+    view.onRepaintRequested();
+    QCoreApplication::processEvents();
+}

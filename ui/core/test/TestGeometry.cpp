@@ -1,6 +1,7 @@
 #include "ui/core/Format.hpp"
 #include "ui/core/Geometry.hpp"
 #include <gmock/gmock.h>
+#include <limits>
 
 namespace
 {
@@ -110,4 +111,13 @@ TEST_F(GeometryTest, FormatEngineeringAppliesPrefix)
 {
     EXPECT_EQ(ui::FormatEngineering(1500.0f, 1), "1.5k");
     EXPECT_EQ(ui::FormatEngineering(0.002f, 1), "2.0m");
+}
+
+// log10 of zero is undefined and log10 of a non-finite value is meaningless, so neither may reach
+// the exponent arithmetic; both fall back to plain fixed formatting.
+TEST_F(GeometryTest, FormatEngineeringFallsBackForZeroAndNonFinite)
+{
+    EXPECT_EQ(ui::FormatEngineering(0.0f, 1), ui::FormatFixed(0.0f, 1));
+    EXPECT_EQ(ui::FormatEngineering(std::numeric_limits<float>::infinity(), 1),
+        ui::FormatFixed(std::numeric_limits<float>::infinity(), 1));
 }

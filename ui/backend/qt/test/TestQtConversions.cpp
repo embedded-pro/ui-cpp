@@ -142,3 +142,21 @@ TEST_F(QtConversionsTest, ANonTerminatedViewConvertsByLength)
     EXPECT_EQ(ui::backend::qt::ToQt(source.substr(0, 3)), QStringLiteral("abc"));
     EXPECT_EQ(ui::backend::qt::ToQt(std::string_view{}), QString{});
 }
+
+// The robot arm draws its links with round caps, so this mapping is load-bearing for a consumer
+// even though every widget in this repository leaves the cap at its default.
+TEST_F(QtConversionsTest, LineCapsMapToTheirQtCapStyles)
+{
+    using ui::backend::qt::ToQt;
+
+    EXPECT_EQ(ToQt(ui::LineCap::Flat), ::Qt::FlatCap);
+    EXPECT_EQ(ToQt(ui::LineCap::Round), ::Qt::RoundCap);
+    EXPECT_EQ(ToQt(ui::LineCap::Square), ::Qt::SquareCap);
+}
+
+TEST_F(QtConversionsTest, APenCarriesItsCapStyle)
+{
+    const auto converted = ui::backend::qt::ToQt(ui::Pen{ ui::colors::black, 3.0f, ui::LineStyle::Solid, ui::LineCap::Round });
+
+    EXPECT_EQ(converted.capStyle(), ::Qt::RoundCap);
+}

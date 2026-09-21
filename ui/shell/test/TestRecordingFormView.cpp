@@ -1,4 +1,5 @@
 #include "ui/backend/recording/RecordingFormView.hpp"
+#include <algorithm>
 #include <array>
 #include <gmock/gmock.h>
 
@@ -268,4 +269,42 @@ TEST_F(RecordingFormViewTest, DrivingAViewThatWasNeverBuiltIsHarmless)
     EXPECT_FALSE(unbuilt.PressAddRow(0));
     EXPECT_FALSE(unbuilt.PressRemoveRow(0, 0));
     EXPECT_TRUE(unbuilt.Commands().empty());
+}
+
+TEST_F(RecordingFormViewTest, AnActionIsRealisedWithTheRoleItsSpecCarries)
+{
+    const auto& commands = view.Commands();
+    const auto created = std::find_if(commands.begin(), commands.end(),
+        [](const auto& command)
+        {
+            return command.kind == FormCommandKind::CreateAction;
+        });
+
+    ASSERT_NE(created, commands.end());
+    EXPECT_EQ(created->label, "Compute");
+    EXPECT_EQ(created->buttonRole, ui::theme::ButtonRole::Primary);
+}
+
+TEST_F(RecordingFormViewTest, SettingAnActionRecordsItsNewLabelAndRole)
+{
+    static constexpr ui::model::ActionSpec stopped{ compute, "Stop", ui::theme::ButtonRole::Stop, 40 };
+    view.Clear();
+
+    view.SetAction(compute, stopped);
+
+    ASSERT_EQ(view.Commands().size(), 1u);
+    EXPECT_EQ(view.Commands().back().kind, FormCommandKind::SetActionSpec);
+    EXPECT_EQ(view.Commands().back().action, compute);
+    EXPECT_EQ(view.Commands().back().label, "Stop");
+    EXPECT_EQ(view.Commands().back().buttonRole, ui::theme::ButtonRole::Stop);
+}
+
+TEST_F(RecordingFormViewTest, SettingAnActionDoesNotReportAnEdit)
+{
+    static constexpr ui::model::ActionSpec stopped{ compute, "Stop", ui::theme::ButtonRole::Stop, 40 };
+    const auto before = view.FieldChangeCount();
+
+    view.SetAction(compute, stopped);
+
+    EXPECT_EQ(view.FieldChangeCount(), before);
 }

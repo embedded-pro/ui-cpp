@@ -310,6 +310,20 @@ namespace ui::backend::qt
                 candidate.button->setEnabled(enabled);
     }
 
+    void QtFormView::SetAction(model::ActionId action, const model::ActionSpec& spec)
+    {
+        auto* button = ButtonFor(action);
+
+        if (button == nullptr)
+            return;
+
+        button->setText(ToQt(spec.label));
+        StyleButton(*button, spec.buttonRole);
+
+        if (spec.minimumHeight > 0)
+            button->setMinimumHeight(spec.minimumHeight);
+    }
+
     const QtFormView::Control* QtFormView::Find(model::FieldId field) const
     {
         for (const auto& control : controls)

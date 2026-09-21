@@ -25,6 +25,8 @@ namespace ui::shell
 
         virtual void SetActionEnabled(model::ActionId action, bool enabled) = 0;
 
+        virtual void SetAction(model::ActionId action, const model::ActionSpec& spec) = 0;
+
         // These exist so the conformance suite can put the same question to every implementation.
         [[nodiscard]] virtual bool IsControlVisible(model::FieldId field) const = 0;
         [[nodiscard]] virtual bool IsControlEnabled(model::FieldId field) const = 0;

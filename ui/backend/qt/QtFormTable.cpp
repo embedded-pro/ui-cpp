@@ -43,7 +43,10 @@ namespace ui::backend::qt
 
         connect(addButton, &QPushButton::clicked, this, &QtFormTable::OnAdd);
         connect(removeButton, &QPushButton::clicked, this, &QtFormTable::OnRemove);
-        connect(grid, &QTableWidget::itemChanged, this, &QtFormTable::OnItemChanged);
+        connect(grid, &QTableWidget::itemChanged, this, [this](const QTableWidgetItem* item)
+            {
+                OnItemChanged(item);
+            });
 
         Refresh();
     }
@@ -100,7 +103,7 @@ namespace ui::backend::qt
         }
     }
 
-    void QtFormTable::OnItemChanged(QTableWidgetItem* item)
+    void QtFormTable::OnItemChanged(const QTableWidgetItem* item)
     {
         if (applying || item == nullptr)
             return;

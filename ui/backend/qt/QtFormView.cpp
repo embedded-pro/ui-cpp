@@ -18,11 +18,11 @@ namespace ui::backend::qt
 {
     QtFormView::QtFormView(QWidget* parent)
         : QWidget(parent)
+        , rootLayout(new QFormLayout{})
     {
         auto* outer = new QVBoxLayout{ this };
         outer->setContentsMargins(0, 0, 0, 0);
 
-        rootLayout = new QFormLayout{};
         outer->addLayout(rootLayout);
         outer->addStretch();
     }

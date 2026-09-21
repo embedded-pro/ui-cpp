@@ -62,7 +62,10 @@ namespace ui::backend::qt
 
         tabs->removeTab(static_cast<int>(index));
         tabs->insertTab(static_cast<int>(index), page, title);
-        delete placeholder;
+
+        // removeTab detaches the placeholder without destroying it, and this can run from a slot,
+        // so the deletion is deferred to the event loop rather than done under the caller's stack.
+        placeholder->deleteLater();
 
         tabs->setCurrentIndex(0);
     }

@@ -29,7 +29,7 @@ namespace ui::backend::qt
     private:
         void OnAdd();
         void OnRemove();
-        void OnItemChanged(QTableWidgetItem* item);
+        void OnItemChanged(const QTableWidgetItem* item);
 
         model::FormModel* model;
         std::size_t tableIndex;

@@ -21,7 +21,7 @@ namespace ui::backend::recording
 
     void RecordingShell::ShowAlert(std::string_view title, std::string_view message)
     {
-        alerts.push_back(AlertRecord{ std::string{ title }, std::string{ message } });
+        alerts.emplace_back(std::string{ title }, std::string{ message });
     }
 
     void RecordingShell::SelectPage(std::size_t index)

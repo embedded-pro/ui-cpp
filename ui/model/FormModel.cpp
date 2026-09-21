@@ -211,6 +211,8 @@ namespace ui::model
     // for values written programmatically and for a backend that does not clamp.
     std::optional<Violation> FormModel::Validate() const
     {
+        using enum ViolationKind;
+
         const auto count = std::min(spec->fields.size(), values.size());
 
         for (std::size_t i = 0; i < count; ++i)
@@ -223,14 +225,14 @@ namespace ui::model
             if (field.kind == FieldKind::Number || field.kind == FieldKind::Integer)
             {
                 if (values[i].number < field.number.minimum)
-                    return Violation{ field.id, ViolationKind::BelowMinimum };
+                    return Violation{ field.id, BelowMinimum };
 
                 if (values[i].number > field.number.maximum)
-                    return Violation{ field.id, ViolationKind::AboveMaximum };
+                    return Violation{ field.id, AboveMaximum };
             }
 
             if (field.kind == FieldKind::Choice && field.options.empty())
-                return Violation{ field.id, ViolationKind::NoSelection };
+                return Violation{ field.id, NoSelection };
         }
 
         return std::nullopt;

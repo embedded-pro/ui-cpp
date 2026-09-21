@@ -1,5 +1,6 @@
 #include "ui/backend/recording/RecordingFormView.hpp"
 #include <algorithm>
+#include <ranges>
 
 namespace ui::backend::recording
 {
@@ -7,17 +8,19 @@ namespace ui::backend::recording
     {
         FormCommandKind CreateKindFor(model::FieldKind kind)
         {
+            using enum model::FieldKind;
+
             switch (kind)
             {
-                case model::FieldKind::Integer:
+                case Integer:
                     return FormCommandKind::CreateInteger;
-                case model::FieldKind::Choice:
+                case Choice:
                     return FormCommandKind::CreateChoice;
-                case model::FieldKind::Toggle:
+                case Toggle:
                     return FormCommandKind::CreateToggle;
-                case model::FieldKind::ReadOut:
+                case ReadOut:
                     return FormCommandKind::CreateReadOut;
-                case model::FieldKind::Number:
+                case Number:
                 default:
                     return FormCommandKind::CreateNumber;
             }
@@ -26,10 +29,10 @@ namespace ui::backend::recording
 
     FormCommand& RecordingFormView::Append(FormCommandKind kind)
     {
-        commands.push_back(FormCommand{});
-        commands.back().kind = kind;
+        auto& command = commands.emplace_back();
+        command.kind = kind;
 
-        return commands.back();
+        return command;
     }
 
     void RecordingFormView::Build(model::FormModel& formModel)
@@ -256,7 +259,7 @@ namespace ui::backend::recording
 
     std::size_t RecordingFormView::CountOf(FormCommandKind kind) const
     {
-        return static_cast<std::size_t>(std::count_if(commands.begin(), commands.end(),
+        return static_cast<std::size_t>(std::ranges::count_if(commands,
             [kind](const FormCommand& command)
             {
                 return command.kind == kind;

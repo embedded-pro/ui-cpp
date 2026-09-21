@@ -64,6 +64,14 @@ namespace ui::theme
         Reset
     };
 
+    enum class StatusLevel : std::uint8_t
+    {
+        Neutral,
+        Ok,
+        Warning,
+        Fault
+    };
+
     // Hard-coded rather than derived from text metrics: the backends' text engines disagree, and
     // structural layout must not shift between them.
     struct ChartMetrics

@@ -22,4 +22,9 @@ namespace ui::backend::qt
     void StyleButton(QAbstractButton& button, theme::ButtonRole role, const theme::Theme& theme);
 
     [[nodiscard]] QString ButtonStyleSheet(theme::ButtonRole role, const theme::Theme& theme);
+
+    void StyleStatusLabel(QWidget& label, theme::StatusLevel level);
+    void StyleStatusLabel(QWidget& label, theme::StatusLevel level, const theme::Theme& theme);
+
+    [[nodiscard]] QString StatusStyleSheet(theme::StatusLevel level, const theme::Theme& theme);
 }

@@ -12,6 +12,7 @@ namespace ui::model
     {
         Number,
         Integer,
+        Slider,
         Choice,
         Toggle,
         ReadOut
@@ -26,6 +27,10 @@ namespace ui::model
         double step{ 1.0 };
         double initial{ 0.0 };
         std::uint8_t decimals{ 2 };
+
+        // Slider only, and zero means no tick marks. It is here rather than on a separate spec so
+        // a slider stays a number that happens to be dragged, not a second kind of field.
+        double tickInterval{ 0.0 };
     };
 
     // data defaults to the option's own index, which is what lets one read path serve both the

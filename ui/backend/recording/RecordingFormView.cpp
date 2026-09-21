@@ -15,6 +15,8 @@ namespace ui::backend::recording
             {
                 case Integer:
                     return CreateInteger;
+                case Slider:
+                    return CreateSlider;
                 case Choice:
                     return CreateChoice;
                 case Toggle:
@@ -60,6 +62,7 @@ namespace ui::backend::recording
             command.minimum = field.number.minimum;
             command.maximum = field.number.maximum;
             command.step = field.number.step;
+            command.tickInterval = field.number.tickInterval;
             command.decimals = field.number.decimals;
             command.count = field.options.size();
 

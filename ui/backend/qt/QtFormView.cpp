@@ -10,6 +10,7 @@
 #include <QGroupBox>
 #include <QLabel>
 #include <QPushButton>
+#include <QSlider>
 #include <QSpinBox>
 #include <QVBoxLayout>
 #include <QVariant>
@@ -96,6 +97,28 @@ namespace ui::backend::qt
                     editor->setSuffix(ToQt(field.suffix));
 
                 connect(editor, &QSpinBox::valueChanged, this, [this, id = field.id](int value)
+                    {
+                        if (!applying)
+                            model->SetNumber(id, static_cast<double>(value));
+                    });
+
+                control.editor = editor;
+                break;
+            }
+            case model::FieldKind::Slider:
+            {
+                auto* editor = new QSlider{ ::Qt::Horizontal, this };
+                editor->setRange(static_cast<int>(field.number.minimum), static_cast<int>(field.number.maximum));
+                editor->setSingleStep(static_cast<int>(field.number.step));
+                editor->setValue(static_cast<int>(model->Number(field.id)));
+
+                if (field.number.tickInterval > 0.0)
+                {
+                    editor->setTickInterval(static_cast<int>(field.number.tickInterval));
+                    editor->setTickPosition(QSlider::TicksBelow);
+                }
+
+                connect(editor, &QSlider::valueChanged, this, [this, id = field.id](int value)
                     {
                         if (!applying)
                             model->SetNumber(id, static_cast<double>(value));
@@ -264,6 +287,8 @@ namespace ui::backend::qt
             number->setValue(model->Number(field));
         else if (auto* integer = qobject_cast<QSpinBox*>(control->editor))
             integer->setValue(static_cast<int>(model->Number(field)));
+        else if (auto* slider = qobject_cast<QSlider*>(control->editor))
+            slider->setValue(static_cast<int>(model->Number(field)));
         else if (auto* choice = qobject_cast<QComboBox*>(control->editor))
             choice->setCurrentIndex(static_cast<int>(model->Selection(field)));
         else if (auto* toggle = qobject_cast<QCheckBox*>(control->editor))

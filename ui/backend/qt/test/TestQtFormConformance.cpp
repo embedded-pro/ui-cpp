@@ -3,6 +3,8 @@
 #include "ui/backend/recording/RecordingFormView.hpp"
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QSlider>
+#include <algorithm>
 #include <gmock/gmock.h>
 
 namespace
@@ -105,4 +107,58 @@ TEST_F(QtFormConformanceTest, BothClampTheTableToTheSameCapacity)
 
     EXPECT_EQ(recordedHarness.Model().Table(0).RowCount(), recordedHarness.Model().Table(0).MaximumRows());
     EXPECT_FALSE(recorded.PressAddRow(0));
+}
+
+TEST_F(QtFormConformanceTest, BothRealiseASliderAsItsOwnKindRatherThanANumber)
+{
+    EXPECT_EQ(recorded.CountOf(FormCommandKind::CreateSlider), 1u);
+    EXPECT_NE(qobject_cast<QSlider*>(native.ControlFor(formspec::torque)), nullptr);
+}
+
+TEST_F(QtFormConformanceTest, BothTranscribeTheSlidersRangeAndTicks)
+{
+    auto* slider = qobject_cast<QSlider*>(native.ControlFor(formspec::torque));
+    ASSERT_NE(slider, nullptr);
+
+    EXPECT_EQ(slider->minimum(), -200);
+    EXPECT_EQ(slider->maximum(), 200);
+    EXPECT_EQ(slider->tickInterval(), 50);
+    EXPECT_NE(slider->tickPosition(), QSlider::NoTicks);
+
+    const auto& commands = recorded.Commands();
+    const auto created = std::find_if(commands.begin(), commands.end(),
+        [](const auto& command)
+        {
+            return command.kind == FormCommandKind::CreateSlider;
+        });
+
+    ASSERT_NE(created, commands.end());
+    EXPECT_DOUBLE_EQ(created->minimum, -200.0);
+    EXPECT_DOUBLE_EQ(created->maximum, 200.0);
+    EXPECT_DOUBLE_EQ(created->tickInterval, 50.0);
+}
+
+TEST_F(QtFormConformanceTest, BothDrivingTheSliderReachTheSameModelValue)
+{
+    qobject_cast<QSlider*>(native.ControlFor(formspec::torque))->setValue(-75);
+    recorded.TypeNumber(formspec::torque, -75.0);
+
+    EXPECT_DOUBLE_EQ(nativeHarness.Model().Number(formspec::torque), -75.0);
+    EXPECT_DOUBLE_EQ(recordedHarness.Model().Number(formspec::torque), -75.0);
+}
+
+TEST_F(QtFormConformanceTest, ASliderRefreshedFromTheModelDoesNotEchoBackAsAnEdit)
+{
+    auto changes = 0;
+    nativeHarness.Model().onFieldChanged = [&changes](ui::model::FieldId)
+    {
+        ++changes;
+    };
+
+    nativeHarness.Model().SetNumber(formspec::torque, 120.0);
+    changes = 0;
+    native.Refresh(formspec::torque);
+
+    EXPECT_EQ(changes, 0);
+    EXPECT_EQ(qobject_cast<QSlider*>(native.ControlFor(formspec::torque))->value(), 120);
 }

@@ -23,6 +23,7 @@ namespace
     constexpr FieldId order{ 2 };
     constexpr FieldId filterType{ 3 };
     constexpr FieldId cutoffHigh{ 4 };
+    constexpr FieldId normalise{ 5 };
     constexpr ActionId compute{ 1 };
 
     constexpr std::array<OptionSpec, 3> filterOptions{
@@ -31,11 +32,12 @@ namespace
         OptionSpec{ "Band-Pass", 30 }
     };
 
-    constexpr std::array<FieldSpec, 4> fields{
+    constexpr std::array<FieldSpec, 5> fields{
         FieldSpec{ cutoff, ui::model::noGroup, FieldKind::Number, "Cutoff", " Hz", { 1.0, 22050.0, 10.0, 1000.0, 1 }, {}, {}, {} },
         FieldSpec{ order, ui::model::noGroup, FieldKind::Integer, "Order", "", { 3.0, 127.0, 2.0, 31.0, 0 }, {}, {}, {} },
         FieldSpec{ filterType, ui::model::noGroup, FieldKind::Choice, "Type", "", {}, filterOptions, {}, {} },
-        FieldSpec{ cutoffHigh, ui::model::noGroup, FieldKind::Number, "Cutoff High", " Hz", { 1.0, 22050.0, 10.0, 4000.0, 1 }, {}, {}, Condition{ filterType, 0b100u } }
+        FieldSpec{ cutoffHigh, ui::model::noGroup, FieldKind::Number, "Cutoff High", " Hz", { 1.0, 22050.0, 10.0, 4000.0, 1 }, {}, {}, Condition{ filterType, 0b100u } },
+        FieldSpec{ normalise, ui::model::noGroup, FieldKind::Toggle, "Normalise", "", {}, {}, {}, {} }
     };
 
     constexpr std::array<ui::model::ActionSpec, 1> actions{
@@ -72,7 +74,7 @@ namespace
         std::array<double, 8> cells{};
         std::array<TableModel, 1> tables{ TableModel{ tableSpecs[0], cells } };
 
-        std::array<FieldValue, 4> storage{};
+        std::array<FieldValue, 5> storage{};
         FormSpec spec{ {}, fields, actions, tableSpecs };
         FormModel model{ spec, storage, tables };
         RecordingFormView view;
@@ -111,8 +113,8 @@ TEST_F(RecordingFormViewTest, ANumberCarriesItsRangeStepDecimalsAndSuffix)
 // asserting it here is what stops it regressing.
 TEST_F(RecordingFormViewTest, EveryFieldStatesItsInitialVisibilityAndEnablement)
 {
-    EXPECT_EQ(view.CountOf(FormCommandKind::SetVisible), 4u);
-    EXPECT_EQ(view.CountOf(FormCommandKind::SetEnabled), 4u);
+    EXPECT_EQ(view.CountOf(FormCommandKind::SetVisible), 5u);
+    EXPECT_EQ(view.CountOf(FormCommandKind::SetEnabled), 5u);
     EXPECT_FALSE(view.IsControlEnabled(cutoffHigh));
     EXPECT_TRUE(view.IsControlEnabled(cutoff));
 }
@@ -206,4 +208,64 @@ TEST_F(RecordingFormViewTest, AnUnknownFieldIsNeitherVisibleNorEnabled)
 {
     EXPECT_FALSE(view.IsControlVisible(FieldId{ 999 }));
     EXPECT_FALSE(view.IsControlEnabled(FieldId{ 999 }));
+}
+
+TEST_F(RecordingFormViewTest, TogglingAFlagReachesTheModel)
+{
+    view.ToggleFlag(normalise, true);
+
+    EXPECT_TRUE(model.Flag(normalise));
+    EXPECT_EQ(view.FieldChangeCount(), 1u);
+}
+
+TEST_F(RecordingFormViewTest, RefreshingAToggleRecordsItsFlagRatherThanAValue)
+{
+    model.SetFlag(normalise, true);
+
+    view.Clear();
+    view.Refresh(normalise);
+
+    ASSERT_EQ(view.Commands().size(), 1u);
+    EXPECT_EQ(view.Commands().front().kind, FormCommandKind::SetFlag);
+    EXPECT_TRUE(view.Commands().front().flag);
+}
+
+TEST_F(RecordingFormViewTest, RefreshingAChoiceRecordsItsSelection)
+{
+    model.SetSelection(filterType, 2);
+
+    view.Clear();
+    view.Refresh(filterType);
+
+    ASSERT_EQ(view.Commands().size(), 1u);
+    EXPECT_EQ(view.Commands().front().kind, FormCommandKind::SetSelection);
+    EXPECT_EQ(view.Commands().front().index, 2u);
+}
+
+TEST_F(RecordingFormViewTest, DisablingAnActionIsRecorded)
+{
+    view.Clear();
+    view.SetActionEnabled(compute, false);
+
+    ASSERT_EQ(view.Commands().size(), 1u);
+    EXPECT_EQ(view.Commands().front().action, compute);
+    EXPECT_FALSE(view.Commands().front().flag);
+}
+
+TEST_F(RecordingFormViewTest, TheLabelsReportEveryNamedControl)
+{
+    EXPECT_THAT(view.Labels(), ::testing::IsSupersetOf({ "Cutoff", "Order", "Type", "Cutoff High", "Normalise", "Compute" }));
+}
+
+TEST_F(RecordingFormViewTest, DrivingAViewThatWasNeverBuiltIsHarmless)
+{
+    RecordingFormView unbuilt;
+
+    unbuilt.TypeNumber(cutoff, 1.0);
+    unbuilt.Refresh();
+    unbuilt.Refresh(cutoff);
+
+    EXPECT_FALSE(unbuilt.PressAddRow(0));
+    EXPECT_FALSE(unbuilt.PressRemoveRow(0, 0));
+    EXPECT_TRUE(unbuilt.Commands().empty());
 }

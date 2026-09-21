@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ui/core/Callback.hpp"
 #include "ui/core/Canvas.hpp"
 #include "ui/core/Geometry.hpp"
 #include "ui/core/Input.hpp"
+#include "ui/core/PaintedViewHost.hpp"
 
 namespace ui
 {
@@ -14,13 +14,23 @@ namespace ui
         : public InputHandler
     {
     public:
+        ~PaintedView() override;
+
         virtual void Paint(Canvas& canvas, const Rect& bounds) = 0;
 
         [[nodiscard]] virtual Size MinimumSize() const;
 
-        Callback<void()> onRepaintRequested;
+        // The link is two-way so that neither side outlives the other's knowledge of it. A window
+        // destroys its view members before ~QMainWindow deletes the child widgets hosting them, so
+        // without the destroyed-view notification the adapter would reach into freed storage.
+        void AttachHost(PaintedViewHost& newHost);
+        void DetachHost(PaintedViewHost& formerHost);
+        [[nodiscard]] bool HasHost() const;
 
     protected:
         void RequestRepaint() const;
+
+    private:
+        PaintedViewHost* host{ nullptr };
     };
 }

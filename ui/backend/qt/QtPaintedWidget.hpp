@@ -11,11 +11,15 @@ namespace ui::backend::qt
     // paintEvent/mouseEvent blocks copy-pasted across the consumer repos collapse into it.
     class QtPaintedWidget
         : public QWidget
+        , public PaintedViewHost
     {
         Q_OBJECT
 
     public:
         explicit QtPaintedWidget(PaintedView& view, QWidget* parent = nullptr);
+
+        // ~PaintedViewHost clears the link, so a view outliving this widget stops repainting a
+        // destroyed QWidget without any explicit teardown here.
         ~QtPaintedWidget() override;
 
         // A view that paints its own opaque background (the oscilloscope) selects
@@ -28,6 +32,9 @@ namespace ui::backend::qt
 
         [[nodiscard]] QSize minimumSizeHint() const override;
 
+        void Invalidate() override;
+        void OnViewDestroyed() override;
+
     protected:
         void paintEvent(QPaintEvent* event) override;
         void mousePressEvent(QMouseEvent* event) override;
@@ -39,7 +46,7 @@ namespace ui::backend::qt
         void keyPressEvent(QKeyEvent* event) override;
 
     private:
-        PaintedView& view;
+        PaintedView* view;
         QtCanvas canvas;
         theme::ColorRole backgroundRole{ theme::ColorRole::Background };
         bool panCursorEnabled{ false };

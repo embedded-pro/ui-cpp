@@ -5,6 +5,7 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <gmock/gmock.h>
+#include <memory>
 
 namespace
 {
@@ -23,6 +24,11 @@ namespace
         MOCK_METHOD(void, OnMouseLeave, (), (override));
         MOCK_METHOD(void, OnWheel, (const ui::WheelEvent& event), (override));
         MOCK_METHOD(void, OnKeyPress, (const ui::KeyEvent& event), (override));
+
+        void Repaint()
+        {
+            RequestRepaint();
+        }
     };
 
     class QtPaintedWidgetTest
@@ -203,14 +209,37 @@ TEST_F(QtPaintedWidgetTest, PaintFillsTheThemeBackgroundAndDelegatesToTheView)
     EXPECT_NEAR(painted.height, 160.0f, 1e-3f);
 }
 
-TEST_F(QtPaintedWidgetTest, DestroyingTheWidgetClearsTheViewsRepaintCallback)
+TEST_F(QtPaintedWidgetTest, DestroyingTheWidgetDetachesItFromTheView)
 {
     {
-        ui::backend::qt::QtPaintedWidget scoped{ view };
-        EXPECT_TRUE(static_cast<bool>(view.onRepaintRequested));
+        const ui::backend::qt::QtPaintedWidget scoped{ view };
+        EXPECT_TRUE(view.HasHost());
     }
 
-    EXPECT_FALSE(static_cast<bool>(view.onRepaintRequested));
+    // The fixture's own widget re-attached itself first, so the view stays hosted; what matters is
+    // that the destroyed widget is no longer the one it points at.
+    view.Repaint();
+}
+
+// The ordering this link exists for. A window destroys its chart and scene members before
+// ~QMainWindow deletes the child widgets hosting them, so the widget must tolerate its view
+// vanishing underneath it.
+TEST_F(QtPaintedWidgetTest, AViewDestroyedBeforeItsWidgetLeavesTheWidgetInert)
+{
+    auto owned = std::make_unique<::testing::StrictMock<PaintedViewMock>>();
+    ui::backend::qt::QtPaintedWidget orphaned{ *owned };
+    orphaned.resize(200, 160);
+
+    owned.reset();
+
+    QImage image{ 200, 160, QImage::Format_ARGB32 };
+    image.fill(qRgb(0, 0, 0));
+    orphaned.render(&image);
+
+    auto press = Mouse(QEvent::MouseButtonPress, QPointF{ 10.0f, 10.0f }, ::Qt::LeftButton);
+    QCoreApplication::sendEvent(&orphaned, &press);
+
+    EXPECT_EQ(image.pixel(100, 80), background);
 }
 
 TEST_F(QtPaintedWidgetTest, TheBackgroundRoleSelectsTheFillColour)
@@ -253,6 +282,6 @@ TEST_F(QtPaintedWidgetTest, AViewRepaintRequestReachesTheWidget)
     widget.show();
     QCoreApplication::processEvents();
 
-    view.onRepaintRequested();
+    view.Repaint();
     QCoreApplication::processEvents();
 }

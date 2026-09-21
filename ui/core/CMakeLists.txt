@@ -11,6 +11,8 @@ ui_add_library(ui.core
         Input.hpp
         PaintedView.cpp
         PaintedView.hpp
+        PaintedViewHost.cpp
+        PaintedViewHost.hpp
         Pen.hpp
 )
 

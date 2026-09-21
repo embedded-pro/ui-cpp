@@ -1,4 +1,5 @@
 #include "ui/backend/recording/RecordingCanvas.hpp"
+#include "ui/backend/recording/RecordingPaintedHost.hpp"
 #include "ui/charts/ChartCore.hpp"
 #include "ui/charts/LinearAxis.hpp"
 #include "ui/charts/Log10Axis.hpp"
@@ -254,15 +255,11 @@ TEST_F(ChartCoreTest, DoubleClickResetsTheZoom)
 
 TEST_F(ChartCoreTest, RepaintIsRequestedOnInteraction)
 {
-    auto repaints = 0;
-    chart.onRepaintRequested = [&repaints]
-    {
-        ++repaints;
-    };
+    ui::backend::recording::RecordingPaintedHost host{ chart };
 
     chart.SetAxisValues(LinearAxisValues(20));
 
-    EXPECT_GT(repaints, 0);
+    EXPECT_GT(host.InvalidateCount(), 0u);
 }
 
 TEST_F(FrequencyChartCoreTest, NonPositiveFrequenciesAreDroppedFromThePolyline)

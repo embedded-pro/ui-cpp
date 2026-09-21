@@ -130,7 +130,6 @@ namespace ui::terminal
 
         if (cursor_.column + 1 >= cols_)
         {
-            // Stay at last column; defer wrap until next printable.
             pendingWrap_ = modes_.autoWrap;
             cursor_.column = cols_ - 1;
         }
@@ -389,8 +388,6 @@ namespace ui::terminal
         if (n > regionRows)
             n = regionRows;
 
-        // Push displaced rows from top of region into history,
-        // but only when the scroll region equals the full screen.
         const bool fullScreen = scrollTop_ == 0 && scrollBottom_ == rows_ - 1;
         for (int i = 0; i < n; ++i)
         {
@@ -435,7 +432,6 @@ namespace ui::terminal
             else
                 out.push_back('?');
         }
-        // Trim trailing spaces for convenience.
         while (!out.empty() && out.back() == ' ')
             out.pop_back();
         return out;

@@ -50,7 +50,6 @@ TEST_F(TestVt100Terminal, crlf_starts_a_new_line_with_no_loss)
 
 TEST_F(TestVt100Terminal, byte_chunked_crlf_does_not_lose_characters)
 {
-    // Feed CR then LF as separate Feed() calls (the original failure mode).
     Feed("Hi");
     Feed("\r");
     Feed("\n");
@@ -105,7 +104,7 @@ TEST_F(TestVt100Terminal, cursor_movements_clamp_at_edges)
 TEST_F(TestVt100Terminal, erase_in_line_to_right)
 {
     Feed("12345");
-    Feed("\x1B[3G\x1B[K"); // move to col 3, erase to right
+    Feed("\x1B[3G\x1B[K");
 
     EXPECT_EQ(Line(0), "12");
 }
@@ -325,7 +324,6 @@ TEST_F(TestVt100Terminal, dsr_6_replies_with_cursor_position)
     Feed("\x1B[3;7HX");
     Feed("\x1B[6n");
 
-    // After writing 'X' at (3,7), cursor advances to column 8 (1-based).
     EXPECT_EQ(terminal.TakeOutgoing(), std::string{ "\x1B[3;8R" });
 }
 
@@ -465,10 +463,6 @@ TEST_F(TestVt100Terminal, malformed_csi_is_recovered)
 
 TEST_F(TestVt100Terminal, regression_help_table_with_color_and_tabs)
 {
-    // Simulates the kind of output the firmware CLI emits: colored
-    // banner, CRLF-terminated rows, and tab-aligned columns. Feed it
-    // byte-by-byte to match the worst-case chunking behavior of a
-    // real serial port.
     const std::string output =
         "\x1B[32m== bridge ==\x1B[0m\r\n"
         "h\thelp\r\n"
@@ -484,13 +478,8 @@ TEST_F(TestVt100Terminal, regression_help_table_with_color_and_tabs)
 
 TEST_F(TestVt100Terminal, embedded_control_inside_csi_does_not_lose_text)
 {
-    // CR embedded mid-CSI must be executed inline; the surrounding
-    // sequence and following text must still arrive intact.
     Feed("AB\x1B[1\r;2H");
     Feed("X");
 
-    // The CR moves cursor to column 0 of row 0 mid-sequence; the CSI
-    // then completes as CUP(1,2) -> 0-based (0,1). 'X' overwrites
-    // column 1, so Line(0) reads "AX".
     EXPECT_EQ(Line(0), "AX");
 }

@@ -259,7 +259,7 @@ TEST_F(TestVt100Parser, can_aborts_in_progress_csi)
     ui::terminal::Vt100Parser parser(MakeCallbacks());
 
     parser.Feed(std::string_view{ "\x1B[12" });
-    parser.FeedByte(0x18); // CAN aborts
+    parser.FeedByte(0x18);
     parser.Feed(std::string_view{ "X" });
 
     ASSERT_EQ(events.size(), 1u);
@@ -328,7 +328,6 @@ TEST_F(TestVt100Parser, embedded_c0_in_csi_executes_inline)
 
     parser.Feed(std::string_view{ "\x1B[1\r;2H" });
 
-    // Expect: CR executed, then full CSI dispatched.
     ASSERT_EQ(events.size(), 2u);
     EXPECT_EQ(events[0].kind, ParserEvent::Kind::Execute);
     EXPECT_EQ(events[0].executeByte, 0x0D);

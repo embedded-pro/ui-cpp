@@ -234,28 +234,28 @@ namespace ui::terminal
         {
             case 0x08:
                 screen_.Backspace();
-                break; // BS
+                break;
             case 0x09:
                 screen_.HorizontalTab();
-                break; // HT
-            case 0x0A: // LF
-            case 0x0B: // VT (treated as LF)
+                break;
+            case 0x0A:
+            case 0x0B:
             case 0x0C:
                 screen_.LineFeed();
-                break; // FF (treated as LF)
+                break;
             case 0x0D:
                 screen_.CarriageReturn();
-                break; // CR
+                break;
             case 0x07:
-                break; // BEL: silent
+                break;
             case 0x00:
-                break; // NUL: ignored
+                break;
             case 0x05:
-                break; // ENQ: no answerback configured
+                break;
             case 0x11:
-                break; // XON: ignored
+                break;
             case 0x13:
-                break; // XOFF: ignored
+                break;
             default:
                 break;
         }
@@ -265,7 +265,6 @@ namespace ui::terminal
     {
         if (intermediate == '(' || intermediate == ')' || intermediate == '*' || intermediate == '+')
         {
-            // Character set designation; ignored beyond accepting it.
             return;
         }
         if (intermediate == '#')
@@ -281,34 +280,34 @@ namespace ui::terminal
         {
             case 'D':
                 screen_.Index();
-                break; // IND
+                break;
             case 'E':
                 screen_.NextLine();
-                break; // NEL
+                break;
             case 'M':
                 screen_.ReverseIndex();
-                break; // RI
+                break;
             case 'H':
                 screen_.TabStops().SetHere();
-                break; // HTS
+                break;
             case '7':
                 screen_.CursorOperations().Save();
-                break; // DECSC
+                break;
             case '8':
                 screen_.CursorOperations().Restore();
-                break; // DECRC
+                break;
             case 'c':
                 screen_.Reset();
-                break; // RIS
+                break;
             case '=':
                 screen_.GetModes().applicationKeypad = true;
-                break; // DECKPAM
+                break;
             case '>':
                 screen_.GetModes().applicationKeypad = false;
-                break; // DECKPNM
+                break;
             case 'Z':
                 outgoing_ += deviceAttributesResponse_;
-                break; // DECID
+                break;
             default:
                 break;
         }
@@ -317,7 +316,7 @@ namespace ui::terminal
     void Vt100Terminal::OnCsi(char finalByte, const std::vector<int>& params, bool privateMarker, char intermediate)
     {
         if (intermediate != 0)
-            return; // VT100 core does not implement intermediate-CSIs.
+            return;
 
         switch (finalByte)
         {
@@ -369,13 +368,13 @@ namespace ui::terminal
             case 'm':
                 ApplySgr(params);
                 break;
-            case 'n': // DSR
+            case 'n':
                 if (ParamRaw(params, 0, 0) == 5)
                     ReportDeviceStatus();
                 else if (ParamRaw(params, 0, 0) == 6)
                     ReportCursorPosition();
                 break;
-            case 'c': // DA
+            case 'c':
                 if (!privateMarker)
                     ReportDeviceAttributes();
                 break;
@@ -384,18 +383,17 @@ namespace ui::terminal
                 break;
             case 's':
                 screen_.CursorOperations().Save();
-                break; // SCO save cursor
+                break;
             case 'u':
                 screen_.CursorOperations().Restore();
-                break; // SCO restore cursor
+                break;
             default:
                 break;
         }
     }
 
-    void Vt100Terminal::OnOsc(const std::string& /*payload*/)
+    void Vt100Terminal::OnOsc(const std::string& /*payload*/) const
     {
-        // OSC accepted and ignored. Title-setting could be exposed later.
     }
 
     void Vt100Terminal::ApplySgr(const std::vector<int>& params)
@@ -426,7 +424,6 @@ namespace ui::terminal
 
     void Vt100Terminal::ReportCursorPosition()
     {
-        // 1-based row;column.
         const auto& c = screen_.Cursor();
         outgoing_ += "\x1B[";
         outgoing_ += std::to_string(c.row + 1);

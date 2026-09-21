@@ -12,7 +12,6 @@ namespace ui::terminal
 
         bool IsC0Execute(uint8_t b)
         {
-            // 0x00..0x17, 0x19, 0x1C..0x1F. ESC, CAN, SUB are handled separately.
             if (b == ESC_BYTE || b == CAN_BYTE || b == SUB_BYTE)
                 return false;
             if (b <= 0x17)
@@ -101,13 +100,10 @@ namespace ui::terminal
         consumed = true;
         if (b == ESC_BYTE)
         {
-            // ESC always restarts; abandons any in-progress sequence.
             Transition(Escape);
         }
         else if (b == CAN_BYTE || b == SUB_BYTE)
         {
-            // Abort current sequence; SUB conventionally also displays a
-            // substitute character, but we silently drop it for now.
             Transition(Ground);
         }
         else
@@ -120,8 +116,6 @@ namespace ui::terminal
     {
         using enum State;
 
-        // OSC must capture ESC as the first half of ST (ESC \), so handle
-        // OSC states before the generic anywhere transitions.
         if (state_ == OscString)
         {
             HandleOsc(b);
@@ -161,7 +155,7 @@ namespace ui::terminal
                 break;
             case OscString:
             case OscStringEsc:
-                break; // handled above
+                break;
         }
     }
 
@@ -175,11 +169,8 @@ namespace ui::terminal
                 callbacks_.Execute(b);
             return;
         }
-        if (b >= 0x20)
-        {
-            if (callbacks_.Print)
-                callbacks_.Print(static_cast<char32_t>(b));
-        }
+        if (b >= 0x20 && callbacks_.Print)
+            callbacks_.Print(static_cast<char32_t>(b));
     }
 
     void Vt100Parser::HandleEscape(uint8_t b)
@@ -196,8 +187,6 @@ namespace ui::terminal
             return;
         if (IsIntermediate(b))
         {
-            // Collect a single intermediate byte; subsequent intermediates
-            // overwrite for simplicity (sufficient for VT100 sequences).
             intermediate_ = static_cast<char>(b);
             return;
         }
@@ -213,19 +202,16 @@ namespace ui::terminal
         }
         if (b == 'P' || b == 'X' || b == '^' || b == '_')
         {
-            // DCS/SOS/PM/APC: consume the string until ST or BEL.
             Transition(OscString);
             return;
         }
         if (b == '\\')
         {
-            // Lone ST outside string mode: ignore.
             Transition(Ground);
             return;
         }
         if (IsFinal(b) || (b >= 0x30 && b <= 0x3F))
         {
-            // ESC <intermediate?> <final>
             if (callbacks_.EscDispatch)
                 callbacks_.EscDispatch(static_cast<char>(b), intermediate_);
             Transition(Ground);
@@ -248,7 +234,6 @@ namespace ui::terminal
         if (IsPrivateMarker(b))
         {
             privateMarker_ = b == '?';
-            // Other private markers (=, >, <) are tolerated but not flagged.
             Transition(CsiParam);
             return;
         }
@@ -393,8 +378,6 @@ namespace ui::terminal
             Transition(Ground);
             return;
         }
-        // Not a valid ST; abandon the OSC and reinterpret the byte from
-        // the Escape state so the user's intent is not lost.
         Transition(Escape);
         FeedByte(b);
     }

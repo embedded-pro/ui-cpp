@@ -184,7 +184,7 @@ TEST_F(TestTerminalScreen, reverse_index_at_top_scrolls_down)
 
     EXPECT_EQ(screen.Cursor().row, 0);
     EXPECT_EQ(screen.LineText(2), "X");
-    screen.ReverseIndex(); // already at top -> scroll down inserts blank
+    screen.ReverseIndex();
     EXPECT_EQ(screen.LineText(0), "");
 }
 
@@ -369,9 +369,6 @@ TEST_F(TestTerminalScreen, scroll_region_limits_index_to_region)
     screen.Index();
     screen.Write(U'B');
 
-    // Index at scroll bottom shifts rows in the region up: 'A' moves
-    // from row 3 to row 2 (0-based), and 'B' is written at the new
-    // bottom row 3.
     EXPECT_EQ(screen.LineText(2), "A");
     EXPECT_EQ(screen.LineText(3), "B");
 }

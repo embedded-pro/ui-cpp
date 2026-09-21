@@ -10,10 +10,6 @@
 
 namespace ui::terminal
 {
-    // Public facade. Feed bytes received from the host (e.g. a serial port);
-    // the terminal updates its screen state and may queue outbound bytes
-    // (e.g. responses to DSR/CPR/DA requests) which the host program can
-    // retrieve via TakeOutgoing().
     class Vt100Terminal
     {
     public:
@@ -28,7 +24,6 @@ namespace ui::terminal
 
         std::string TakeOutgoing();
 
-        // Identity reported by DA. Default is "VT102": ESC [ ? 6 c.
         void SetDeviceAttributesResponse(std::string response);
 
     private:
@@ -36,7 +31,7 @@ namespace ui::terminal
         void OnExecute(uint8_t b);
         void OnEsc(char finalByte, char intermediate);
         void OnCsi(char finalByte, const std::vector<int>& params, bool privateMarker, char intermediate);
-        void OnOsc(const std::string& payload);
+        void OnOsc(const std::string& payload) const;
 
         void ApplySgr(const std::vector<int>& params);
         void ApplyMode(const std::vector<int>& params, bool set, bool privateMarker);

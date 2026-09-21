@@ -190,3 +190,28 @@ TEST_F(Log10AxisTest, CursorReadoutSwitchesUnitAtAKilohertz)
     length = axis.FormatCursorValue(2500.0f, scratch);
     EXPECT_EQ((std::string_view{ scratch.data(), length }), "f = 2.50 kHz");
 }
+
+TEST_F(Log10AxisTest, AnEmptyDataSetHasNoRange)
+{
+    const auto range = axis.RangeFor(std::span<const float>{});
+
+    EXPECT_NEAR(range.Span(), 0.0f, tolerance);
+}
+
+// A degenerate view has no decades to walk, and a caller-owned buffer may be too small to hold
+// what a full view would emit; neither may run off the end of the span.
+TEST_F(Log10AxisTest, ADegenerateViewProducesNoTicksOrGridLines)
+{
+    const ui::charts::AxisRange collapsed{ 2.0f, 2.0f };
+
+    EXPECT_EQ(axis.Ticks(collapsed, ticks), 0u);
+    EXPECT_EQ(axis.GridLines(collapsed, gridLines), 0u);
+}
+
+TEST_F(Log10AxisTest, TicksAndGridLinesStopAtTheEndOfTheirBuffer)
+{
+    const ui::charts::AxisRange wide{ 0.0f, 6.0f };
+
+    EXPECT_EQ(axis.Ticks(wide, std::span<ui::charts::Tick>{ ticks.data(), 2 }), 2u);
+    EXPECT_EQ(axis.GridLines(wide, std::span<ui::charts::GridLine>{ gridLines.data(), 4 }), 4u);
+}

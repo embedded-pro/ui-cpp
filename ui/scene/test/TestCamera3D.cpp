@@ -287,3 +287,57 @@ TEST_F(OrbitCameraTest, ThePoseAndTheViewportAreIndependent)
     EXPECT_NEAR(narrow.Forward().z, wide.Forward().z, 1e-6f);
     EXPECT_NE(narrow.Project(Vector3{ 1.0f, 1.0f, 0.0f }).x, wide.Project(Vector3{ 1.0f, 1.0f, 0.0f }).x);
 }
+
+TEST_F(ViewFrameTest, TheFrameExposesTheBasisItProjectsWith)
+{
+    const auto frame = FrameFor(CameraPose{});
+
+    // Right, up and forward are mutually orthogonal and unit length, which is what makes the
+    // per-vertex projection a pair of dot products.
+    EXPECT_NEAR(ui::scene::Length(frame.Up()), 1.0f, 1e-5f);
+    EXPECT_NEAR(ui::scene::Dot(frame.Up(), frame.Right()), 0.0f, 1e-5f);
+    EXPECT_NEAR(ui::scene::Dot(frame.Up(), frame.Forward()), 0.0f, 1e-5f);
+
+    EXPECT_EQ(frame.Viewport().width, standardViewport.width);
+    EXPECT_EQ(frame.Viewport().height, standardViewport.height);
+}
+
+// A backend that reports no wheel quantum must not divide by it.
+TEST_F(OrbitCameraTest, AZeroWheelQuantumLeavesTheDistanceAlone)
+{
+    OrbitLimits limits;
+    limits.wheelDeltaPerStep = 0.0f;
+
+    OrbitCamera stubborn{ CameraPose{}, limits, ProjectionConfig{} };
+    const auto before = stubborn.Pose().distance;
+
+    stubborn.Zoom(120.0f);
+
+    EXPECT_NEAR(stubborn.Pose().distance, before, 1e-6f);
+}
+
+TEST_F(OrbitCameraTest, SettingTheLookAtMovesOnlyTheTarget)
+{
+    const auto before = camera.Pose();
+
+    camera.SetLookAt(Vector3{ 1.0f, 2.0f, 3.0f });
+
+    EXPECT_NEAR(camera.Pose().lookAt.x, 1.0f, 1e-6f);
+    EXPECT_NEAR(camera.Pose().lookAt.z, 3.0f, 1e-6f);
+    EXPECT_NEAR(camera.Pose().azimuth, before.azimuth, 1e-6f);
+    EXPECT_NEAR(camera.Pose().distance, before.distance, 1e-6f);
+}
+
+// Reset returns to the pose the camera was constructed with, not to whatever was set later.
+TEST_F(OrbitCameraTest, SettingAPoseDoesNotMoveTheResetTarget)
+{
+    const auto original = camera.Pose();
+
+    camera.SetPose(CameraPose{ 1.2f, 0.9f, 7.0f, Vector3{ 0.0f, 0.0f, 1.0f } });
+    EXPECT_NEAR(camera.Pose().distance, 7.0f, 1e-6f);
+
+    camera.Reset();
+
+    EXPECT_NEAR(camera.Pose().azimuth, original.azimuth, 1e-6f);
+    EXPECT_NEAR(camera.Pose().distance, original.distance, 1e-6f);
+}

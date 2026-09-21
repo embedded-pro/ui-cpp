@@ -280,3 +280,68 @@ TEST_F(ScopeCoreTest, TheViewRequestsARepaintWhenTheTimebaseChanges)
 
     EXPECT_EQ(repaints, 2);
 }
+
+// FindTriggerPoint is the render-time sweep alignment, not the acquisition trigger that
+// TestTrigger.cpp covers: it re-searches the ring buffer each repaint to decide where the
+// displayed sweep starts, and had only ever been exercised on a rising edge.
+TEST_F(ScopeCoreTest, TheSweepAlignsToAFallingEdgeWhenOneIsSelected)
+{
+    scope.SetTriggerMode(ui::scope::TriggerMode::Normal);
+    scope.SetTriggerEdge(ui::scope::TriggerEdge::Falling);
+    scope.SetTriggerLevel(0.0f);
+    FeedSine(300);
+
+    ASSERT_TRUE(scope.IsTriggered());
+    scope.Paint(canvas, bounds);
+
+    const auto* polyline = FirstOf(CommandKind::DrawPolyline);
+    ASSERT_NE(polyline, nullptr);
+    EXPECT_GT(polyline->points.size(), 1u);
+}
+
+// A level the trace never reaches leaves the search with nothing, and the sweep falls back to the
+// newest sample rather than drawing nothing at all.
+TEST_F(ScopeCoreTest, ASweepWithNoCrossingFallsBackToTheNewestSample)
+{
+    scope.SetTriggerMode(ui::scope::TriggerMode::Normal);
+    scope.SetTriggerLevel(100.0f);
+    FeedSine(300);
+    scope.ForceTrigger();
+
+    scope.Paint(canvas, bounds);
+
+    const auto* polyline = FirstOf(CommandKind::DrawPolyline);
+    ASSERT_NE(polyline, nullptr);
+    EXPECT_GT(polyline->points.size(), 1u);
+}
+
+TEST_F(ScopeCoreTest, AZeroSamplePeriodDrawsTheGraticuleButNoTrace)
+{
+    FeedSine(200);
+    scope.SetSamplePeriod(0.0f);
+
+    scope.Paint(canvas, bounds);
+
+    EXPECT_EQ(canvas.CountOf(CommandKind::DrawPolyline), 0u);
+    EXPECT_GT(canvas.CountOf(CommandKind::DrawLine), 0u);
+}
+
+TEST_F(ScopeCoreTest, TheConfigurationIsReadBackThroughTheAccessors)
+{
+    scope.SetTriggerMode(ui::scope::TriggerMode::Single);
+    scope.SetTriggerEdge(ui::scope::TriggerEdge::Falling);
+    scope.SetTriggerChannel(1);
+    scope.SetTriggerLevel(0.25f);
+    scope.SetRunning(false);
+
+    EXPECT_EQ(scope.ChannelCount(), 2u);
+    EXPECT_NEAR(scope.TimePerDivision(), 1e-3f, 1e-9f);
+    EXPECT_NEAR(scope.SamplePeriod(), 100e-6f, 1e-9f);
+    EXPECT_NEAR(scope.TriggerLevel(), 0.25f, 1e-6f);
+    EXPECT_EQ(scope.CurrentTriggerMode(), ui::scope::TriggerMode::Single);
+    EXPECT_EQ(scope.CurrentTriggerEdge(), ui::scope::TriggerEdge::Falling);
+    EXPECT_EQ(scope.TriggerChannel(), 1u);
+    EXPECT_FALSE(scope.IsRunning());
+    EXPECT_EQ(scope.MinimumSize().width, 320.0f);
+    EXPECT_EQ(scope.MinimumSize().height, 250.0f);
+}

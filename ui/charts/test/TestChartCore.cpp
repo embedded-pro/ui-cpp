@@ -37,15 +37,47 @@ namespace
         return values;
     }
 
+    std::size_t CrosshairLineCount(const ui::backend::recording::RecordingCanvas& canvas)
+    {
+        const auto crosshair = ui::theme::Current().Get(ui::theme::ColorRole::Crosshair);
+        std::size_t count{ 0 };
+
+        for (const auto& command : canvas.Commands())
+            if (command.kind == CommandKind::DrawLine && command.pen.color == crosshair)
+                ++count;
+
+        return count;
+    }
+
+    const ui::backend::recording::Command* ReadoutBackground(const ui::backend::recording::RecordingCanvas& canvas)
+    {
+        for (const auto& command : canvas.Commands())
+            if (command.kind == CommandKind::DrawRoundedRect)
+                return &command;
+
+        return nullptr;
+    }
+
     class ChartCoreTest
         : public ::testing::Test
     {
     protected:
+        void HoverAt(ui::Point position, std::size_t seriesCount = 1)
+        {
+            chart.SetAxisValues(LinearAxisValues(20));
+            chart.SetPanels(OnePanel(seriesCount, 20));
+            chart.OnMouseMove(ui::MouseEvent{ position, ui::MouseButton::None, {} });
+            chart.Paint(canvas, bounds);
+        }
+
         ui::backend::recording::RecordingCanvas canvas;
         ui::charts::LinearAxis axis{ ui::charts::LinearAxis::Time() };
         ui::charts::ChartCore chart{ axis, ui::charts::ChartConfig{} };
 
         static constexpr ui::Rect bounds{ 0.0f, 0.0f, 800.0f, 600.0f };
+
+        // PlotAreaFor with the default ChartMetrics: x in [65, 780], y in [15, 565].
+        static constexpr ui::Point insidePlot{ 441.0f, 300.0f };
     };
 
     class FrequencyChartCoreTest
@@ -283,4 +315,231 @@ TEST_F(FrequencyChartCoreTest, TheSameEngineServesBothAxes)
 
     EXPECT_EQ(canvas.CountOf(CommandKind::DrawPolyline), 2u);
     EXPECT_EQ(canvas.CountOf(CommandKind::SetClip), 2u);
+}
+
+// The crosshair and its readout were dropped when the two chart widgets were merged: the line was
+// ported, the tooltip was not, leaving NearestSampleIndex, FormatCursorValue and DrawRoundedRect
+// with no caller. These tests pin the restored behaviour against the original widget's.
+TEST_F(ChartCoreTest, HoveringDrawsBothCrosshairLines)
+{
+    HoverAt(insidePlot);
+
+    EXPECT_EQ(CrosshairLineCount(canvas), 2u);
+}
+
+TEST_F(ChartCoreTest, NoCrosshairIsDrawnBeforeTheCursorEnters)
+{
+    chart.SetAxisValues(LinearAxisValues(20));
+    chart.SetPanels(OnePanel(1, 20));
+    chart.Paint(canvas, bounds);
+
+    EXPECT_EQ(CrosshairLineCount(canvas), 0u);
+    EXPECT_EQ(ReadoutBackground(canvas), nullptr);
+}
+
+TEST_F(ChartCoreTest, LeavingHidesTheCrosshair)
+{
+    HoverAt(insidePlot);
+    chart.OnMouseLeave();
+
+    canvas.Clear();
+    chart.Paint(canvas, bounds);
+
+    EXPECT_EQ(CrosshairLineCount(canvas), 0u);
+    EXPECT_EQ(ReadoutBackground(canvas), nullptr);
+}
+
+TEST_F(ChartCoreTest, HoveringOutsideThePlotAreaDrawsNoCrosshair)
+{
+    HoverAt(ui::Point{ 10.0f, 300.0f });
+
+    EXPECT_EQ(CrosshairLineCount(canvas), 0u);
+    EXPECT_EQ(ReadoutBackground(canvas), nullptr);
+}
+
+TEST_F(ChartCoreTest, TheReadoutNamesTheAxisValueAndEverySeries)
+{
+    HoverAt(insidePlot, 2);
+
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains(::testing::StartsWith("t = ")));
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains(::testing::StartsWith("series0 = ")));
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains(::testing::StartsWith("series1 = ")));
+}
+
+// 441px is (441-65)/715 of the way across a [0, 19] view, which is 9.99 - so the readout must
+// report sample 10, not the 9 a truncating lookup would give.
+TEST_F(ChartCoreTest, TheReadoutReportsTheNearestSampleRatherThanTheCursorPosition)
+{
+    HoverAt(insidePlot);
+
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains("series0 = 1.000"));
+}
+
+TEST_F(ChartCoreTest, TheReadoutSitsOnATranslucentSurface)
+{
+    HoverAt(insidePlot);
+
+    const auto* background = ReadoutBackground(canvas);
+    ASSERT_NE(background, nullptr);
+
+    const auto& theme = ui::theme::Current();
+    EXPECT_EQ(background->brush.color, theme.Get(ui::theme::ColorRole::Surface).WithAlpha(230));
+    EXPECT_EQ(background->pen.color, theme.Get(ui::theme::ColorRole::Neutral));
+}
+
+TEST_F(ChartCoreTest, TheReadoutFlipsLeftOfACursorNearTheRightEdge)
+{
+    HoverAt(ui::Point{ 775.0f, 300.0f });
+
+    const auto* background = ReadoutBackground(canvas);
+    ASSERT_NE(background, nullptr);
+    EXPECT_LT(background->rect.Right(), 775.0f);
+}
+
+TEST_F(ChartCoreTest, TheReadoutDropsBelowACursorNearTheTop)
+{
+    HoverAt(ui::Point{ 441.0f, 20.0f });
+
+    const auto* background = ReadoutBackground(canvas);
+    ASSERT_NE(background, nullptr);
+    EXPECT_GT(background->rect.Top(), 20.0f);
+}
+
+// The readout writes into fixed storage, so a panel with more series than it holds must stop
+// filling rather than run off the end of the array.
+TEST_F(ChartCoreTest, TheReadoutIsCappedAtItsFixedLineCount)
+{
+    HoverAt(insidePlot, 12);
+
+    // The legend draws a bare "seriesN" for each of the twelve; only the readout writes "N = value".
+    std::size_t readoutLines{ 0 };
+    for (const auto& text : canvas.Texts())
+        if (text.find(" = ") != std::string::npos)
+            ++readoutLines;
+
+    EXPECT_EQ(readoutLines, 9u);
+}
+
+TEST_F(ChartCoreTest, DraggingPansTheView)
+{
+    chart.SetAxisValues(LinearAxisValues(20));
+    chart.SetPanels(OnePanel(1, 20));
+    chart.Paint(canvas, bounds);
+    chart.OnWheel(ui::WheelEvent{ insidePlot, 1.0f, {} });
+
+    const auto before = chart.Interaction().ViewMinimum();
+
+    chart.OnMousePress(ui::MouseEvent{ insidePlot, ui::MouseButton::Left, {} });
+    chart.OnMouseMove(ui::MouseEvent{ ui::Point{ 300.0f, 300.0f }, ui::MouseButton::None, {} });
+
+    EXPECT_GT(chart.Interaction().ViewMinimum(), before);
+}
+
+TEST_F(ChartCoreTest, ReleasingEndsThePan)
+{
+    chart.SetAxisValues(LinearAxisValues(20));
+    chart.SetPanels(OnePanel(1, 20));
+    chart.Paint(canvas, bounds);
+    chart.OnWheel(ui::WheelEvent{ insidePlot, 1.0f, {} });
+
+    chart.OnMousePress(ui::MouseEvent{ insidePlot, ui::MouseButton::Left, {} });
+    chart.OnMouseRelease(ui::MouseEvent{ insidePlot, ui::MouseButton::Left, {} });
+
+    const auto after = chart.Interaction().ViewMinimum();
+    chart.OnMouseMove(ui::MouseEvent{ ui::Point{ 300.0f, 300.0f }, ui::MouseButton::None, {} });
+
+    EXPECT_NEAR(chart.Interaction().ViewMinimum(), after, 1e-6f);
+}
+
+TEST_F(ChartCoreTest, APressWithTheRightButtonDoesNotPan)
+{
+    chart.SetAxisValues(LinearAxisValues(20));
+    chart.SetPanels(OnePanel(1, 20));
+    chart.Paint(canvas, bounds);
+    chart.OnWheel(ui::WheelEvent{ insidePlot, 1.0f, {} });
+
+    const auto before = chart.Interaction().ViewMinimum();
+
+    chart.OnMousePress(ui::MouseEvent{ insidePlot, ui::MouseButton::Right, {} });
+    chart.OnMouseMove(ui::MouseEvent{ ui::Point{ 300.0f, 300.0f }, ui::MouseButton::None, {} });
+
+    EXPECT_NEAR(chart.Interaction().ViewMinimum(), before, 1e-6f);
+}
+
+TEST_F(FrequencyChartCoreTest, TheReadoutUsesTheFrequencyFormatter)
+{
+    std::vector<float> frequencies;
+    for (std::size_t i = 1; i <= 100; ++i)
+        frequencies.push_back(static_cast<float>(i) * 100.0f);
+
+    chart.SetAxisValues(frequencies);
+    chart.SetPanels(OnePanel(1, 100));
+    chart.OnMouseMove(ui::MouseEvent{ ui::Point{ 441.0f, 300.0f }, ui::MouseButton::None, {} });
+    chart.Paint(canvas, bounds);
+
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains(::testing::StartsWith("f = ")));
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains(::testing::AnyOf(::testing::HasSubstr(" Hz"), ::testing::HasSubstr(" kHz"))));
+}
+
+// Quirks carried over from the original widgets deliberately, so they need pinning: an empty
+// series falls back to a +/-1 Y range rather than collapsing the panel.
+TEST_F(ChartCoreTest, APanelWithNoDataFallsBackToAUnitRange)
+{
+    auto panels = OnePanel(1, 0);
+
+    chart.SetAxisValues(LinearAxisValues(20));
+    chart.SetPanels(std::move(panels));
+    chart.Paint(canvas, bounds);
+
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains("-1.00"));
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains("1.00"));
+}
+
+// Above one sample per half-pixel the series is strided, and the original closed the trace with a
+// segment to the final sample whenever the stride stepped over it.
+TEST_F(ChartCoreTest, AStridedSeriesStillReachesItsFinalSample)
+{
+    chart.SetAxisValues(LinearAxisValues(3000));
+    chart.SetPanels(OnePanel(1, 3000));
+    chart.Paint(canvas, bounds);
+
+    for (const auto& command : canvas.Commands())
+    {
+        if (command.kind == CommandKind::DrawPolyline)
+        {
+            EXPECT_EQ(command.points.size(), 1501u);
+        }
+    }
+}
+
+TEST_F(ChartCoreTest, TheReadoutClampsToTheFirstSampleAtTheLeftEdge)
+{
+    HoverAt(ui::Point{ 65.0f, 300.0f });
+
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains("series0 = 0.000"));
+}
+
+TEST_F(ChartCoreTest, TheReadoutClampsToTheLastSampleAtTheRightEdge)
+{
+    HoverAt(ui::Point{ 780.0f, 300.0f });
+
+    EXPECT_THAT(canvas.Texts(), ::testing::Contains("series0 = 1.900"));
+}
+
+TEST_F(ChartCoreTest, ASeriesWithNoDataIsSkippedInTheReadout)
+{
+    auto panels = OnePanel(2, 20);
+    panels[0].series[1].data.clear();
+
+    chart.SetAxisValues(LinearAxisValues(20));
+    chart.SetPanels(std::move(panels));
+    chart.OnMouseMove(ui::MouseEvent{ insidePlot, ui::MouseButton::None, {} });
+    chart.Paint(canvas, bounds);
+
+    std::size_t readoutLines{ 0 };
+    for (const auto& text : canvas.Texts())
+        if (text.find(" = ") != std::string::npos)
+            ++readoutLines;
+
+    EXPECT_EQ(readoutLines, 2u);
 }

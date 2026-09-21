@@ -82,3 +82,26 @@ TEST_F(CallbackTest, ReassignmentReplacesTarget)
     EXPECT_EQ(first, 0);
     EXPECT_EQ(second, 1);
 }
+
+// The stored target is copied through placement new rather than assignment, so a copied callback
+// must carry its own captured state and not alias the original's.
+TEST_F(CallbackTest, CopyingACallbackCopiesItsCapturedState)
+{
+    auto observed = 0;
+    auto captured = 7;
+
+    ui::Callback<void()> original{ [&observed, captured]
+        {
+            observed = captured;
+        } };
+
+    captured = 9;
+
+    auto copy = original;
+    original.Reset();
+
+    ASSERT_TRUE(static_cast<bool>(copy));
+    copy();
+
+    EXPECT_EQ(observed, 7);
+}

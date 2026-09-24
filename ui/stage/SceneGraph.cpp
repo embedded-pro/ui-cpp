@@ -33,7 +33,11 @@ namespace ui::stage
             return NodeId{};
 
         const NodeId id{ static_cast<std::uint16_t>(nodes.size()) };
-        nodes.push_back(Node{ parent, origin, joint, Clamp(0.0f, joint.minimum, joint.maximum) });
+        auto& node = nodes.emplace_back();
+        node.parent = parent;
+        node.local = origin;
+        node.joint = joint;
+        node.value = Clamp(0.0f, joint.minimum, joint.maximum);
         worlds.emplace_back();
 
         if (joint.type != JointType::Fixed)

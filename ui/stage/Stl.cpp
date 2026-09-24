@@ -136,7 +136,7 @@ namespace ui::stage
 
             const auto exponent = ReadExponent(token, position);
 
-            if (digits == 0 || !exponent || position != token.size())
+            if (digits == 0 || !exponent.has_value() || position != token.size())
                 return std::nullopt;
 
             const auto value = mantissa * std::pow(10.0, *exponent - static_cast<int>(fractionDigits));
@@ -151,12 +151,17 @@ namespace ui::stage
                 : text(text)
             {}
 
-            [[nodiscard]] std::string_view Next()
+            [[nodiscard]] bool AtEnd()
             {
                 while (position < text.size() && IsSpace(text[position]))
                     ++position;
 
-                const auto start = position;
+                return position == text.size();
+            }
+
+            [[nodiscard]] std::string_view Next()
+            {
+                const auto start = AtEnd() ? text.size() : position;
 
                 while (position < text.size() && !IsSpace(text[position]))
                     ++position;
@@ -180,7 +185,7 @@ namespace ui::stage
             const auto y = ParseFloat(tokens.Next());
             const auto z = ParseFloat(tokens.Next());
 
-            if (!x || !y || !z)
+            if (!x.has_value() || !y.has_value() || !z.has_value())
                 return std::nullopt;
 
             return Vector3{ *x, *y, *z };
@@ -197,9 +202,9 @@ namespace ui::stage
 
             Corners corners;
 
-            for (auto token = tokens.Next(); !token.empty(); token = tokens.Next())
+            while (!tokens.AtEnd())
             {
-                if (token != "vertex")
+                if (tokens.Next() != "vertex")
                     continue;
 
                 const auto vertex = ReadVertex(tokens);
@@ -248,7 +253,7 @@ namespace ui::stage
             for (std::uint32_t i = 0; i < corners.size(); ++i)
                 keyed.emplace_back(Key{ quantise(corners[i].x), quantise(corners[i].y), quantise(corners[i].z) }, i);
 
-            std::sort(keyed.begin(), keyed.end());
+            std::ranges::sort(keyed);
 
             std::vector<std::uint32_t> remap(corners.size());
 

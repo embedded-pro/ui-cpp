@@ -129,7 +129,8 @@ namespace ui::stage
         [[nodiscard]] std::optional<BoundingSphere> Bounds() const;
 
     private:
-        MeshId SharedMesh(std::optional<MeshId>& cache, Mesh (*make)(Tessellation));
+        template<class Make>
+        MeshId SharedMesh(std::optional<MeshId>& cache, Make make);
 
         Tessellation tessellation;
         SceneGraph graph;

@@ -42,7 +42,7 @@ TEST_F(MeshTest, ACoplanarSharedEdgeIsNotAFeature)
     const auto mesh = Hinge(0.0f);
 
     EXPECT_EQ(ui::stage::test::FeatureEdgeUses(mesh), 4u);
-    EXPECT_EQ(mesh.faces[0].featureMask & 0b100u, 0u);
+    EXPECT_EQ(mesh.faces[0].featureMask & std::byte{ 0b100 }, std::byte{ 0 });
 }
 
 TEST_F(MeshTest, ASharpFoldIsAFeatureOnBothSides)

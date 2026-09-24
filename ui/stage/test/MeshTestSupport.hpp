@@ -11,7 +11,7 @@ namespace ui::stage::test
         std::size_t uses{ 0 };
 
         for (const auto& face : mesh.faces)
-            uses += static_cast<std::size_t>(std::popcount(static_cast<unsigned>(face.featureMask)));
+            uses += static_cast<std::size_t>(std::popcount(std::to_integer<unsigned>(face.featureMask)));
 
         return uses;
     }

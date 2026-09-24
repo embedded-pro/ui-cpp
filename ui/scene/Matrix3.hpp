@@ -28,17 +28,17 @@ namespace ui::scene
 
         // Fixed-axis roll about X, then pitch about Y, then yaw about Z: the URDF convention.
         [[nodiscard]] static Matrix3 FromRpy(float roll, float pitch, float yaw);
+
+        [[nodiscard]] friend constexpr Vector3 operator*(const Matrix3& matrix, Vector3 value)
+        {
+            return matrix.columns[0] * value.x + matrix.columns[1] * value.y + matrix.columns[2] * value.z;
+        }
+
+        [[nodiscard]] friend constexpr Matrix3 operator*(const Matrix3& a, const Matrix3& b)
+        {
+            return Matrix3{ { a * b.columns[0], a * b.columns[1], a * b.columns[2] } };
+        }
     };
-
-    [[nodiscard]] constexpr Vector3 operator*(const Matrix3& matrix, Vector3 value)
-    {
-        return matrix.columns[0] * value.x + matrix.columns[1] * value.y + matrix.columns[2] * value.z;
-    }
-
-    [[nodiscard]] constexpr Matrix3 operator*(const Matrix3& a, const Matrix3& b)
-    {
-        return Matrix3{ { a * b.columns[0], a * b.columns[1], a * b.columns[2] } };
-    }
 
     [[nodiscard]] constexpr Matrix3 Transposed(const Matrix3& matrix)
     {

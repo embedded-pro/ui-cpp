@@ -54,7 +54,7 @@ namespace ui::stage
                 }
             }
 
-            std::sort(edges.begin(), edges.end(), [](const EdgeUse& a, const EdgeUse& b)
+            std::ranges::sort(edges, [](const EdgeUse& a, const EdgeUse& b)
                 {
                     return a.low != b.low ? a.low < b.low : a.high < b.high;
                 });
@@ -79,10 +79,7 @@ namespace ui::stage
 
                 if (!smooth)
                     for (auto i = first; i < last; ++i)
-                    {
-                        auto& mask = mesh.faces[edges[i].face].featureMask;
-                        mask = static_cast<std::uint8_t>(mask | (1u << edges[i].edge));
-                    }
+                        mesh.faces[edges[i].face].featureMask |= std::byte{ 1 } << edges[i].edge;
 
                 first = last;
             }
@@ -98,12 +95,12 @@ namespace ui::stage
 
     void Mesh::AddTriangle(std::uint32_t a, std::uint32_t b, std::uint32_t c)
     {
-        faces.push_back(Face{ { a, b, c, 0 }, 3, Vector3{}, 0 });
+        faces.push_back(Face{ { a, b, c, 0 }, 3, Vector3{}, std::byte{ 0 } });
     }
 
     void Mesh::AddQuad(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d)
     {
-        faces.push_back(Face{ { a, b, c, d }, 4, Vector3{}, 0 });
+        faces.push_back(Face{ { a, b, c, d }, 4, Vector3{}, std::byte{ 0 } });
     }
 
     void Mesh::Finish(float featureAngleDegrees)
@@ -111,7 +108,7 @@ namespace ui::stage
         for (auto& face : faces)
         {
             face.normal = NormalOf(*this, face);
-            face.featureMask = 0;
+            face.featureMask = std::byte{ 0 };
         }
 
         MarkFeatureEdges(*this, featureAngleDegrees);

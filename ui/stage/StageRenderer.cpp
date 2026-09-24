@@ -159,7 +159,7 @@ namespace ui::stage
         for (std::uint32_t i = 0; i < items.size(); ++i)
             order.push_back(SortKey{ items[i].depth, i });
 
-        std::sort(order.begin(), order.end(), [](const SortKey& a, const SortKey& b)
+        std::ranges::sort(order, [](const SortKey& a, const SortKey& b)
             {
                 return a.depth != b.depth ? a.depth > b.depth : a.item < b.item;
             });
@@ -235,7 +235,7 @@ namespace ui::stage
         DrawItem item;
         item.kind = ItemKind::Face;
         item.count = static_cast<std::uint8_t>(count);
-        item.featureMask = count == face.count ? face.featureMask : std::uint8_t{ 0 };
+        item.featureMask = count == face.count ? face.featureMask : std::byte{ 0 };
         item.fill = Shade(part.base, part.material, lit, highlight);
         item.material = part.part.material;
         item.part = part.id;
@@ -355,7 +355,7 @@ namespace ui::stage
     {
         const auto& material = stage.Materials()[item.material.value];
         const std::span points{ item.points.data(), item.count };
-        const auto fullMask = static_cast<std::uint8_t>((1u << item.count) - 1u);
+        const auto fullMask = static_cast<std::byte>((1u << item.count) - 1u);
 
         if (material.wireframe)
         {
@@ -379,13 +379,13 @@ namespace ui::stage
         ApplyPen(canvas, item.fill.alpha == 255 ? Pen{ item.fill } : Pen{ item.fill, 1.0f, LineStyle::None });
         canvas.DrawPolygon(points);
 
-        if (!material.outline || item.featureMask == 0)
+        if (!material.outline || item.featureMask == std::byte{ 0 })
             return;
 
         ApplyPen(canvas, EdgePen(material));
 
         for (std::uint8_t i = 0; i < item.count; ++i)
-            if ((item.featureMask & (1u << i)) != 0)
+            if ((item.featureMask & (std::byte{ 1 } << i)) != std::byte{ 0 })
                 canvas.DrawLine(points[i], points[(i + 1) % item.count]);
     }
 

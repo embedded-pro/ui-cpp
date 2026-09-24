@@ -19,7 +19,7 @@ namespace ui::stage
         std::array<std::uint32_t, 4> index{};
         std::uint8_t count{ 3 };
         Vector3 normal;
-        std::uint8_t featureMask{ 0 };
+        std::byte featureMask{ 0 };
     };
 
     struct Mesh

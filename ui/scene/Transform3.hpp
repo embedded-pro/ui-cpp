@@ -59,12 +59,12 @@ namespace ui::scene
                 Vector3{ values[3], values[7], values[11] }
             };
         }
-    };
 
-    [[nodiscard]] constexpr Transform3 operator*(const Transform3& a, const Transform3& b)
-    {
-        return Transform3{ a.rotation * b.rotation, a.Apply(b.translation) };
-    }
+        [[nodiscard]] friend constexpr Transform3 operator*(const Transform3& a, const Transform3& b)
+        {
+            return Transform3{ a.rotation * b.rotation, a.Apply(b.translation) };
+        }
+    };
 
     inline Transform3 Transform3::AlignZ(Vector3 from, Vector3 to)
     {

@@ -47,7 +47,7 @@ namespace ui::stage
         [[nodiscard]] NodeId Selection() const;
 
         void FrameAll();
-        void Refresh();
+        void Refresh() const;
 
         void Paint(Canvas& canvas, const Rect& bounds) override;
         [[nodiscard]] Size MinimumSize() const override;

@@ -60,7 +60,7 @@ namespace ui::stage
         {
             ItemKind kind{ ItemKind::Face };
             std::uint8_t count{ 0 };
-            std::uint8_t featureMask{ 0 };
+            std::byte featureMask{ 0 };
             std::array<Point, 5> points{};
             Color fill;
             MaterialId material;

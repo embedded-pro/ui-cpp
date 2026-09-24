@@ -1,6 +1,7 @@
 #include "ui/stage/Stage.hpp"
 #include <algorithm>
 #include <cstring>
+#include <iterator>
 
 namespace ui::stage
 {
@@ -9,16 +10,16 @@ namespace ui::stage
         template<class Handle, class Container>
         [[nodiscard]] bool Knows(const Container& container, Handle id)
         {
-            return id.Valid() && id.value < container.size();
+            return id.Valid() && id.value < std::size(container);
         }
 
         template<class Handle, class Container>
         [[nodiscard]] Handle NextId(const Container& container)
         {
-            if (container.size() >= Handle::invalid)
+            if (std::size(container) >= Handle::invalid)
                 return Handle{};
 
-            return Handle{ static_cast<std::uint16_t>(container.size()) };
+            return Handle{ static_cast<std::uint16_t>(std::size(container)) };
         }
 
         template<class Container, class Handle>
@@ -77,7 +78,8 @@ namespace ui::stage
         return id;
     }
 
-    MeshId Stage::SharedMesh(std::optional<MeshId>& cache, Mesh (*make)(Tessellation))
+    template<class Make>
+    MeshId Stage::SharedMesh(std::optional<MeshId>& cache, Make make)
     {
         if (!cache)
             cache = AddMesh(make(tessellation));

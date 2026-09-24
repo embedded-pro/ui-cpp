@@ -63,7 +63,7 @@ namespace ui::stage
         }
     }
 
-    void StageView::Refresh()
+    void StageView::Refresh() const
     {
         RequestRepaint();
     }
@@ -85,10 +85,11 @@ namespace ui::stage
 
     void StageView::OnMousePress(const MouseEvent& event)
     {
-        const auto pan = event.button == MouseButton::Right || event.button == MouseButton::Middle ||
-                         (event.button == MouseButton::Left && event.modifiers.shift);
+        using enum MouseButton;
 
-        if (event.button == MouseButton::None)
+        const auto pan = event.button == Right || event.button == Middle || (event.button == Left && event.modifiers.shift);
+
+        if (event.button == None)
             return;
 
         drag = pan ? Drag::Pan : Drag::Orbit;

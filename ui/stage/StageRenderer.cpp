@@ -37,7 +37,7 @@ namespace ui::stage
         {
             const auto channel = [ratio](std::uint8_t a, std::uint8_t b)
             {
-                return static_cast<std::uint8_t>(std::lround(Lerp(a, b, ratio)));
+                return static_cast<std::uint8_t>(std::lround(Lerp(static_cast<float>(a), static_cast<float>(b), ratio)));
             };
 
             return Color{ channel(from.red, to.red), channel(from.green, to.green), channel(from.blue, to.blue), from.alpha };

@@ -247,7 +247,7 @@ namespace ui::stage
 
     std::optional<BoundingSphere> Stage::Bounds() const
     {
-        std::optional<std::pair<Vector3, Vector3>> box;
+        std::optional<std::pair<Vector3, Vector3>> extent;
 
         for (const auto& part : parts)
         {
@@ -264,13 +264,13 @@ namespace ui::stage
                     (corner & 2u) != 0 ? mesh.boundsMax.y : mesh.boundsMin.y, (corner & 4u) != 0 ? mesh.boundsMax.z : mesh.boundsMin.z };
                 const auto world = transform.Apply(Scaled(local, part.scale));
 
-                box = box ? std::pair{ Minimum(box->first, world), Maximum(box->second, world) } : std::pair{ world, world };
+                extent = extent ? std::pair{ Minimum(extent->first, world), Maximum(extent->second, world) } : std::pair{ world, world };
             }
         }
 
-        if (!box)
+        if (!extent)
             return std::nullopt;
 
-        return BoundingSphere{ (box->first + box->second) * 0.5f, scene::Length(box->second - box->first) * 0.5f };
+        return BoundingSphere{ (extent->first + extent->second) * 0.5f, scene::Length(extent->second - extent->first) * 0.5f };
     }
 }

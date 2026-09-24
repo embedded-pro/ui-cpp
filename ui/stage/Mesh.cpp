@@ -79,7 +79,10 @@ namespace ui::stage
 
                 if (!smooth)
                     for (auto i = first; i < last; ++i)
-                        mesh.faces[edges[i].face].featureMask |= static_cast<std::uint8_t>(1u << edges[i].edge);
+                    {
+                        auto& mask = mesh.faces[edges[i].face].featureMask;
+                        mask = static_cast<std::uint8_t>(mask | (1u << edges[i].edge));
+                    }
 
                 first = last;
             }

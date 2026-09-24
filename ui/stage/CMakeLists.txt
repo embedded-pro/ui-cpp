@@ -12,6 +12,8 @@ ui_add_library(ui.stage
         Stage.hpp
         StageBuilder.cpp
         StageBuilder.hpp
+        StageRenderer.cpp
+        StageRenderer.hpp
         Stl.cpp
         Stl.hpp
         Trail.hpp

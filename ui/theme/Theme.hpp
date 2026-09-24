@@ -39,6 +39,12 @@ namespace ui::theme
         SceneAxisX,
         SceneAxisY,
         SceneAxisZ,
+        SceneSurface,
+        SceneJoint,
+        SceneEdge,
+        SceneSelection,
+        SceneTrail,
+        SceneLabel,
         Count
     };
 

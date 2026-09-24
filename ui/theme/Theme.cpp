@@ -40,7 +40,13 @@ namespace ui::theme
             Color::Rgb(0xF0F0F5), // SceneBackground
             Color::Rgb(0xC0392B), // SceneAxisX
             Color::Rgb(0x27AE60), // SceneAxisY
-            Color::Rgb(0x2980B9)  // SceneAxisZ
+            Color::Rgb(0x2980B9), // SceneAxisZ
+            Color::Rgb(0xB4BCC8), // SceneSurface
+            Color::Rgb(0xE67E22), // SceneJoint
+            Color::Rgb(0x2C3E50), // SceneEdge
+            Color::Rgb(0xF1C40F), // SceneSelection
+            Color::Rgb(0x8E44AD), // SceneTrail
+            Color::Rgb(0x202020)  // SceneLabel
         };
 
         // e-foc's oscilloscope and SVPWM hexagon: dark instrument chrome, higher-contrast traces.
@@ -74,7 +80,13 @@ namespace ui::theme
             Color::Rgb(0x1E1E2D), // SceneBackground
             Color::Rgb(0xDC3C3C), // SceneAxisX
             Color::Rgb(0x3CDC3C), // SceneAxisY
-            Color::Rgb(0x3C64FF)  // SceneAxisZ
+            Color::Rgb(0x3C64FF), // SceneAxisZ
+            Color::Rgb(0x9AA3AE), // SceneSurface
+            Color::Rgb(0xFFA500), // SceneJoint
+            Color::Rgb(0x101018), // SceneEdge
+            Color::Rgb(0xFFD700), // SceneSelection
+            Color::Rgb(0x00DCDC), // SceneTrail
+            Color::Rgb(0xDDDDDD)  // SceneLabel
         };
 
         constexpr std::array<FontSpec, static_cast<std::size_t>(FontRole::Count)> defaultFonts{

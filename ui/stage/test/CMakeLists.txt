@@ -2,6 +2,8 @@ ui_add_test(ui.stage_test
     SOURCES
         TestMesh.cpp
         TestPrimitives.cpp
+        TestSceneGraph.cpp
+        TestStage.cpp
         TestStl.cpp
     LINK
         ui.stage

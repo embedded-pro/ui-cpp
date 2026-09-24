@@ -1,12 +1,20 @@
 ui_add_library(ui.stage
     SOURCES
         Ids.hpp
+        Material.hpp
         Mesh.cpp
         Mesh.hpp
         Primitives.cpp
         Primitives.hpp
+        SceneGraph.cpp
+        SceneGraph.hpp
+        Stage.cpp
+        Stage.hpp
+        StageBuilder.cpp
+        StageBuilder.hpp
         Stl.cpp
         Stl.hpp
+        Trail.hpp
     LINK
         ui.core
         ui.theme

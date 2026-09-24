@@ -149,8 +149,8 @@ int main(int argc, char** argv)
     {
         status->setText(node.Valid() ? QString{ "Selected node %1" }.arg(node.value) : QString{ "Nothing selected" });
     };
-    armView.onSelectionChanged = reportSelection;
-    millView.onSelectionChanged = reportSelection;
+    armView.SetOnSelectionChanged(reportSelection);
+    millView.SetOnSelectionChanged(reportSelection);
 
     auto time = 0.0f;
     QTimer timer;

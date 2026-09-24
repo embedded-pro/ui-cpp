@@ -68,6 +68,16 @@ namespace ui::stage
         RequestRepaint();
     }
 
+    void StageView::SetOnPick(const PickHandler& handler)
+    {
+        onPick = handler;
+    }
+
+    void StageView::SetOnSelectionChanged(const SelectionHandler& handler)
+    {
+        onSelectionChanged = handler;
+    }
+
     void StageView::Paint(Canvas& canvas, const Rect& bounds)
     {
         const CanvasStateGuard guard{ canvas };

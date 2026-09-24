@@ -23,14 +23,14 @@ namespace
     protected:
         StageViewTest()
         {
-            view.onPick = [this](std::optional<PickResult> result)
-            {
-                picks.Call(result);
-            };
-            view.onSelectionChanged = [this](NodeId node)
-            {
-                selections.Call(node);
-            };
+            view.SetOnPick([this](std::optional<PickResult> result)
+                {
+                    picks.Call(result);
+                });
+            view.SetOnSelectionChanged([this](NodeId node)
+                {
+                    selections.Call(node);
+                });
 
             ui::stage::AddBox(view.Scene(), box, Vector3{ 0.4f, 0.4f, 0.4f }, view.Scene().AddMaterial(ui::stage::materials::Aluminium()));
             view.Paint(canvas, bounds);

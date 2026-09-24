@@ -57,7 +57,7 @@ carries no units, so set `StlOptions::scale` to `0.001f` for CAD files in millim
 | Left drag                        | Orbit                                         |
 | Right, middle or shift-left drag | Pan                                           |
 | Wheel                            | Zoom                                          |
-| Click (within `clickSlop`)       | Pick; fires `onPick`, selects the part's node |
+| Click (within `clickSlop`)       | Pick, select the node; fires `SetOnPick` hook |
 | Double click                     | Frame the whole scene                         |
 | Escape / Home                    | Clear selection / reset the camera            |
 

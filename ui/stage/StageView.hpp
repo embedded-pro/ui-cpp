@@ -34,6 +34,9 @@ namespace ui::stage
         : public PaintedView
     {
     public:
+        using PickHandler = Callback<void(std::optional<PickResult>)>;
+        using SelectionHandler = Callback<void(NodeId)>;
+
         explicit StageView(const StageViewConfig& config = {});
 
         [[nodiscard]] Stage& Scene();
@@ -49,6 +52,10 @@ namespace ui::stage
         void FrameAll();
         void Refresh() const;
 
+        // Fired on every click, with nothing when the click missed every part.
+        void SetOnPick(const PickHandler& handler);
+        void SetOnSelectionChanged(const SelectionHandler& handler);
+
         void Paint(Canvas& canvas, const Rect& bounds) override;
         [[nodiscard]] Size MinimumSize() const override;
 
@@ -58,9 +65,6 @@ namespace ui::stage
         void OnMouseDoubleClick(const MouseEvent& event) override;
         void OnWheel(const WheelEvent& event) override;
         void OnKeyPress(const KeyEvent& event) override;
-
-        Callback<void(std::optional<PickResult>)> onPick;
-        Callback<void(NodeId)> onSelectionChanged;
 
     private:
         enum class Drag : std::uint8_t
@@ -79,6 +83,8 @@ namespace ui::stage
         RenderOptions options;
         float clickSlop;
         Size minimumSize;
+        PickHandler onPick;
+        SelectionHandler onSelectionChanged;
 
         NodeId selection;
         Rect lastBounds;

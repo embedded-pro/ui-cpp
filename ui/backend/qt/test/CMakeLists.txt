@@ -9,11 +9,13 @@ ui_add_test(ui.backend.qt_test CUSTOM_MAIN
         TestQtFormTable.cpp
         TestQtFormView.cpp
         TestQtPaintedWidget.cpp
+        TestQtStageView.cpp
         TestQtTheme.cpp
     LINK
         ui.backend.qt
         ui.backend.recording
         ui.charts
+        ui.stage
 )
 
 if (TARGET ui.backend.qt_test)

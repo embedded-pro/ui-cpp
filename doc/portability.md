@@ -5,7 +5,7 @@ records what actually sits in each one and why anything in Tier 3 is there.
 
 ## Tier 1 — no Qt, builds and tests everywhere
 
-`ui/core`, `ui/theme`, `ui/model`, `ui/shell`, `ui/charts`, `ui/scope`, `ui/scene`,
+`ui/core`, `ui/theme`, `ui/model`, `ui/shell`, `ui/charts`, `ui/scope`, `ui/scene`, `ui/stage`,
 `ui/backend/recording`.
 
 These compile and their tests run on Linux, macOS and Windows with no Qt installed and no display.
@@ -16,6 +16,13 @@ which never configures a Qt target.
 scrollback is unbounded by definition, and `Vt100Terminal::TakeOutgoing` returns a string; pinning
 either would mean a fixed history nobody asked for. Neither the parser nor the screen sits on a
 per-sample path, so the rule that exists to keep `Paint` allocation-free does not apply to them.
+
+`ui/stage/` allocates while a scene is being built: adding a node, part, mesh or trail grows a
+vector, and STL import is a load-time operation. That is setup, not painting. Moving joints,
+pushing trail points and relabelling do not allocate, and the renderer's scratch buffers grow only
+on the first paint after the stage has grown. `ui.stage_allocation_test` pins this. The 3D view
+draws through the 2D `Canvas` with no depth buffer, so it runs on every backend; see
+`doc/scene3d.md`.
 
 ## Tier 2 — abstracted, currently only a Qt implementation
 

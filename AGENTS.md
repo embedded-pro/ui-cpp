@@ -13,8 +13,8 @@ toolbox rules, deliberately and explicitly:
 Unlike the library repos, heap allocation is **allowed** in `ui/backend/**` and `ui/shell/**`:
 Qt owns its widget tree with `new`, and fighting that buys nothing.
 
-**But** code in `ui/core/`, `ui/theme/`, `ui/model/`, `ui/widgets/` and `ui/sim/` must be
-**allocation-free after construction** — preallocate buffers, take `std::span` inputs, reuse
+**But** code in `ui/core/`, `ui/theme/`, `ui/model/`, `ui/widgets/`, `ui/scene/`, `ui/stage/` and
+`ui/sim/` must be **allocation-free after construction** — preallocate buffers, take `std::span` inputs, reuse
 member vectors across frames. This is the rule that keeps a non-desktop backend viable, and
 unlike a blanket "no heap" it is actually testable.
 
@@ -32,7 +32,7 @@ Every component is Tier 1, 2 or 3. The tier is not advisory — it is enforced i
 **Tier 1 — genuinely backend-agnostic.** No `<Q...>` include, no `Qt6::` link, builds and tests
 on Linux, macOS and Windows with no Qt installed.
 Everything under `ui/` **except** the toolkit backends — today `ui/core/`, `ui/theme/`, `ui/model/`,
-`ui/shell/`, `ui/charts/`, `ui/scope/`, `ui/scene/`, `ui/widgets/`, `ui/terminal/` and
+`ui/shell/`, `ui/charts/`, `ui/scope/`, `ui/scene/`, `ui/stage/`, `ui/widgets/`, `ui/terminal/` and
 `ui/backend/recording/`. The CI check is
 phrased as that exclusion, so a directory added later
 is policed without anyone remembering to list it.

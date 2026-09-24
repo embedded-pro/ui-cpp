@@ -30,7 +30,8 @@
       "generator": "Ninja Multi-Config",
       "cacheVariables": {
         "UI_BUILD_TESTS": true,
-        "UI_BUILD_QT_BACKEND": true
+        "UI_BUILD_QT_BACKEND": true,
+        "UI_BUILD_EXAMPLES": true
       }
     },
     {

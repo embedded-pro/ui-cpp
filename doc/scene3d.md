@@ -52,14 +52,14 @@ carries no units, so set `StlOptions::scale` to `0.001f` for CAD files in millim
 
 ## Interaction
 
-| Input                            | Effect                                             |
-|----------------------------------|----------------------------------------------------|
-| Left drag                        | Orbit                                              |
-| Right, middle or shift-left drag | Pan                                                |
-| Wheel                            | Zoom                                               |
-| Click (within `clickSlop`)       | Pick; fires `onPick`, selects the part's node      |
-| Double click                     | Frame the whole scene                              |
-| Escape / Home                    | Clear selection / reset the camera                 |
+| Input                            | Effect                                        |
+|----------------------------------|-----------------------------------------------|
+| Left drag                        | Orbit                                         |
+| Right, middle or shift-left drag | Pan                                           |
+| Wheel                            | Zoom                                          |
+| Click (within `clickSlop`)       | Pick; fires `onPick`, selects the part's node |
+| Double click                     | Frame the whole scene                         |
+| Escape / Home                    | Clear selection / reset the camera            |
 
 Camera and selection changes repaint on their own. Joint values and trail points are data: the
 host's timer repaints, as it does for `ScopeCore`. Call `StageView::Refresh()` for a one-off change.
@@ -79,6 +79,7 @@ Outlines draw only a mesh's hard edges, so a cylinder shows its rims and not eve
 are cut into 16-segment chunks that sort alongside the faces.
 
 **Allocation:**
+
 - Adding things allocates, and belongs to setup.
 - Moving joints, pushing trail points, relabelling, recolouring and resizing never allocate.
 - The renderer's scratch buffers grow only on the first paint after the stage has grown.

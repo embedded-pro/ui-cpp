@@ -5,6 +5,7 @@ ui_add_test(ui.stage_test
         TestSceneGraph.cpp
         TestStage.cpp
         TestStageRenderer.cpp
+        TestStageView.cpp
         TestStl.cpp
     LINK
         ui.stage

@@ -1,7 +1,7 @@
 # UI Toolbox — Claude Instructions
 
 Canonical rules: **[AGENTS.md](AGENTS.md)** (shared with Copilot).
-Portability tiers: `doc/portability.md`. Geometry conventions: `doc/canvas.md`.
+Portability tiers: `doc/portability.md`. Geometry conventions: `doc/canvas.md`. 3D stage: `doc/scene3d.md`.
 
 Essentials (full detail in AGENTS.md):
 

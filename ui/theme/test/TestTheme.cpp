@@ -85,3 +85,21 @@ TEST_F(ThemeTest, TheAxisTriadRolesAreDistinctInBothThemes)
         EXPECT_NE(x, z);
     }
 }
+
+TEST_F(ThemeTest, TheStageRolesSitAtTheEndOfBothPalettes)
+{
+    EXPECT_EQ(ui::theme::Light().Get(ui::theme::ColorRole::SceneLabel), ui::Color::Rgb(0x202020));
+    EXPECT_EQ(ui::theme::Instrument().Get(ui::theme::ColorRole::SceneLabel), ui::Color::Rgb(0xDDDDDD));
+    EXPECT_EQ(ui::theme::Instrument().Get(ui::theme::ColorRole::SceneSurface), ui::Color::Rgb(0x9AA3AE));
+}
+
+TEST_F(ThemeTest, TheSelectionStandsOutFromSurfaceAndBackgroundInBothThemes)
+{
+    for (const auto& theme : { std::cref(ui::theme::Light()), std::cref(ui::theme::Instrument()) })
+    {
+        const auto selection = theme.get().Get(ui::theme::ColorRole::SceneSelection);
+
+        EXPECT_NE(selection, theme.get().Get(ui::theme::ColorRole::SceneSurface));
+        EXPECT_NE(selection, theme.get().Get(ui::theme::ColorRole::SceneBackground));
+    }
+}

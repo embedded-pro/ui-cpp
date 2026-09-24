@@ -12,6 +12,7 @@ option(UI_BUILD_TESTS "Enable build of the tests" Off)
 # option. The Qt backend is opted into explicitly.
 option(UI_BUILD_QT_BACKEND "Enable build of the Qt backend" Off)
 option(UI_ENABLE_COVERAGE "Instrument this project's targets for gcov" Off)
+option(UI_BUILD_EXAMPLES "Enable build of the Qt examples (needs UI_BUILD_QT_BACKEND)" Off)
 
 if (UI_BUILD_TESTS)
     set(BUILD_TESTING On)
@@ -46,6 +47,14 @@ if (UI_BUILD_TESTS)
 endif()
 
 add_subdirectory(ui)
+
+if (UI_BUILD_EXAMPLES)
+    if (NOT UI_BUILD_QT_BACKEND)
+        message(FATAL_ERROR "UI_BUILD_EXAMPLES needs UI_BUILD_QT_BACKEND: the examples open Qt windows.")
+    endif()
+
+    add_subdirectory(examples/stage)
+endif()
 
 if (COMMAND emil_clangformat_directories)
     emil_clangformat_directories(ui DIRECTORIES .)

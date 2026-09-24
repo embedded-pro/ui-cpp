@@ -1,4 +1,5 @@
 #include "ui/scene/SceneGizmos.hpp"
+#include "ui/scene/Clip3.hpp"
 #include "ui/theme/Theme.hpp"
 
 namespace ui::scene
@@ -11,6 +12,17 @@ namespace ui::scene
         [[nodiscard]] int LineCountFor(const GroundGridConfig& config)
         {
             return static_cast<int>(2.0f * config.extent / config.step);
+        }
+
+        // Clipped rather than clamped: with a panned camera the eye can hover over the grid, and
+        // a clamped line would smear across the whole viewport.
+        void DrawClippedLine(Canvas& canvas, const ViewFrame& frame, Vector3 from, Vector3 to)
+        {
+            auto viewFrom = frame.ToView(from);
+            auto viewTo = frame.ToView(to);
+
+            if (ClipSegmentNear(viewFrom, viewTo, frame.NearDistance()))
+                canvas.DrawLine(frame.ProjectView(viewFrom), frame.ProjectView(viewTo));
         }
     }
 
@@ -28,16 +40,14 @@ namespace ui::scene
         {
             const auto coordinate = -config.extent + config.step * static_cast<float>(i);
 
-            canvas.DrawLine(frame.Project(Vector3{ coordinate, -config.extent, 0.0f }),
-                frame.Project(Vector3{ coordinate, config.extent, 0.0f }));
+            DrawClippedLine(canvas, frame, Vector3{ coordinate, -config.extent, 0.0f }, Vector3{ coordinate, config.extent, 0.0f });
         }
 
         for (auto i = 0; i <= lines; ++i)
         {
             const auto coordinate = -config.extent + config.step * static_cast<float>(i);
 
-            canvas.DrawLine(frame.Project(Vector3{ -config.extent, coordinate, 0.0f }),
-                frame.Project(Vector3{ config.extent, coordinate, 0.0f }));
+            DrawClippedLine(canvas, frame, Vector3{ -config.extent, coordinate, 0.0f }, Vector3{ config.extent, coordinate, 0.0f });
         }
     }
 

@@ -1,7 +1,10 @@
 ui_add_test(ui.scene_test
     SOURCES
         TestCamera3D.cpp
+        TestClip3.cpp
+        TestMatrix3.cpp
         TestSceneGizmos.cpp
+        TestTransform3.cpp
         TestVector3.cpp
     LINK
         ui.scene

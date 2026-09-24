@@ -16,7 +16,8 @@ ui/core      geometry, colour, font, Canvas, input, PaintedView, Callback   — 
 ui/theme     colour/font roles, chart metrics, Light + Instrument themes    — no Qt
 ui/charts    ChartCore, AxisTransform (linear + log10), interaction         — no Qt
 ui/scope     ScopeCore, RingBuffer, edge triggering                         — no Qt
-ui/scene     Vector3, orbit camera, ground grid and axis triad             — no Qt
+ui/scene     Vector3, rigid transforms, clipping, orbit camera, grid, triad — no Qt
+ui/stage     3D stage: scene graph, joints, meshes, STL, materials, view   — no Qt
 ui/backend/recording  records draw calls — the test harness                 — no Qt
 
 ui/backend/qt         QtCanvas, QtPaintedWidget, QtTheme — Qt6 Widgets
@@ -48,6 +49,9 @@ ctest --preset host-qt
 `UI_BUILD_QT_BACKEND` is opt-in and off by default, and is deliberately *not* inferred from a
 consumer's `*_BUILD_SIMULATOR` flag — e-foc configures its host tools (and therefore Qt) on every
 host build, while the toolboxes only do so under their simulator option.
+
+The 3D stage (robot arms, CNC machines) is described in [doc/scene3d.md](doc/scene3d.md); a Qt demo
+builds with `-DUI_BUILD_QT_BACKEND=ON -DUI_BUILD_EXAMPLES=ON`.
 
 ## Contributing
 

@@ -341,3 +341,100 @@ TEST_F(OrbitCameraTest, SettingAPoseDoesNotMoveTheResetTarget)
     EXPECT_NEAR(camera.Pose().azimuth, original.azimuth, 1e-6f);
     EXPECT_NEAR(camera.Pose().distance, original.distance, 1e-6f);
 }
+
+TEST_F(ViewFrameTest, ProjectIsProjectViewOfToView)
+{
+    const auto frame = FrameFor(CameraPose{ 0.4f, 0.3f, 4.0f, Vector3{ 0.1f, 0.2f, 0.3f } });
+    const Vector3 point{ 0.5f, -0.4f, 0.8f };
+
+    const auto direct = frame.Project(point);
+    const auto staged = frame.ProjectView(frame.ToView(point));
+
+    EXPECT_NEAR(direct.x, staged.x, 1e-4f);
+    EXPECT_NEAR(direct.y, staged.y, 1e-4f);
+}
+
+TEST_F(ViewFrameTest, ViewSpaceDepthIsTheDistanceAlongForward)
+{
+    const auto frame = FrameFor(CameraPose{ 0.0f, 0.0f, 3.0f, Vector3{} });
+
+    const auto view = frame.ToView(Vector3{ -1.0f, 0.5f, 0.25f });
+
+    EXPECT_NEAR(view.x, 0.5f, 1e-5f);
+    EXPECT_NEAR(view.y, 0.25f, 1e-5f);
+    EXPECT_NEAR(view.z, 4.0f, 1e-5f);
+}
+
+TEST_F(ViewFrameTest, ProjectWithDepthReportsTheDepth)
+{
+    const auto frame = FrameFor(CameraPose{ 0.0f, 0.0f, 3.0f, Vector3{} });
+
+    const auto projected = frame.ProjectWithDepth(Vector3{});
+
+    ASSERT_TRUE(projected.has_value());
+    EXPECT_NEAR(projected->depth, 3.0f, 1e-5f);
+    EXPECT_NEAR(projected->point.x, 400.0f, 1e-2f);
+}
+
+TEST_F(ViewFrameTest, ProjectWithDepthRejectsPointsBehindTheEye)
+{
+    const auto frame = FrameFor(CameraPose{ 0.0f, 0.0f, 3.0f, Vector3{} });
+
+    EXPECT_FALSE(frame.ProjectWithDepth(Vector3{ 10.0f, 0.1f, 0.0f }).has_value());
+    EXPECT_NEAR(frame.NearDistance(), ProjectionConfig{}.nearDistance, 1e-9f);
+}
+
+TEST_F(OrbitCameraTest, PanningRightMovesTheLookAtAgainstTheCameraRight)
+{
+    const auto right = camera.FrameFor(standardViewport).Right();
+    const auto before = camera.Pose().lookAt;
+
+    camera.Pan(10.0f, 0.0f, 600.0f);
+
+    const auto moved = camera.Pose().lookAt - before;
+
+    EXPECT_LT(ui::scene::Dot(moved, right), 0.0f);
+    EXPECT_NEAR(camera.Pose().distance, CameraPose{}.distance, 1e-6f);
+}
+
+// At the look-at depth, one pixel of drag is exactly one pixel of scene motion.
+TEST_F(OrbitCameraTest, APanKeepsTheLookAtPointUnderTheCursor)
+{
+    const auto before = camera.FrameFor(standardViewport).Project(CameraPose{}.lookAt);
+
+    camera.Pan(25.0f, -10.0f, standardViewport.height);
+
+    const auto after = camera.FrameFor(standardViewport).Project(CameraPose{}.lookAt);
+
+    EXPECT_NEAR(after.x - before.x, 25.0f, 0.05f);
+    EXPECT_NEAR(after.y - before.y, -10.0f, 0.05f);
+}
+
+TEST_F(OrbitCameraTest, PanDragsOnlyAfterAPress)
+{
+    camera.UpdatePan(ui::Point{ 50.0f, 50.0f }, 600.0f);
+    EXPECT_EQ(camera.Pose().lookAt, CameraPose{}.lookAt);
+
+    camera.StartPan(ui::Point{ 0.0f, 0.0f });
+    EXPECT_TRUE(camera.IsPanning());
+    camera.UpdatePan(ui::Point{ 50.0f, 50.0f }, 600.0f);
+    EXPECT_NE(camera.Pose().lookAt, CameraPose{}.lookAt);
+
+    camera.EndPan();
+    EXPECT_FALSE(camera.IsPanning());
+}
+
+TEST_F(OrbitCameraTest, FramingCentresAndFitsTheSphere)
+{
+    camera.Frame(Vector3{ 1.0f, 2.0f, 0.5f }, 1.0f);
+
+    EXPECT_EQ(camera.Pose().lookAt, (Vector3{ 1.0f, 2.0f, 0.5f }));
+    EXPECT_NEAR(camera.Pose().distance, 2.0f, 1e-4f);
+}
+
+TEST_F(OrbitCameraTest, FramingRespectsTheDistanceLimits)
+{
+    camera.Frame(Vector3{}, 100.0f);
+
+    EXPECT_NEAR(camera.Pose().distance, OrbitLimits{}.maximumDistance, 1e-6f);
+}

@@ -143,3 +143,22 @@ TEST_F(SceneGizmosTest, TheGizmosDoNotInheritAFillFromEarlierDrawing)
 
     EXPECT_NE(brushReset, commands.end());
 }
+
+// A camera hovering just above the grid, looking along it: the lines passing under and behind
+// the eye must be clipped, not smeared across the viewport.
+TEST_F(SceneGizmosTest, AGridSeenFromInsideIsClippedToFiniteLines)
+{
+    ViewFrame inside{ CameraPose{ 0.0f, 0.1f, 0.5f, Vector3{} }, ui::Rect{ 0.0f, 0.0f, 800.0f, 600.0f }, {} };
+
+    ui::scene::DrawGroundGrid(canvas, inside);
+
+    EXPECT_TRUE(AllFinite(canvas));
+    EXPECT_LT(canvas.CountOf(CommandKind::DrawLine), 34u);
+
+    for (const auto& command : canvas.Commands())
+        if (command.kind == CommandKind::DrawLine)
+        {
+            EXPECT_LT(std::abs(command.from.y), 1e5f);
+            EXPECT_LT(std::abs(command.to.y), 1e5f);
+        }
+}

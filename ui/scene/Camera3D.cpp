@@ -15,6 +15,11 @@ namespace ui::scene
 
             return wrapped;
         }
+
+        float TanHalfFieldOfView(const ProjectionConfig& projection)
+        {
+            return std::tan(projection.fieldOfViewDegrees * std::numbers::pi_v<float> / 180.0f * 0.5f);
+        }
     }
 
     ViewFrame::ViewFrame(const CameraPose& pose, const Rect& viewport, const ProjectionConfig& projection)
@@ -41,25 +46,43 @@ namespace ui::scene
         // is. Only the gimbal fallback above breaks that, and only momentarily.
         up = Cross(right, forward);
 
-        tanHalfFieldOfView = std::tan(projection.fieldOfViewDegrees * std::numbers::pi_v<float> / 180.0f * 0.5f);
+        tanHalfFieldOfView = TanHalfFieldOfView(projection);
         aspect = std::max(1.0f, viewport.width) / std::max(1.0f, viewport.height);
     }
 
     Point ViewFrame::Project(Vector3 world) const
     {
+        return ProjectView(ToView(world));
+    }
+
+    Vector3 ViewFrame::ToView(Vector3 world) const
+    {
         const auto offset = world - eye;
 
-        const auto viewX = Dot(right, offset);
-        const auto viewY = Dot(up, offset);
-        const auto viewZ = std::max(Dot(forward, offset), nearDistance);
+        return Vector3{ Dot(right, offset), Dot(up, offset), Dot(forward, offset) };
+    }
 
-        const auto normalizedX = viewX / (viewZ * tanHalfFieldOfView * aspect);
-        const auto normalizedY = viewY / (viewZ * tanHalfFieldOfView);
+    Point ViewFrame::ProjectView(Vector3 view) const
+    {
+        const auto viewZ = std::max(view.z, nearDistance);
+
+        const auto normalizedX = view.x / (viewZ * tanHalfFieldOfView * aspect);
+        const auto normalizedY = view.y / (viewZ * tanHalfFieldOfView);
 
         return Point{
             viewport.x + (normalizedX + 1.0f) * 0.5f * viewport.width,
             viewport.y + (1.0f - normalizedY) * 0.5f * viewport.height
         };
+    }
+
+    std::optional<ProjectedPoint> ViewFrame::ProjectWithDepth(Vector3 world) const
+    {
+        const auto view = ToView(world);
+
+        if (view.z < nearDistance)
+            return std::nullopt;
+
+        return ProjectedPoint{ ProjectView(view), view.z };
     }
 
     Vector3 ViewFrame::Eye() const
@@ -85,6 +108,11 @@ namespace ui::scene
     const Rect& ViewFrame::Viewport() const
     {
         return viewport;
+    }
+
+    float ViewFrame::NearDistance() const
+    {
+        return nearDistance;
     }
 
     OrbitCamera::OrbitCamera(CameraPose pose, OrbitLimits limits, ProjectionConfig projection)
@@ -126,6 +154,42 @@ namespace ui::scene
         return orbiting;
     }
 
+    void OrbitCamera::StartPan(Point position)
+    {
+        panning = true;
+        lastPosition = position;
+    }
+
+    void OrbitCamera::UpdatePan(Point position, float viewportHeight)
+    {
+        if (!panning)
+            return;
+
+        Pan(position.x - lastPosition.x, position.y - lastPosition.y, viewportHeight);
+        lastPosition = position;
+    }
+
+    void OrbitCamera::EndPan()
+    {
+        panning = false;
+    }
+
+    bool OrbitCamera::IsPanning() const
+    {
+        return panning;
+    }
+
+    void OrbitCamera::Pan(float deltaX, float deltaY, float viewportHeight)
+    {
+        if (viewportHeight <= 0.0f)
+            return;
+
+        const ViewFrame frame{ pose, Rect{ 0.0f, 0.0f, 1.0f, 1.0f }, projection };
+        const auto worldPerPixel = 2.0f * pose.distance * TanHalfFieldOfView(projection) / viewportHeight;
+
+        pose.lookAt = pose.lookAt - frame.Right() * (deltaX * worldPerPixel) + frame.Up() * (deltaY * worldPerPixel);
+    }
+
     void OrbitCamera::Orbit(float deltaX, float deltaY)
     {
         pose.azimuth = WrapAngle(pose.azimuth - deltaX * limits.radiansPerPixel);
@@ -151,6 +215,17 @@ namespace ui::scene
     {
         pose = initialPose;
         orbiting = false;
+        panning = false;
+    }
+
+    void OrbitCamera::Frame(Vector3 centre, float radius)
+    {
+        const auto sineHalfFieldOfView = std::sin(projection.fieldOfViewDegrees * std::numbers::pi_v<float> / 180.0f * 0.5f);
+
+        pose.lookAt = centre;
+
+        if (sineHalfFieldOfView > 0.0f)
+            pose.distance = Clamp(radius / sineHalfFieldOfView, limits.minimumDistance, limits.maximumDistance);
     }
 
     void OrbitCamera::SetLookAt(Vector3 lookAt)

@@ -2,6 +2,7 @@
 
 #include "ui/core/Geometry.hpp"
 #include "ui/scene/Vector3.hpp"
+#include <optional>
 
 namespace ui::scene
 {
@@ -37,6 +38,12 @@ namespace ui::scene
         Vector3 lookAt{ 0.0f, 0.0f, 0.3f };
     };
 
+    struct ProjectedPoint
+    {
+        Point point;
+        float depth{ 0.0f };
+    };
+
     // Built once per repaint and then projects. The Qt original rebuilt this basis inside every
     // Project() call - 1092 times per frame at two degrees of freedom with a full trail.
     class ViewFrame
@@ -46,11 +53,21 @@ namespace ui::scene
 
         [[nodiscard]] Point Project(Vector3 world) const;
 
+        // x right, y up, z depth along the forward axis.
+        [[nodiscard]] Vector3 ToView(Vector3 world) const;
+
+        // Clamps depth like Project; clip with ClipPolygonNear / ClipSegmentNear first.
+        [[nodiscard]] Point ProjectView(Vector3 view) const;
+
+        // Nothing for a point nearer than the near plane, rather than a smeared one.
+        [[nodiscard]] std::optional<ProjectedPoint> ProjectWithDepth(Vector3 world) const;
+
         [[nodiscard]] Vector3 Eye() const;
         [[nodiscard]] Vector3 Forward() const;
         [[nodiscard]] Vector3 Right() const;
         [[nodiscard]] Vector3 Up() const;
         [[nodiscard]] const Rect& Viewport() const;
+        [[nodiscard]] float NearDistance() const;
 
     private:
         Vector3 eye;
@@ -79,9 +96,20 @@ namespace ui::scene
         void EndOrbit();
         [[nodiscard]] bool IsOrbiting() const;
 
+        // Slides the look-at point so the scene follows the cursor at the look-at depth.
+        void StartPan(Point position);
+        void UpdatePan(Point position, float viewportHeight);
+        void EndPan();
+        [[nodiscard]] bool IsPanning() const;
+
         void Orbit(float deltaX, float deltaY);
+        void Pan(float deltaX, float deltaY, float viewportHeight);
         void Zoom(float wheelDelta);
         void Reset();
+
+        // Centres on a bounding sphere and backs off until it fits the vertical field of view,
+        // within the distance limits.
+        void Frame(Vector3 centre, float radius);
 
         void SetLookAt(Vector3 lookAt);
         void SetPose(const CameraPose& pose);
@@ -95,6 +123,7 @@ namespace ui::scene
         ProjectionConfig projection;
 
         bool orbiting{ false };
+        bool panning{ false };
         Point lastPosition;
     };
 }

@@ -1,0 +1,9 @@
+ui_add_test(ui.stage_test
+    SOURCES
+        TestMesh.cpp
+        TestPrimitives.cpp
+        TestStl.cpp
+    LINK
+        ui.stage
+        ui.backend.recording
+)

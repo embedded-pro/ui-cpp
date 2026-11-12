@@ -73,6 +73,25 @@ TEST_F(QtThemeTest, ADefaultButtonKeepsTheReadableTextColour)
         ::testing::HasSubstr("color: " + Colour(ui::theme::ColorRole::TextInverse, theme).toStdString()));
 }
 
+TEST_F(QtThemeTest, ADefaultButtonStandsOutFromThePanelItSitsOn)
+{
+    for (const auto* theme : { &ui::theme::Light(), &ui::theme::Instrument() })
+    {
+        const auto sheet = ui::backend::qt::ButtonStyleSheet(ui::theme::ButtonRole::Default, *theme).toStdString();
+        const auto enabledRule = sheet.substr(0, sheet.find('}'));
+        const auto surface = Colour(ui::theme::ColorRole::Surface, *theme).toStdString();
+
+        EXPECT_THAT(enabledRule, ::testing::Not(::testing::HasSubstr("background-color: " + surface + ";")));
+        EXPECT_THAT(enabledRule, ::testing::HasSubstr("border: 1px solid"));
+    }
+}
+
+TEST_F(QtThemeTest, ColouredButtonsKeepNoBorder)
+{
+    EXPECT_THAT(ui::backend::qt::ButtonStyleSheet(ui::theme::ButtonRole::Start, ui::theme::Light()).toStdString(),
+        ::testing::HasSubstr("border: none;"));
+}
+
 TEST_F(QtThemeTest, StylingAButtonInstallsTheRulesForItsRole)
 {
     QPushButton button;

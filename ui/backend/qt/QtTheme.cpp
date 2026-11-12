@@ -74,12 +74,12 @@ namespace ui::backend::qt
                     fill.lighter(140).name(QColor::HexRgb), fill.lighter(160).name(QColor::HexRgb), border);
         }
 
-        // A default button is filled with the panel's own colour, so on its own it disappears into
-        // the panel; lifting it toward the text colour reads as raised in a light and a dark theme.
         QString DefaultRule(const theme::Theme& theme)
         {
-            const auto surface = ToQt(theme.Get(theme::ColorRole::Surface));
-            const auto text = ToQt(theme.Get(theme::ColorRole::Text));
+            using enum theme::ColorRole;
+
+            const auto surface = ToQt(theme.Get(Surface));
+            const auto text = ToQt(theme.Get(Text));
             const auto fill = Mix(surface, text, 0.10f);
             const auto border = QStringLiteral("1px solid %1").arg(Mix(surface, text, 0.30f).name(QColor::HexRgb));
 
@@ -91,7 +91,7 @@ namespace ui::backend::qt
                 "QPushButton:disabled, QToolButton:disabled { background-color: %6; color: %7; }")
                 .arg(fill.name(QColor::HexRgb), text.name(QColor::HexRgb), border, Mix(surface, text, 0.18f).name(QColor::HexRgb),
                     Mix(surface, text, 0.04f).name(QColor::HexRgb), surface.name(QColor::HexRgb),
-                    ToQt(theme.Get(theme::ColorRole::TextMuted)).name(QColor::HexRgb));
+                    ToQt(theme.Get(TextMuted)).name(QColor::HexRgb));
         }
     }
 

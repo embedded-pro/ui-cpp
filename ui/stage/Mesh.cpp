@@ -103,6 +103,24 @@ namespace ui::stage
         faces.push_back(Face{ { a, b, c, d }, 4, Vector3{}, std::byte{ 0 } });
     }
 
+    void Mesh::Append(const Mesh& part, const scene::Transform3& placement)
+    {
+        const auto offset = static_cast<std::uint32_t>(vertices.size());
+        vertices.reserve(vertices.size() + part.vertices.size());
+        faces.reserve(faces.size() + part.faces.size());
+
+        for (const auto& vertex : part.vertices)
+            vertices.push_back(placement.Apply(vertex));
+
+        for (auto face : part.faces)
+        {
+            for (std::uint8_t i = 0; i < face.count; ++i)
+                face.index[i] += offset;
+            face.normal = placement.ApplyDirection(face.normal);
+            faces.push_back(face);
+        }
+    }
+
     void Mesh::Finish(float featureAngleDegrees)
     {
         for (auto& face : faces)

@@ -3,6 +3,7 @@ ui_add_test(ui.stage_test
         TestMesh.cpp
         TestPrimitives.cpp
         TestSceneGraph.cpp
+        TestShading.cpp
         TestStage.cpp
         TestStageRenderer.cpp
         TestStageView.cpp

@@ -8,6 +8,8 @@ ui_add_library(ui.stage
         Primitives.hpp
         SceneGraph.cpp
         SceneGraph.hpp
+        Shading.cpp
+        Shading.hpp
         Stage.cpp
         Stage.hpp
         StageBuilder.cpp

@@ -1,6 +1,8 @@
 #include "MeshTestSupport.hpp"
 #include "ui/stage/Primitives.hpp"
+#include <array>
 #include <gmock/gmock.h>
+#include <span>
 
 namespace
 {
@@ -106,4 +108,56 @@ TEST_F(PrimitivesTest, ThePlaneIsOneQuadWithAnOutlinedBoundary)
     EXPECT_EQ(plane.faces[0].count, 4u);
     EXPECT_NEAR(plane.faces[0].normal.z, 1.0f, 1e-6f);
     EXPECT_EQ(ui::stage::test::FeatureEdgeUses(plane), 4u);
+}
+
+TEST_F(PrimitivesTest, ALatheTurnsAProfileIntoAClosedSolidWithOutwardFaces)
+{
+    const std::array<ui::stage::ProfilePoint, 6> profile{ { { 0.0f, 1.0f }, { 0.8f, 1.0f }, { 1.0f, 0.8f }, { 1.0f, 0.2f }, { 0.8f, 0.0f }, { 0.0f, 0.0f } } };
+    const auto hub = ui::stage::MakeLathe(profile, Tessellation{ 16, 2 });
+
+    EXPECT_EQ(hub.vertices.size(), 2u + 4u * 16u);
+    EXPECT_EQ(hub.faces.size(), 2u * 16u + 3u * 16u);
+    EXPECT_NEAR(hub.boundsMax.x, 1.0f, 1e-6f);
+    EXPECT_NEAR(hub.boundsMax.z, 1.0f, 1e-6f);
+    ExpectOutwardNormals(hub, Vector3{ 0.0f, 0.0f, 0.5f });
+    EXPECT_EQ(ui::stage::test::FeatureEdgeUses(hub), 2u * 4u * 16u);
+
+    EXPECT_TRUE(ui::stage::MakeLathe(std::span(profile).first(2)).faces.empty());
+}
+
+TEST_F(PrimitivesTest, AnExtrusionCapsBothEndsAndOutlinesOnlyItsStraightCorners)
+{
+    const auto outline = ui::stage::RoundedRectangle(2.0f, 1.0f, 0.3f, 6);
+    const auto bar = ui::stage::MakeExtrusion(outline, -0.5f, 0.5f);
+    const auto sides = outline.size();
+
+    EXPECT_EQ(bar.faces.size(), 3u * sides);
+    EXPECT_NEAR(bar.boundsMin.x, -1.0f, 1e-6f);
+    EXPECT_NEAR(bar.boundsMax.y, 0.5f, 1e-6f);
+    ExpectOutwardNormals(bar, Vector3{});
+    EXPECT_EQ(ui::stage::test::FeatureEdgeUses(bar), 2u * 2u * sides);
+
+    const auto square = ui::stage::MakeExtrusion(ui::stage::RoundedRectangle(1.0f, 1.0f, 0.0f, 4), 0.0f, 1.0f);
+    EXPECT_EQ(ui::stage::test::FeatureEdgeUses(square), 2u * (2u * 4u + 4u));
+    EXPECT_TRUE(ui::stage::MakeExtrusion(std::span(outline).first(2), 0.0f, 1.0f).faces.empty());
+}
+
+TEST_F(PrimitivesTest, OutlinesRunCounterClockwiseAroundTheirCentre)
+{
+    for (const auto& outline : { ui::stage::Stadium(3.0f, 1.0f, 8), ui::stage::RegularPolygon(6, 1.0f), ui::stage::RoundedRectangle(1.0f, 2.0f, 0.2f, 4) })
+    {
+        float area{ 0.0f };
+        for (std::size_t i = 0; i < outline.size(); ++i)
+        {
+            const auto& p = outline[i];
+            const auto& q = outline[(i + 1) % outline.size()];
+            area += p.x * q.y - q.x * p.y;
+        }
+        EXPECT_GT(area, 0.0f);
+    }
+
+    const auto slot = ui::stage::Stadium(3.0f, 1.0f, 8);
+    EXPECT_EQ(slot.size(), 18u);
+    EXPECT_NEAR(slot.back().y, 3.0f, 1e-6f);
+    EXPECT_EQ(ui::stage::RegularPolygon(6, 1.0f).size(), 6u);
 }

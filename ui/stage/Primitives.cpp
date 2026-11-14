@@ -1,5 +1,6 @@
 #include "ui/stage/Primitives.hpp"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <span>
@@ -9,14 +10,6 @@ namespace ui::stage
     namespace
     {
         constexpr float pi{ std::numbers::pi_v<float> };
-
-        // A radius of zero is a pole: one vertex rather than a ring. The first and last profile
-        // points must be poles, so every lathed solid is closed.
-        struct ProfilePoint
-        {
-            float radius{ 0.0f };
-            float z{ 0.0f };
-        };
 
         [[nodiscard]] std::uint32_t Segments(Tessellation tessellation)
         {
@@ -149,6 +142,96 @@ namespace ui::stage
         profile.push_back(ProfilePoint{ 0.0f, -radius });
 
         return Lathe(profile, Segments(tessellation));
+    }
+
+    Mesh MakeLathe(std::span<const ProfilePoint> profile, Tessellation tessellation)
+    {
+        if (profile.size() < 3)
+            return Mesh{};
+
+        return Lathe(profile, Segments(tessellation));
+    }
+
+    Mesh MakeExtrusion(std::span<const Point2> outline, float bottom, float top)
+    {
+        Mesh mesh;
+        const auto count = static_cast<std::uint32_t>(outline.size());
+        if (count < 3)
+            return mesh;
+
+        Point2 centre;
+        for (const auto& point : outline)
+        {
+            mesh.AddVertex(Vector3{ point.x, point.y, bottom });
+            centre = Point2{ centre.x + point.x / static_cast<float>(count), centre.y + point.y / static_cast<float>(count) };
+        }
+        for (const auto& point : outline)
+            mesh.AddVertex(Vector3{ point.x, point.y, top });
+
+        const auto lowerCentre = mesh.AddVertex(Vector3{ centre.x, centre.y, bottom });
+        const auto upperCentre = mesh.AddVertex(Vector3{ centre.x, centre.y, top });
+
+        for (std::uint32_t i = 0; i < count; ++i)
+        {
+            const auto next = (i + 1) % count;
+            mesh.AddQuad(i, next, count + next, count + i);
+            mesh.AddTriangle(upperCentre, count + i, count + next);
+            mesh.AddTriangle(lowerCentre, next, i);
+        }
+
+        mesh.Finish();
+        return mesh;
+    }
+
+    Outline RoundedRectangle(float width, float height, float radius, std::uint32_t cornerSegments)
+    {
+        const auto r = std::clamp(radius, 0.0f, std::min(width, height) / 2.0f);
+        const auto x = width / 2.0f - r;
+        const auto y = height / 2.0f - r;
+        const auto segments = r > 0.0f ? std::max<std::uint32_t>(cornerSegments, 1) : 0;
+        const std::array<std::array<float, 3>, 4> corners{ { { x, -y, -pi / 2.0f }, { x, y, 0.0f }, { -x, y, pi / 2.0f }, { -x, -y, pi } } };
+
+        Outline outline;
+        outline.reserve(4 * (segments + 1));
+        for (const auto& [cx, cy, start] : corners)
+            for (std::uint32_t step = 0; step <= segments; ++step)
+            {
+                const auto angle = start + (pi / 2.0f) * (segments == 0 ? 0.0f : static_cast<float>(step) / static_cast<float>(segments));
+                outline.push_back(Point2{ cx + r * std::cos(angle), cy + r * std::sin(angle) });
+            }
+        return outline;
+    }
+
+    Outline Stadium(float length, float width, std::uint32_t endSegments)
+    {
+        const auto r = width / 2.0f;
+        const auto segments = std::max<std::uint32_t>(endSegments, 1);
+
+        Outline outline;
+        outline.reserve(2 * (segments + 1));
+        for (std::uint32_t step = 0; step <= segments; ++step)
+        {
+            const auto angle = pi + pi * static_cast<float>(step) / static_cast<float>(segments);
+            outline.push_back(Point2{ r * std::cos(angle), r * std::sin(angle) });
+        }
+        for (std::uint32_t step = 0; step <= segments; ++step)
+        {
+            const auto angle = pi * static_cast<float>(step) / static_cast<float>(segments);
+            outline.push_back(Point2{ r * std::cos(angle), length + r * std::sin(angle) });
+        }
+        return outline;
+    }
+
+    Outline RegularPolygon(std::uint32_t sides, float radius)
+    {
+        Outline outline;
+        outline.reserve(sides);
+        for (std::uint32_t side = 0; side < sides; ++side)
+        {
+            const auto angle = 2.0f * pi * static_cast<float>(side) / static_cast<float>(sides);
+            outline.push_back(Point2{ radius * std::cos(angle), radius * std::sin(angle) });
+        }
+        return outline;
     }
 
     Mesh MakePlane()

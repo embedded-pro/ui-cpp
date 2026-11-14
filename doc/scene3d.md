@@ -6,7 +6,8 @@ no GPU, and it is tested with `RecordingCanvas` like every other widget.
 
 ```text
 ui/scene   Vector3, Matrix3, Transform3, near-plane clipping, ViewFrame, OrbitCamera, grid, triad
-ui/stage   Mesh, primitives, STL import, SceneGraph, Material, Stage, StageRenderer, StageView
+ui/stage   Mesh, primitives, lathe and extrusion, shading, STL import, SceneGraph, Material, Stage,
+           StageRenderer, StageView
 ```
 
 ## Building a scene
@@ -46,6 +47,28 @@ frame. `Transform3::FromRowMajor` takes a 3×4 pose from a consumer's own kinema
 
 Imported geometry comes from `ParseStl` (binary or ASCII, from a byte span) or `LoadStlFile`. STL
 carries no units, so set `StlOptions::scale` to `0.001f` for CAD files in millimetres.
+
+### Shapes of your own
+
+Two builders cover most machined parts, both in `Primitives.hpp`:
+
+- **`MakeLathe`** turns a profile of `ProfilePoint{ radius, z }` about Z, from the top pole down to the bottom
+  pole. Hubs, flanges, gearboxes, collars and chamfered discs are a handful of points each.
+- **`MakeExtrusion`** sweeps a convex outline, counter-clockwise in XY, along Z and caps both ends. Plates,
+  tubes, motor bodies and bolt heads come from `RoundedRectangle`, `Stadium` and `RegularPolygon`.
+
+`Mesh::Append` merges a finished part under a rigid transform (`Transform3::AlignZ` puts a part's Z along
+any axis), so a whole link can be one mesh; call `Finish` once all parts are in. Give rounded corners and
+round ends enough points to stay under the feature angle (30° by default), or they outline as facets.
+
+### Smooth shading for a GPU renderer
+
+The painter flat-shades from face normals. A GPU renderer wants a normal per corner: `Shade(mesh,
+creaseAngle)` returns a `ShadedMesh` of triangles with interleaved positions and normals and 32-bit
+indices. Each corner averages the faces round its vertex that lie within the crease angle (35° by
+default) of its own face, so a cylinder is round along its side and sharp at its rims, and a corner is
+duplicated only where a crease splits it. It works the same for an imported STL. It allocates; call it at
+setup, not per frame.
 
 `examples/stage` is a Qt demo of a six-axis arm and a three-axis gantry mill. It is built with
 `-DUI_BUILD_QT_BACKEND=ON -DUI_BUILD_EXAMPLES=ON`.
@@ -90,7 +113,8 @@ are cut into 16-segment chunks that sort alongside the faces.
 - **Sorting artefacts.** Parts that interpenetrate, faces that overlap cyclically, and a small face
   next to a large one can sort wrongly. Split large planes, tessellate finer, or set `drawOnTop`
   on overlays that must stay visible.
-- **Flat shading only.** There are no textures, no shadows and no smooth normals.
+- **Flat shading only.** There are no textures and no shadows; the painter ignores `Shade`, which is for GPU
+  backends.
 - **Translucency is sorted, not order-independent.**
 - **Budget.** A few thousand front faces keep a QPainter backend interactive. Reduce a large STL
   before loading it, and cap it with `StlOptions::maximumTriangles`.

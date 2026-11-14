@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ui/scene/Transform3.hpp"
 #include "ui/scene/Vector3.hpp"
 #include <array>
 #include <cstddef>
@@ -32,6 +33,8 @@ namespace ui::stage
         std::uint32_t AddVertex(Vector3 position);
         void AddTriangle(std::uint32_t a, std::uint32_t b, std::uint32_t c);
         void AddQuad(std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d);
+        // Merges a finished part placed by a rigid transform; call Finish again once all are in.
+        void Append(const Mesh& part, const scene::Transform3& placement);
 
         // Normals, bounds and feature edges, once all faces are in. Allocates; call at setup.
         void Finish(float featureAngleDegrees = 30.0f);

@@ -45,13 +45,13 @@ jobs:
       - name: Install Qt6
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends qt6-base-dev libgl1-mesa-dev
+          apt-get install -y --no-install-recommends qt6-base-dev qt6-declarative-dev qt6-quick3d-dev qt6-shadertools-dev qml6-module-qtqml-workerscript qml6-module-qtquick qml6-module-quick3d libgl1-mesa-dev
       - name: Build & Collect Coverage
         run: |
-          # The Qt backend is switched on here rather than in the preset itself: Sonar needs a
+          # The Qt backends are switched on here rather than in the preset itself: Sonar needs a
           # compile command for every analysed file, but a developer without qt6-base-dev must
           # still be able to run the coverage preset.
-          cmake --preset coverage -DUI_BUILD_QT_BACKEND=On -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --preset coverage -DUI_BUILD_QT_BACKEND=On -DUI_BUILD_QUICK3D_BACKEND=On -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build --preset coverage
           GTEST_OUTPUT="xml:${PWD}/testresults/" ctest --preset coverage
           gcovr --sonarqube=coverage.xml --exclude-lines-by-pattern '.*assert\(.*\);|.*really_assert\(.*\);|.*std::abort();' --exclude-unreachable-branches --exclude-throw-branches -j 2 --exclude=.*/_deps/.* --exclude=.*/generated/.* --exclude=.*autogen.* --exclude=.*/examples/.* --exclude=.*/tracing/.* --exclude=.*/test/.*

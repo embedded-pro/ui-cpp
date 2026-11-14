@@ -19,3 +19,7 @@ if (UI_BUILD_QT_BACKEND)
 
     add_subdirectory(backend/qt)
 endif()
+
+if (UI_BUILD_QUICK3D_BACKEND)
+    add_subdirectory(backend/qt/quick3d)
+endif()

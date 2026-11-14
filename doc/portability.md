@@ -52,6 +52,21 @@ the macOS and Windows jobs with no Qt installed, which is the part that cannot b
 | `QtTheme`       | Maps theme roles onto `QPalette` and Qt stylesheet strings. Both are Qt concepts with no equivalent elsewhere; another backend maps the same roles onto its own styling model. |
 | `QtConversions` | By definition: it is the type mapping between `ui::` and `Qt::`.                                                                                                               |
 
+### Qt Quick 3D — `ui/backend/qt/quick3d`, opt-in
+
+`UI_BUILD_QUICK3D_BACKEND` builds the `Ui.Quick3D` QML module (static library
+`ui.backend.quick3d`, plugin `ui.backend.quick3d_plugin`, class `UiQuick3DPlugin`). It needs Qt Quick
+3D (`qt6-quick3d-dev`, `qt6-declarative-dev`, `qt6-shadertools-dev`), which a Widgets-only consumer
+should not have to install, so it is off by default and lives under `ui/backend/qt/` with the rest of the
+Qt code.
+
+| Component            | Why it is not abstracted                                                                 |
+|----------------------|------------------------------------------------------------------------------------------|
+| `ShadedMeshGeometry` | A `QQuick3DGeometry`: hands a `ui::stage::ShadedMesh` to the GPU renderer                |
+| `MeshCatalog`        | The `QObject` C++ fills with shaded meshes by key and QML reads them from                |
+| `PolylineGeometry`   | A `QQuick3DGeometry` line strip, such as a tool trail                                    |
+| `GltfInspection`     | Counts a glTF file's triangles with `QJsonDocument` before `RuntimeLoader` is allowed it |
+
 ## What degrades rather than breaks
 
 Some input has no equivalent on a touch-first backend. `InputHandler` gives every event an empty

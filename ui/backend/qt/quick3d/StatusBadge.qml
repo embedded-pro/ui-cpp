@@ -9,7 +9,9 @@ Rectangle {
     property color textColor: "#1d1f21"
     property real toneOpacity: 0.85
 
-    visible: root.text.length > 0
+    readonly property bool shown: root.text.length > 0
+
+    visible: root.shown
     width: label.implicitWidth + 24
     height: label.implicitHeight + 12
     radius: 4

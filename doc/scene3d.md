@@ -93,7 +93,7 @@ A geometry rebuilds only when its own key changes, and `empty` says whether ther
 engine's import paths (Qt 6.4 does not search resources for modules by itself).
 
 `StudioView` is the stage around a model, in Y-up centimetres: the studio light probe (`studio.hdr`,
-written by `generate-studio-probe.py`: two soft boxes and a top light), a key light that casts soft
+written by `scripts/generate-studio-probe.py`: two soft boxes and a top light), a key light that casts soft
 shadows, fill and rim lights, a floor with a grid, MSAA, ambient occlusion and filmic tone mapping. Its
 children are scene nodes. `extent` sizes the camera: it orbits a point at `focusHeight` × `extent`
 above the floor at `homeDistance` × `extent`. `frame()` goes home, `showPreset(i)` to one of `presets`

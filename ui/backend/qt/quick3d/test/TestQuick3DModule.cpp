@@ -59,10 +59,10 @@ TEST_F(Quick3DModuleTest, AStatusBadgeShowsOnlyWhileItHasText)
 {
     const auto badge = Create("import Ui.Quick3D\nStatusBadge {}\n");
     ASSERT_NE(badge, nullptr);
-    EXPECT_FALSE(badge->property("visible").toBool());
+    EXPECT_FALSE(badge->property("shown").toBool());
 
     badge->setProperty("text", "Near a singularity");
-    EXPECT_TRUE(badge->property("visible").toBool());
+    EXPECT_TRUE(badge->property("shown").toBool());
 
     EXPECT_NE(Create("import Ui.Quick3D\nAxisTriad { length: 12 }\n"), nullptr);
 }

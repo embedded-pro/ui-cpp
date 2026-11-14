@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import math
 import pathlib
-import sys
 
 WIDTH, HEIGHT = 256, 128
 
@@ -54,4 +53,4 @@ def main(path):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else str(pathlib.Path(__file__).with_name("studio.hdr")))
+    main(pathlib.Path(__file__).resolve().parent.parent / "ui" / "backend" / "qt" / "quick3d" / "studio.hdr")

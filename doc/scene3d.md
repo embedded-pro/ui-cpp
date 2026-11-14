@@ -89,7 +89,31 @@ A geometry rebuilds only when its own key changes, and `empty` says whether ther
 `PolylineGeometry` draws a line strip through `points` (one pixel wide in Qt Quick 3D).
 `CheckGltf(path, triangleBudget)` counts a glTF file's triangles from its accessors and gives a URL for
 `RuntimeLoader` only when the file is within the budget, otherwise the reason. A static consumer links
-`ui.backend.quick3d_plugin` and writes `Q_IMPORT_QML_PLUGIN(UiQuick3DPlugin)`.
+`ui.backend.quick3d_plugin`, writes `Q_IMPORT_QML_PLUGIN(UiQuick3DPlugin)` and adds `:/` to its QML
+engine's import paths (Qt 6.4 does not search resources for modules by itself).
+
+`StudioView` is the stage around a model, in Y-up centimetres: the studio light probe (`studio.hdr`,
+written by `generate-studio-probe.py`: two soft boxes and a top light), a key light that casts soft
+shadows, fill and rim lights, a floor with a grid, MSAA, ambient occlusion and filmic tone mapping. Its
+children are scene nodes. `extent` sizes the camera: it orbits a point at `focusHeight` × `extent`
+above the floor at `homeDistance` × `extent`. `frame()` goes home, `showPreset(i)` to one of `presets`
+(front, side, top and iso by default), with keys F and 1–9 while `keyboardShortcuts` is on; a double tap
+frames and a tap emits `picked` with the `View3D` pick result. Colours, light levels and the
+floor, grid, shadow and ambient-occlusion switches are properties.
+
+```qml
+StudioView {
+    extent: 60
+    backgroundColor: theme.background
+    Model { source: "#Sphere"; materials: PrincipledMaterial { baseColor: "#f28c28" } }
+    AxisTriad { length: 8 }
+    onPicked: (result) => select(result.objectHit)
+}
+```
+
+`AxisTriad` draws x, y and z as red, green and blue cylinders of `length` and `thickness`.
+`StatusBadge` is a 2-D label to place over the view: it shows `symbol` and `text` on `tone` while `text`
+is not empty, and is announced as an alert.
 
 `examples/stage` is a Qt demo of a six-axis arm and a three-axis gantry mill. It is built with
 `-DUI_BUILD_QT_BACKEND=ON -DUI_BUILD_EXAMPLES=ON`.

@@ -66,6 +66,9 @@ Qt code.
 | `MeshCatalog`        | The `QObject` C++ fills with shaded meshes by key and QML reads them from                |
 | `PolylineGeometry`   | A `QQuick3DGeometry` line strip, such as a tool trail                                    |
 | `GltfInspection`     | Counts a glTF file's triangles with `QJsonDocument` before `RuntimeLoader` is allowed it |
+| `StudioView`         | QML: a `View3D` with the studio light probe, three lights, floor, grid and orbit camera  |
+| `AxisTriad`          | QML: x, y and z axes as red, green and blue cylinders                                    |
+| `StatusBadge`        | QML: a toned label over the 3-D view, announced as an alert                              |
 
 ## What degrades rather than breaks
 

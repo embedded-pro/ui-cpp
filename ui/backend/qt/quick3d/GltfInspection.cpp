@@ -70,7 +70,7 @@ namespace ui::backend::qt
             return { {}, QString{ "cannot open %1" }.arg(path) };
 
         const auto triangles = CountGltfTriangles(file.readAll());
-        if (!triangles)
+        if (!triangles.has_value())
             return { {}, QString{ "%1 is not a glTF file" }.arg(path) };
         if (*triangles > triangleBudget)
             return { {}, QString{ "%1 has %2 triangles, more than %3" }.arg(path).arg(*triangles).arg(triangleBudget) };

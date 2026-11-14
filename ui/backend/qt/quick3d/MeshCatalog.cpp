@@ -8,7 +8,7 @@ namespace ui::backend::qt
 
     void MeshCatalog::Set(const QString& key, ui::stage::ShadedMesh mesh)
     {
-        meshes.insert(key, std::move(mesh));
+        meshes.emplace(key, std::move(mesh));
         emit changed(key);
     }
 

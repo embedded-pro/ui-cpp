@@ -11,6 +11,7 @@ option(UI_BUILD_TESTS "Enable build of the tests" Off)
 # (and therefore Qt) on every host build, while the toolboxes only do so under their simulator
 # option. The Qt backend is opted into explicitly.
 option(UI_BUILD_QT_BACKEND "Enable build of the Qt backend" Off)
+option(UI_BUILD_QUICK3D_BACKEND "Enable build of the Qt Quick 3D backend (needs Qt Quick 3D)" Off)
 option(UI_ENABLE_COVERAGE "Instrument this project's targets for gcov" Off)
 option(UI_BUILD_EXAMPLES "Enable build of the Qt examples (needs UI_BUILD_QT_BACKEND)" Off)
 

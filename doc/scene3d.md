@@ -70,6 +70,27 @@ default) of its own face, so a cylinder is round along its side and sharp at its
 duplicated only where a crease splits it. It works the same for an imported STL. It allocates; call it at
 setup, not per frame.
 
+### Qt Quick 3D
+
+`UI_BUILD_QUICK3D_BACKEND` adds the `Ui.Quick3D` QML module (`doc/portability.md`). C++ fills a
+`MeshCatalog` with `ShadedMesh`es by key; QML draws one with a `ShadedMeshGeometry`:
+
+```qml
+import QtQuick3D
+import Ui.Quick3D
+
+Model {
+    geometry: ShadedMeshGeometry { catalog: scene.meshes; key: "upper-arm/aluminium" }
+    materials: PrincipledMaterial { baseColor: "#f2f4f7"; metalness: 0.45; roughness: 0.28 }
+}
+```
+
+A geometry rebuilds only when its own key changes, and `empty` says whether there is anything to draw.
+`PolylineGeometry` draws a line strip through `points` (one pixel wide in Qt Quick 3D).
+`CheckGltf(path, triangleBudget)` counts a glTF file's triangles from its accessors and gives a URL for
+`RuntimeLoader` only when the file is within the budget, otherwise the reason. A static consumer links
+`ui.backend.quick3d_plugin` and writes `Q_IMPORT_QML_PLUGIN(UiQuick3DPlugin)`.
+
 `examples/stage` is a Qt demo of a six-axis arm and a three-axis gantry mill. It is built with
 `-DUI_BUILD_QT_BACKEND=ON -DUI_BUILD_EXAMPLES=ON`.
 

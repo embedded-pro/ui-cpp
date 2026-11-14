@@ -18,7 +18,7 @@ qt_add_qml_module(ui.backend.quick3d
     PLUGIN_TARGET ui.backend.quick3d_plugin
     CLASS_NAME UiQuick3DPlugin
     OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/Ui/Quick3D
-    DEPENDENCIES QtQuick3D
+    DEPENDENCIES QtQuick QtQuick3D
     NO_CACHEGEN
     SOURCES
         GltfInspection.cpp
@@ -29,6 +29,12 @@ qt_add_qml_module(ui.backend.quick3d
         PolylineGeometry.hpp
         ShadedMeshGeometry.cpp
         ShadedMeshGeometry.hpp
+    QML_FILES
+        AxisTriad.qml
+        StatusBadge.qml
+        StudioView.qml
+    RESOURCES
+        studio.hdr
 )
 
 add_subdirectory(test)

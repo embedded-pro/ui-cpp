@@ -18,6 +18,15 @@ namespace ui::charts
         constexpr float tickLabelOffset{ 2.0f };
         constexpr float tickLabelHeight{ 14.0f };
         constexpr float tickLabelWidth{ 50.0f };
+        constexpr float minimumYLabelSpacing{ tickLabelHeight + 4.0f };
+
+        int YDivisions(float plotHeight)
+        {
+            auto divisions = std::max(theme::Current().Charts().gridLines, 1);
+            while (divisions > 1 && plotHeight / static_cast<float>(divisions) < minimumYLabelSpacing)
+                --divisions;
+            return divisions;
+        }
 
         constexpr float readoutCornerRadius{ 3.0f };
         constexpr float readoutCursorOffset{ 12.0f };
@@ -216,16 +225,16 @@ namespace ui::charts
     void ChartCore::DrawGridLines(Canvas& canvas, const Rect& plotArea) const
     {
         const auto& theme = theme::Current();
-        const auto& metrics = theme.Charts();
 
         const Pen majorPen{ theme.Get(theme::ColorRole::GridMajor), 1.0f, LineStyle::Dash };
         const Pen minorPen{ theme.Get(theme::ColorRole::GridMinor), 1.0f, LineStyle::Dot };
 
         canvas.SetPen(majorPen);
 
-        for (auto i = 1; i <= metrics.gridLines; ++i)
+        const auto divisions = YDivisions(plotArea.height);
+        for (auto i = 1; i <= divisions; ++i)
         {
-            const auto y = plotArea.Bottom() - static_cast<float>(i) * plotArea.height / static_cast<float>(metrics.gridLines);
+            const auto y = plotArea.Bottom() - static_cast<float>(i) * plotArea.height / static_cast<float>(divisions);
             canvas.DrawLine(Point{ plotArea.Left(), y }, Point{ plotArea.Right(), y });
         }
 
@@ -252,14 +261,14 @@ namespace ui::charts
     void ChartCore::DrawYLabels(Canvas& canvas, const Rect& plotArea, const PanelBounds& bounds) const
     {
         const auto& theme = theme::Current();
-        const auto& metrics = theme.Charts();
 
         canvas.SetFont(theme.Get(theme::FontRole::AxisLabel));
         canvas.SetPen(Pen{ theme.Get(theme::ColorRole::Text) });
 
-        for (auto i = 0; i <= metrics.gridLines; ++i)
+        const auto divisions = YDivisions(plotArea.height);
+        for (auto i = 0; i <= divisions; ++i)
         {
-            const auto ratio = static_cast<float>(i) / static_cast<float>(metrics.gridLines);
+            const auto ratio = static_cast<float>(i) / static_cast<float>(divisions);
             const auto y = plotArea.Bottom() - ratio * plotArea.height;
             const auto value = bounds.minimumY + ratio * bounds.Span();
 

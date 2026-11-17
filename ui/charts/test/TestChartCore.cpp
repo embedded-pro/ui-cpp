@@ -3,6 +3,7 @@
 #include "ui/charts/ChartCore.hpp"
 #include "ui/charts/LinearAxis.hpp"
 #include "ui/charts/Log10Axis.hpp"
+#include <algorithm>
 #include <gmock/gmock.h>
 
 namespace
@@ -57,6 +58,16 @@ namespace
                 return &command;
 
         return nullptr;
+    }
+
+    std::vector<float> YLabelBaselines(const ui::backend::recording::RecordingCanvas& canvas)
+    {
+        const auto labelX = static_cast<float>(ui::theme::Current().Charts().leftMargin) - 60.0f;
+        std::vector<float> baselines;
+        for (const auto& command : canvas.Commands())
+            if (command.kind == CommandKind::DrawText && command.rect.width == 0.0f && command.from.x == labelX)
+                baselines.push_back(command.from.y);
+        return baselines;
     }
 
     class ChartCoreTest
@@ -185,6 +196,29 @@ TEST_F(ChartCoreTest, TickLabelsUseTheConfiguredDecimals)
 
     EXPECT_THAT(canvas.Texts(), ::testing::Contains("0.00"));
     EXPECT_THAT(canvas.Texts(), ::testing::Contains("10.00"));
+}
+
+TEST_F(ChartCoreTest, ATallPanelLabelsEveryGridLine)
+{
+    chart.SetAxisValues(LinearAxisValues(11));
+    chart.SetPanels(OnePanel(1, 11));
+    chart.Paint(canvas, bounds);
+
+    EXPECT_EQ(static_cast<std::size_t>(ui::theme::Current().Charts().gridLines + 1), YLabelBaselines(canvas).size());
+}
+
+TEST_F(ChartCoreTest, AShortPanelDropsLabelsUntilTheyNoLongerOverlap)
+{
+    chart.SetAxisValues(LinearAxisValues(11));
+    chart.SetPanels(OnePanel(1, 11));
+    chart.Paint(canvas, ui::Rect{ 0.0f, 0.0f, 800.0f, 110.0f });
+
+    auto baselines = YLabelBaselines(canvas);
+    std::ranges::sort(baselines);
+    ASSERT_GE(baselines.size(), 2u);
+    EXPECT_LT(baselines.size(), static_cast<std::size_t>(ui::theme::Current().Charts().gridLines + 1));
+    for (std::size_t i = 1; i < baselines.size(); ++i)
+        EXPECT_GE(baselines[i] - baselines[i - 1], 18.0f);
 }
 
 TEST_F(ChartCoreTest, ASingleSeriesHasNoLegend)

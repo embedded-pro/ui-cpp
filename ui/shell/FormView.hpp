@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ui/model/FormModel.hpp"
+#include "ui/theme/Theme.hpp"
+#include <string_view>
 
 namespace ui::shell
 {
@@ -27,8 +29,14 @@ namespace ui::shell
 
         virtual void SetAction(model::ActionId action, const model::ActionSpec& spec) = 0;
 
+        // Marks one field with a status and a sentence that says why, such as a value that reads back
+        // different or differs from a preset. Neutral with an empty note clears it; a rebuild clears all.
+        // The note always travels with the colour, so the colour is never the only signal.
+        virtual void SetFieldStatus(model::FieldId field, theme::StatusLevel level, std::string_view note) = 0;
+
         // These exist so the conformance suite can put the same question to every implementation.
         [[nodiscard]] virtual bool IsControlVisible(model::FieldId field) const = 0;
         [[nodiscard]] virtual bool IsControlEnabled(model::FieldId field) const = 0;
+        [[nodiscard]] virtual theme::StatusLevel FieldStatus(model::FieldId field) const = 0;
     };
 }

@@ -38,9 +38,11 @@ namespace ui::backend::qt
         void Refresh(model::FieldId field) override;
         void SetActionEnabled(model::ActionId action, bool enabled) override;
         void SetAction(model::ActionId action, const model::ActionSpec& spec) override;
+        void SetFieldStatus(model::FieldId field, theme::StatusLevel level, std::string_view note) override;
 
         [[nodiscard]] bool IsControlVisible(model::FieldId field) const override;
         [[nodiscard]] bool IsControlEnabled(model::FieldId field) const override;
+        [[nodiscard]] theme::StatusLevel FieldStatus(model::FieldId field) const override;
 
         [[nodiscard]] QWidget* ControlFor(model::FieldId field) const;
         [[nodiscard]] QAbstractButton* ButtonFor(model::ActionId action) const;
@@ -52,6 +54,7 @@ namespace ui::backend::qt
             QWidget* editor{ nullptr };
             QWidget* row{ nullptr };
             QLabel* label{ nullptr };
+            theme::StatusLevel status{ theme::StatusLevel::Neutral };
         };
 
         struct Action
@@ -67,6 +70,7 @@ namespace ui::backend::qt
         void ApplyConditions();
         void OnFieldChanged(model::FieldId field);
         [[nodiscard]] const Control* Find(model::FieldId field) const;
+        [[nodiscard]] Control* Find(model::FieldId field);
 
         model::FormModel* model{ nullptr };
         QVBoxLayout* outerLayout{ nullptr };

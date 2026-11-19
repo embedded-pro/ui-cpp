@@ -43,6 +43,7 @@ namespace ui::backend::recording
         model = &formModel;
         commands.clear();
         fieldOrder.clear();
+        statuses.clear();
 
         for (const auto& group : formModel.Spec().groups)
         {
@@ -189,6 +190,31 @@ namespace ui::backend::recording
         auto& command = Append(FormCommandKind::SetActionEnabled);
         command.action = action;
         command.flag = isEnabled;
+    }
+
+    void RecordingFormView::SetFieldStatus(model::FieldId field, theme::StatusLevel level, std::string_view note)
+    {
+        auto& command = Append(FormCommandKind::SetFieldStatus);
+        command.field = field;
+        command.status = level;
+        command.label = std::string{ note };
+
+        const auto index = static_cast<std::size_t>(field.value);
+        if (statuses.size() <= index)
+            statuses.resize(index + 1, { theme::StatusLevel::Neutral, {} });
+        statuses[index] = { level, std::string{ note } };
+    }
+
+    theme::StatusLevel RecordingFormView::FieldStatus(model::FieldId field) const
+    {
+        const auto index = static_cast<std::size_t>(field.value);
+        return index < statuses.size() ? statuses[index].first : theme::StatusLevel::Neutral;
+    }
+
+    std::string RecordingFormView::FieldNote(model::FieldId field) const
+    {
+        const auto index = static_cast<std::size_t>(field.value);
+        return index < statuses.size() ? statuses[index].second : std::string{};
     }
 
     void RecordingFormView::SetAction(model::ActionId action, const model::ActionSpec& spec)

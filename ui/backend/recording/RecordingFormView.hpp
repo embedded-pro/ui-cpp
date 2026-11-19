@@ -4,6 +4,7 @@
 #include "ui/shell/FormView.hpp"
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ui::backend::recording
@@ -26,7 +27,8 @@ namespace ui::backend::recording
         SetVisible,
         SetEnabled,
         SetActionEnabled,
-        SetActionSpec
+        SetActionSpec,
+        SetFieldStatus
     };
 
     struct FormCommand
@@ -43,6 +45,7 @@ namespace ui::backend::recording
         double step{ 0.0 };
         double tickInterval{ 0.0 };
         theme::ButtonRole buttonRole{ theme::ButtonRole::Default };
+        theme::StatusLevel status{ theme::StatusLevel::Neutral };
         std::uint8_t decimals{ 0 };
         std::size_t index{ 0 };
         std::size_t count{ 0 };
@@ -61,9 +64,12 @@ namespace ui::backend::recording
         void Refresh(model::FieldId field) override;
         void SetActionEnabled(model::ActionId action, bool enabled) override;
         void SetAction(model::ActionId action, const model::ActionSpec& spec) override;
+        void SetFieldStatus(model::FieldId field, theme::StatusLevel level, std::string_view note) override;
 
         [[nodiscard]] bool IsControlVisible(model::FieldId field) const override;
         [[nodiscard]] bool IsControlEnabled(model::FieldId field) const override;
+        [[nodiscard]] theme::StatusLevel FieldStatus(model::FieldId field) const override;
+        [[nodiscard]] std::string FieldNote(model::FieldId field) const;
 
         // Drive the model the way a person would, so a test asserts a round trip rather than the
         // setter it just called.
@@ -90,6 +96,7 @@ namespace ui::backend::recording
         std::vector<model::FieldId> fieldOrder;
         std::vector<bool> visible;
         std::vector<bool> enabled;
+        std::vector<std::pair<theme::StatusLevel, std::string>> statuses;
         std::size_t fieldChangeCount{ 0 };
         bool applying{ false };
     };

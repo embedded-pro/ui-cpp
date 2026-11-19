@@ -308,3 +308,30 @@ TEST_F(RecordingFormViewTest, SettingAnActionDoesNotReportAnEdit)
 
     EXPECT_EQ(view.FieldChangeCount(), before);
 }
+
+TEST_F(RecordingFormViewTest, AFieldStatusIsRecordedWithItsNoteAndReadBack)
+{
+    EXPECT_EQ(ui::theme::StatusLevel::Neutral, view.FieldStatus(cutoff));
+
+    view.SetFieldStatus(cutoff, ui::theme::StatusLevel::Warning, "differs from the preset");
+
+    const auto* command = LastOf(FormCommandKind::SetFieldStatus);
+    ASSERT_NE(nullptr, command);
+    EXPECT_EQ(cutoff, command->field);
+    EXPECT_EQ("differs from the preset", command->label);
+    EXPECT_EQ(ui::theme::StatusLevel::Warning, view.FieldStatus(cutoff));
+    EXPECT_EQ("differs from the preset", view.FieldNote(cutoff));
+
+    view.SetFieldStatus(cutoff, ui::theme::StatusLevel::Neutral, "");
+    EXPECT_EQ(ui::theme::StatusLevel::Neutral, view.FieldStatus(cutoff));
+    EXPECT_EQ("", view.FieldNote(cutoff));
+}
+
+TEST_F(RecordingFormViewTest, ARebuildClearsEveryFieldStatus)
+{
+    view.SetFieldStatus(order, ui::theme::StatusLevel::Fault, "reads back 33");
+
+    view.Build(model);
+
+    EXPECT_EQ(ui::theme::StatusLevel::Neutral, view.FieldStatus(order));
+}

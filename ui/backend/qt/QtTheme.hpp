@@ -26,5 +26,8 @@ namespace ui::backend::qt
     void StyleStatusLabel(QWidget& label, theme::StatusLevel level);
     void StyleStatusLabel(QWidget& label, theme::StatusLevel level, const theme::Theme& theme);
 
+    // Marks a form field's label with a status colour; Neutral gives the label back to the theme.
+    void StyleFieldLabel(QWidget& label, theme::StatusLevel level);
+
     [[nodiscard]] QString StatusStyleSheet(theme::StatusLevel level, const theme::Theme& theme);
 }

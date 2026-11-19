@@ -159,6 +159,14 @@ namespace ui::backend::qt
         label.setStyleSheet(StatusStyleSheet(level, theme));
     }
 
+    void StyleFieldLabel(QWidget& label, theme::StatusLevel level)
+    {
+        if (level == theme::StatusLevel::Neutral)
+            label.setStyleSheet({});
+        else
+            StyleStatusLabel(label, level);
+    }
+
     QString StatusStyleSheet(theme::StatusLevel level, const theme::Theme& theme)
     {
         return StatusRule(ToQt(theme.Get(ColourFor(level))));

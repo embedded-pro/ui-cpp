@@ -368,10 +368,42 @@ namespace ui::backend::qt
         return nullptr;
     }
 
+    QtFormView::Control* QtFormView::Find(model::FieldId field)
+    {
+        for (auto& control : controls)
+            if (control.field == field)
+                return &control;
+
+        return nullptr;
+    }
+
     bool QtFormView::IsControlVisible(model::FieldId field) const
     {
         const auto* control = Find(field);
         return control != nullptr && !control->editor->isHidden();
+    }
+
+    void QtFormView::SetFieldStatus(model::FieldId field, theme::StatusLevel level, std::string_view note)
+    {
+        auto* control = Find(field);
+        if (control == nullptr)
+            return;
+
+        control->status = level;
+        const auto text = QString::fromUtf8(note.data(), static_cast<qsizetype>(note.size()));
+        control->editor->setToolTip(text);
+        control->editor->setAccessibleDescription(text);
+        if (control->label != nullptr)
+        {
+            control->label->setToolTip(text);
+            StyleFieldLabel(*control->label, level);
+        }
+    }
+
+    theme::StatusLevel QtFormView::FieldStatus(model::FieldId field) const
+    {
+        const auto* control = Find(field);
+        return control == nullptr ? theme::StatusLevel::Neutral : control->status;
     }
 
     bool QtFormView::IsControlEnabled(model::FieldId field) const

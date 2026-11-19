@@ -212,3 +212,20 @@ TEST_F(QtFormConformanceTest, BothCarryAnActionsNewRoleAfterTheSameFlip)
     EXPECT_EQ(native.ButtonFor(formspec::compute)->styleSheet(),
         ui::backend::qt::ButtonStyleSheet(ui::theme::ButtonRole::Stop, ui::theme::Light()));
 }
+
+TEST_F(QtFormConformanceTest, BothMarkAFieldWithItsStatusAndExplainItAndClearItAgain)
+{
+    native.SetFieldStatus(formspec::cutoff, ui::theme::StatusLevel::Warning, "differs from the preset");
+    recorded.SetFieldStatus(formspec::cutoff, ui::theme::StatusLevel::Warning, "differs from the preset");
+
+    EXPECT_EQ(recorded.FieldStatus(formspec::cutoff), native.FieldStatus(formspec::cutoff));
+    EXPECT_EQ(ui::theme::StatusLevel::Warning, native.FieldStatus(formspec::cutoff));
+    EXPECT_EQ(QString{ "differs from the preset" }, native.ControlFor(formspec::cutoff)->toolTip());
+    EXPECT_EQ(QString{ "differs from the preset" }, native.ControlFor(formspec::cutoff)->accessibleDescription());
+
+    native.SetFieldStatus(formspec::cutoff, ui::theme::StatusLevel::Neutral, "");
+    recorded.SetFieldStatus(formspec::cutoff, ui::theme::StatusLevel::Neutral, "");
+
+    EXPECT_EQ(recorded.FieldStatus(formspec::cutoff), native.FieldStatus(formspec::cutoff));
+    EXPECT_TRUE(native.ControlFor(formspec::cutoff)->toolTip().isEmpty());
+}

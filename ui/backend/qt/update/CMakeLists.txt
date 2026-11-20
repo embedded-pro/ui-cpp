@@ -26,3 +26,4 @@ ui_add_library(ui.backend.qt.update QT
 )
 
 add_subdirectory(test)
+add_subdirectory(widgets)

@@ -78,17 +78,28 @@ banner and dialogs. Nothing in it names a product: the caller passes the release
 its current version, its issue page and its log file name. It is Qt-only because it is HTTP, files, processes and
 JSON, which Qt already does on every desktop platform the tools ship on.
 
-| Component            | What it does                                                                                                                                    |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ReleaseVersion`     | Parses and orders `vMAJOR.MINOR.PATCH` tags                                                                                                     |
-| `ReleaseFeed`        | Reads a GitHub "latest release": its version, page, every asset downloadable over HTTPS with its SHA-256, and the installer for this platform    |
-| `UpdateChecker`      | Fetches the feed and says whether a newer release exists                                                                                        |
-| `UpdateDownloader`   | Downloads an installer next to a `.part` file, checks its size and SHA-256, and refuses an asset without a published checksum or with a path    |
-| `UpdateInstallation` | Tells a packaged install from a portable one and builds the command that installs an update (`apt-get` through `pkexec`, or the NSIS setup)     |
-| `UpdateInstaller`    | Runs that command and reports whether the tool must exit first                                                                                  |
-| `UpdateSession`      | Offer, download, install, cancel and dismiss as one state machine; `SetBlocked` holds the install back while the tool is busy with hardware    |
-| `IssueLog`           | A rotating log file plus the recent lines in memory, optionally capturing Qt's own messages                                                    |
-| `IssueReport`        | Builds the new-issue URL with the product, version, platform and recent log, trimmed to fit a URL                                               |
+| Component            | What it does                                                                                                                                  |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `ReleaseVersion`     | Parses and orders `vMAJOR.MINOR.PATCH` tags                                                                                                   |
+| `ReleaseFeed`        | Reads a GitHub "latest release": its version, page, every asset downloadable over HTTPS with its SHA-256, and the installer for this platform |
+| `UpdateChecker`      | Fetches the feed and says whether a newer release exists                                                                                      |
+| `UpdateDownloader`   | Downloads an installer next to a `.part` file, checks its size and SHA-256, and refuses an asset without a published checksum or with a path  |
+| `UpdateInstallation` | Tells a packaged install from a portable one and builds the command that installs an update (`apt-get` through `pkexec`, or the NSIS setup)   |
+| `UpdateInstaller`    | Runs that command and reports whether the tool must exit first                                                                                |
+| `UpdateSession`      | Offer, download, install, cancel and dismiss as one state machine; `SetBlocked` holds the install back while the tool is busy with hardware   |
+| `IssueLog`           | A rotating log file plus the recent lines in memory, optionally capturing Qt's own messages                                                   |
+| `IssueReport`        | Builds the new-issue URL with the product, version, platform and recent log, trimmed to fit a URL                                             |
+
+`ui.backend.qt.update_widgets` (`ui/backend/qt/update/widgets`) adds the Widgets side every tool repeated: the banner, the
+check-download-install flow behind it and the issue report. A tool describes itself once in an `UpdateProduct`
+(names, version, feed, release and issue pages, user agent, and the action that releases a blocked install) and places
+the banner in its window.
+
+| Component         | What it does                                                                                                                                 |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| `UpdateBanner`    | Offer, download progress, ready, installing and failure, with Install, Release Notes, Skip, Cancel and Later                                 |
+| `UpdateAssistant` | Owns the checker, session and banner: automatic daily checks (a setting), skipped versions, the install confirmation and the restart signals |
+| `OpenIssueReport` | Opens the prefilled new-issue page with the recent log, or says where to report it when no browser opens                                     |
 
 The installer asset is found by its name's suffix: `-linux-x86_64.deb` on Linux and `-windows-x86_64-setup.exe`
 on Windows, so a release attaches one of each per tool.

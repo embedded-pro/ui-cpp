@@ -1,5 +1,7 @@
 #include "ui/backend/qt/update/widgets/UpdateBanner.hpp"
+#include "ui/backend/qt/update/widgets/test/DialogAnswerer.hpp"
 #include "gtest/gtest.h"
+#include <QPushButton>
 
 namespace
 {
@@ -81,4 +83,64 @@ TEST_F(TestUpdateBanner, a_failure_says_why_and_offers_another_try)
 
     EXPECT_EQ("Could not update to 1.2.0: the download did not match its checksum.", banner.Message());
     EXPECT_EQ("&Try Again", banner.PrimaryText());
+}
+
+TEST_F(TestUpdateBanner, a_download_shows_its_progress_in_megabytes)
+{
+    auto state = State(UpdatePhase::downloading);
+    state.received = 1024 * 1024;
+    state.total = 4 * 1024 * 1024;
+    banner.Render(state);
+
+    EXPECT_EQ("Downloading 1.2.0 — 1.0 of 4.0 MB", banner.Message());
+
+    state.total = 0;
+    banner.Render(state);
+
+    EXPECT_EQ("Downloading 1.2.0 — 1.0 MB", banner.Message());
+}
+
+TEST_F(TestUpdateBanner, a_failure_without_automatic_install_offers_the_download_page)
+{
+    auto state = State(UpdatePhase::failed);
+    state.automaticInstall = false;
+    state.failure = "no installer for this platform";
+    banner.Render(state);
+
+    EXPECT_EQ("Open Do&wnload Page", banner.PrimaryText());
+}
+
+TEST_F(TestUpdateBanner, the_primary_button_asks_to_install_or_opens_the_download)
+{
+    ui::backend::qt::update::test::UrlCatcher browser;
+    int installs{ 0 };
+    QObject::connect(&banner, &UpdateBanner::InstallRequested, [&installs]()
+        {
+            ++installs;
+        });
+
+    banner.Render(State(UpdatePhase::available));
+    banner.findChildren<QPushButton*>().front()->click();
+
+    auto portable = State(UpdatePhase::available);
+    portable.automaticInstall = false;
+    banner.Render(portable);
+    banner.findChildren<QPushButton*>().front()->click();
+
+    EXPECT_EQ(1, installs);
+    ASSERT_EQ(1u, browser.urls.size());
+    EXPECT_TRUE(browser.urls.front().path().endsWith("example-tool-v1.2.0-linux-x86_64.deb"));
+}
+
+TEST_F(TestUpdateBanner, release_notes_open_the_release_page)
+{
+    ui::backend::qt::update::test::UrlCatcher browser;
+    banner.Render(State(UpdatePhase::available));
+
+    for (auto* button : banner.findChildren<QPushButton*>())
+        if (button->text() == "&Release Notes")
+            button->click();
+
+    ASSERT_EQ(1u, browser.urls.size());
+    EXPECT_EQ("/example/project/releases/tag/v1.2.0", browser.urls.front().path());
 }

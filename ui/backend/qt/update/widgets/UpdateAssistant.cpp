@@ -149,24 +149,8 @@ namespace ui::backend::qt::update
         if (std::exchange(lastPhase, state.phase) == state.phase || !state.release)
             return;
 
-        const auto& tag = state.release->tag;
-        switch (state.phase)
-        {
-            case UpdatePhase::downloading:
-                emit Report(IssueSeverity::info, QString("Downloading update %1 from %2").arg(tag, state.release->installer->url.toString()));
-                break;
-            case UpdatePhase::ready:
-                emit Report(IssueSeverity::info, QString("Update %1 downloaded and verified").arg(tag));
-                break;
-            case UpdatePhase::installing:
-                emit Report(IssueSeverity::info, QString("Installing update %1").arg(tag));
-                break;
-            case UpdatePhase::failed:
-                emit Report(IssueSeverity::warning, QString("Update to %1 failed: %2").arg(tag, state.failure));
-                break;
-            default:
-                break;
-        }
+        if (const auto report = PhaseReport(state))
+            emit Report(report->severity, report->message);
     }
 
     void UpdateAssistant::RequestInstall()
@@ -206,6 +190,27 @@ namespace ui::backend::qt::update
             return QString("%1 downloads the installer and checks it against the release. It then closes, Windows asks for permission, and the new version starts when the installation is done.").arg(product.shortName);
 
         return QString("%1 downloads the package and checks it against the release, then asks for your password to install it and restarts.").arg(product.shortName);
+    }
+
+    std::optional<PhaseMessage> PhaseReport(const UpdateState& state)
+    {
+        if (!state.release)
+            return std::nullopt;
+
+        const auto& tag = state.release->tag;
+        switch (state.phase)
+        {
+            case UpdatePhase::downloading:
+                return PhaseMessage{ IssueSeverity::info, QString("Downloading update %1 from %2").arg(tag, state.release->installer ? state.release->installer->url.toString() : state.release->pageUrl.toString()) };
+            case UpdatePhase::ready:
+                return PhaseMessage{ IssueSeverity::info, QString("Update %1 downloaded and verified").arg(tag) };
+            case UpdatePhase::installing:
+                return PhaseMessage{ IssueSeverity::info, QString("Installing update %1").arg(tag) };
+            case UpdatePhase::failed:
+                return PhaseMessage{ IssueSeverity::warning, QString("Update to %1 failed: %2").arg(tag, state.failure) };
+            default:
+                return std::nullopt;
+        }
     }
 
     bool OpenIssueReport(const UpdateProduct& product, const IssueLog& log, QWidget* parent)

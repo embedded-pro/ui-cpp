@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QWidget>
 #include <chrono>
+#include <optional>
 
 namespace ui::backend::qt::update
 {
@@ -61,5 +62,12 @@ namespace ui::backend::qt::update
         UpdatePhase lastPhase{ UpdatePhase::idle };
     };
 
+    struct PhaseMessage
+    {
+        IssueSeverity severity;
+        QString message;
+    };
+
+    std::optional<PhaseMessage> PhaseReport(const UpdateState& state);
     bool OpenIssueReport(const UpdateProduct& product, const IssueLog& log, QWidget* parent);
 }

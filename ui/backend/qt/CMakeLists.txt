@@ -25,3 +25,4 @@ ui_add_library(ui.backend.qt QT
 )
 
 add_subdirectory(test)
+add_subdirectory(update)

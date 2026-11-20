@@ -1,0 +1,14 @@
+ui_add_test(ui.backend.qt.update_test
+    SOURCES
+        TestIssueLog.cpp
+        TestIssueReport.cpp
+        TestReleaseFeed.cpp
+        TestReleaseVersion.cpp
+        TestUpdateChecker.cpp
+        TestUpdateDownloader.cpp
+        TestUpdateInstallation.cpp
+        TestUpdateInstaller.cpp
+        TestUpdateSession.cpp
+    LINK
+        ui.backend.qt.update
+)

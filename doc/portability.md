@@ -70,6 +70,29 @@ Qt code.
 | `AxisTriad`          | QML: x, y and z axes as red, green and blue cylinders                                    |
 | `StatusBadge`        | QML: a toned label over the 3-D view, announced as an alert                              |
 
+### Updates and issue reports — `ui/backend/qt/update`
+
+`ui.backend.qt.update` lets a desktop tool update itself from its GitHub releases and open a prefilled
+issue. It is built with the Qt backend and links Qt Core and Network only, no Widgets, so a tool draws its own
+banner and dialogs. Nothing in it names a product: the caller passes the release feed URL, its user agent,
+its current version, its issue page and its log file name. It is Qt-only because it is HTTP, files, processes and
+JSON, which Qt already does on every desktop platform the tools ship on.
+
+| Component            | What it does                                                                                                                                    |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ReleaseVersion`     | Parses and orders `vMAJOR.MINOR.PATCH` tags                                                                                                     |
+| `ReleaseFeed`        | Reads a GitHub "latest release": its version, page, every asset downloadable over HTTPS with its SHA-256, and the installer for this platform    |
+| `UpdateChecker`      | Fetches the feed and says whether a newer release exists                                                                                        |
+| `UpdateDownloader`   | Downloads an installer next to a `.part` file, checks its size and SHA-256, and refuses an asset without a published checksum or with a path    |
+| `UpdateInstallation` | Tells a packaged install from a portable one and builds the command that installs an update (`apt-get` through `pkexec`, or the NSIS setup)     |
+| `UpdateInstaller`    | Runs that command and reports whether the tool must exit first                                                                                  |
+| `UpdateSession`      | Offer, download, install, cancel and dismiss as one state machine; `SetBlocked` holds the install back while the tool is busy with hardware    |
+| `IssueLog`           | A rotating log file plus the recent lines in memory, optionally capturing Qt's own messages                                                    |
+| `IssueReport`        | Builds the new-issue URL with the product, version, platform and recent log, trimmed to fit a URL                                               |
+
+The installer asset is found by its name's suffix: `-linux-x86_64.deb` on Linux and `-windows-x86_64-setup.exe`
+on Windows, so a release attaches one of each per tool.
+
 ## What degrades rather than breaks
 
 Some input has no equivalent on a touch-first backend. `InputHandler` gives every event an empty

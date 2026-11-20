@@ -3,6 +3,7 @@
 #include "ui/backend/qt/update/UpdateSession.hpp"
 #include "ui/backend/qt/update/widgets/UpdateProduct.hpp"
 #include <QFrame>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QProgressBar>
 #include <QPushButton>
@@ -40,13 +41,14 @@ namespace ui::backend::qt::update
         void OnPrimary();
 
         UpdateProduct product;
-        QLabel* message;
-        QProgressBar* progress;
-        QPushButton* primaryButton;
-        QPushButton* notesButton;
-        QPushButton* skipButton;
-        QPushButton* cancelButton;
-        QPushButton* dismissButton;
+        QHBoxLayout layout{ this };
+        QLabel message;
+        QProgressBar progress;
+        QPushButton primaryButton;
+        QPushButton notesButton{ "&Release Notes" };
+        QPushButton skipButton{ "S&kip This Version" };
+        QPushButton cancelButton{ "Cancel" };
+        QPushButton dismissButton{ "Later" };
         QUrl notesUrl;
         QUrl downloadUrl;
         bool primaryInstalls{ false };

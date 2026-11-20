@@ -31,7 +31,7 @@ namespace ui::backend::qt::update
         void Check(bool userInitiated);
         void StartAutomaticChecks();
         bool Automatic() const;
-        void SetAutomatic(bool automatic);
+        void SetAutomatic(bool automatic) const;
         void SetBlocked(bool blocked);
 
         static std::optional<InstallCommand> DefaultCommand(const QString& installerPath);

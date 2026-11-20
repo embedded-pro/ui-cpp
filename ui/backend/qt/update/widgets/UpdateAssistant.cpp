@@ -72,7 +72,7 @@ namespace ui::backend::qt::update
         return QSettings{}.value(automaticKey, true).toBool();
     }
 
-    void UpdateAssistant::SetAutomatic(bool automatic)
+    void UpdateAssistant::SetAutomatic(bool automatic) const
     {
         QSettings{}.setValue(automaticKey, automatic);
     }

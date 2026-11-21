@@ -252,3 +252,25 @@ TEST_F(TestUpdateAssistant, the_install_explanation_follows_the_platform_and_kee
     EXPECT_TRUE(InstallExplanation(product, false, InstallerPlatform::windowsX64).contains("Windows asks for permission"));
     EXPECT_TRUE(InstallExplanation(product, true, InstallerPlatform::linuxX64).endsWith("\n\nInstalling waits until you disconnect from the CAN bus."));
 }
+
+TEST_F(TestUpdateAssistant, starting_removes_downloads_older_than_a_day_and_keeps_newer_ones)
+{
+    QDir{}.mkpath(UpdateAssistant::DownloadDirectory());
+    const auto stale = QDir{ UpdateAssistant::DownloadDirectory() }.filePath("stale.deb");
+    const auto fresh = QDir{ UpdateAssistant::DownloadDirectory() }.filePath("fresh.deb");
+    for (const auto& path : { stale, fresh })
+    {
+        QFile file{ path };
+        ASSERT_TRUE(file.open(QIODevice::WriteOnly));
+    }
+    QFile staleFile{ stale };
+    ASSERT_TRUE(staleFile.open(QIODevice::ReadWrite));
+    ASSERT_TRUE(staleFile.setFileTime(QDateTime::currentDateTimeUtc().addDays(-2), QFileDevice::FileModificationTime));
+    staleFile.close();
+
+    UpdateAssistant restarted{ product, window };
+
+    EXPECT_FALSE(QFile::exists(stale));
+    EXPECT_TRUE(QFile::exists(fresh));
+    QFile::remove(fresh);
+}

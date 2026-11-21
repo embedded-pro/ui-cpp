@@ -1,6 +1,7 @@
 #include "ui/backend/qt/update/widgets/UpdateAssistant.hpp"
 #include "ui/backend/qt/update/IssueReport.hpp"
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QDirIterator>
@@ -18,9 +19,11 @@ namespace ui::backend::qt::update
 
         void RemoveStaleDownloads(const QString& directory)
         {
+            const auto cutoff = QDateTime::currentDateTimeUtc().addDays(-1);
             QDirIterator files{ directory, QDir::Files };
             while (files.hasNext())
-                QFile::remove(files.next());
+                if (const auto file = files.nextFileInfo(); file.lastModified().toUTC() < cutoff)
+                    QFile::remove(file.filePath());
         }
     }
 

@@ -22,6 +22,7 @@ ui/backend/recording  records draw calls — the test harness                 �
 
 ui/backend/qt         QtCanvas, QtPaintedWidget, QtTheme — Qt6 Widgets
 ui/backend/qt/update  release check, verified download, installer, issue log — Qt6 Network
+  …/widgets           update banner, update assistant, issue report — Qt6 Widgets
 ```
 
 Still to come: `ui/model` (FormSpec, TableModel), `ui/sim`,

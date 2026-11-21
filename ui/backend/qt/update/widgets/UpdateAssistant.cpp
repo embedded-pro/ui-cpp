@@ -162,7 +162,7 @@ namespace ui::backend::qt::update
             confirm.setIcon(QMessageBox::Question);
             confirm.setWindowTitle("Install Update");
             confirm.setText(QString("Install %1 %2?").arg(product.displayName, QString::fromStdString(state.release->version.ToString())));
-            confirm.setInformativeText(InstallSteps() + (state.blocked ? QString("\n\nInstalling waits until you %1.").arg(product.blockedAction.toLower()) : QString{}));
+            confirm.setInformativeText(InstallExplanation(product, state.blocked, CurrentInstallerPlatform()));
             auto* install = confirm.addButton("&Install and Restart", QMessageBox::AcceptRole);
             confirm.addButton(QMessageBox::Cancel);
             confirm.setDefaultButton(install);
@@ -184,12 +184,14 @@ namespace ui::backend::qt::update
         session.Dismiss();
     }
 
-    QString UpdateAssistant::InstallSteps() const
+    QString InstallExplanation(const UpdateProduct& product, bool blocked, InstallerPlatform platform)
     {
-        if (CurrentInstallerPlatform() == InstallerPlatform::windowsX64)
-            return QString("%1 downloads the installer and checks it against the release. It then closes, Windows asks for permission, and the new version starts when the installation is done.").arg(product.shortName);
-
-        return QString("%1 downloads the package and checks it against the release, then asks for your password to install it and restarts.").arg(product.shortName);
+        auto explanation = platform == InstallerPlatform::windowsX64
+                               ? QString("%1 downloads the installer and checks it against the release. It then closes, Windows asks for permission, and the new version starts when the installation is done.").arg(product.shortName)
+                               : QString("%1 downloads the package and checks it against the release, then asks for your password to install it and restarts.").arg(product.shortName);
+        if (blocked && !product.blockedAction.isEmpty())
+            explanation += QString("\n\nInstalling waits until you %1%2.").arg(product.blockedAction.left(1).toLower(), product.blockedAction.mid(1));
+        return explanation;
     }
 
     std::optional<PhaseMessage> PhaseReport(const UpdateState& state)

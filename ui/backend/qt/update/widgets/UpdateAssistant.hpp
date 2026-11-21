@@ -50,7 +50,6 @@ namespace ui::backend::qt::update
         void OnStateChanged(const UpdateState& state);
         void RequestInstall();
         void Skip();
-        QString InstallSteps() const;
 
         UpdateProduct product;
         QWidget& window;
@@ -69,5 +68,6 @@ namespace ui::backend::qt::update
     };
 
     std::optional<PhaseMessage> PhaseReport(const UpdateState& state);
+    QString InstallExplanation(const UpdateProduct& product, bool blocked, InstallerPlatform platform);
     bool OpenIssueReport(const UpdateProduct& product, const IssueLog& log, QWidget* parent);
 }

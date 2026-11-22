@@ -31,6 +31,7 @@ qt_add_qml_module(ui.backend.quick3d
         ShadedMeshGeometry.hpp
     QML_FILES
         AxisTriad.qml
+        OrientationGizmo.qml
         StatusBadge.qml
         StudioView.qml
     RESOURCES

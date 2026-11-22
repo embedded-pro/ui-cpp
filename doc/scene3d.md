@@ -101,10 +101,33 @@ above the floor at `homeDistance` × `extent`. `frame()` goes home, `showPreset(
 frames and a tap emits `picked` with the `View3D` pick result. Colours, light levels and the
 floor, grid, shadow and ambient-occlusion switches are properties.
 
+Framing follows the content when the consumer gives it:
+
+- **`bounds`** (`{ min, max }`, two `vector3d`, or `null`): while set, `frame()` and every preset keep their view
+  direction but move the pivot to the box's centre and pick the distance that fits all eight corners inside the
+  view, `frameMargin` (a share of the view's height and width, 0.08 by default) from each edge. The fit uses the
+  view's aspect, so a wide box in a narrow view is fitted by its width. Without `bounds` the fixed
+  `homeDistance` × `extent` framing stays.
+- `frameBounds(min, max, rotation)` fits a box at a given (or the current) view direction; `fitDistance` is its
+  pure part, the distance alone.
+- `focusOn(point, distance)` moves the pivot to a point and keeps the view direction (and the distance, when none
+  is given), so orbiting turns about that point.
+- `lookAlong(direction)` turns the view to look back along a scene direction, keeping pivot and distance.
+- Every move animates over 250 ms, and a turn takes the shorter way round.
+- **`orthographic`** switches to an orthographic camera on the same pivot. Its magnification follows the
+  perspective camera's distance, so the scale at the pivot is the same in both, and orbiting and zooming keep
+  working.
+- **Orientation gizmo** (`gizmoVisible`, `gizmoSize`, `gizmoAxes`): a 2-D overlay in the bottom-right corner
+  showing `gizmoAxes` (label, scene direction, colour; scene X, Y and Z by default) as seen from the camera, the
+  nearer end drawn on top. Clicking either end of an axis looks along it and emits `gizmoClicked(axis)`. A
+  consumer whose model frame differs from the scene's passes its own axes, so the labels name the model's
+  frame.
+
 ```qml
 StudioView {
     extent: 60
     backgroundColor: theme.background
+    bounds: ({ min: Qt.vector3d(-20, 0, -20), max: Qt.vector3d(20, 60, 20) })
     Model { source: "#Sphere"; materials: PrincipledMaterial { baseColor: "#f28c28" } }
     AxisTriad { length: 8 }
     onPicked: (result) => select(result.objectHit)

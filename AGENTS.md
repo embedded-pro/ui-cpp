@@ -139,8 +139,6 @@ python3 scripts/validate-docs.py
 - *Memory*: the rest of `ui/` is allocation-free after construction, except setters outside the paint path
   (`SetPanels`, `SetAxisValues`). Never allocate per frame in `Paint()`: keep scratch buffers as members.
 - *Memory*: Tier 1 uses `std` containers and `std::span`, not emil containers: Tier 1 has no external dependency.
-- *Interfaces & errors*: interfaces declare a public `virtual ~Name() = default`, never `= 0`: host-only
-  polymorphic views; the flash cost does not apply.
 - *Interfaces & errors*: preconditions use `assert()`, not `really_assert`: Tier 1 has no emil.
 - *Style*: comments may also be license headers or `NOLINT`.
 - *Testing*: no plain `TEST()`: cppcheck reports `syntaxError` on it. Use `TEST_F`.

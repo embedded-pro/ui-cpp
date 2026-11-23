@@ -48,7 +48,6 @@ namespace ui::charts
         AxisTransform() = default;
         AxisTransform(const AxisTransform& other) = delete;
         AxisTransform& operator=(const AxisTransform& other) = delete;
-        virtual ~AxisTransform() = default;
 
         [[nodiscard]] virtual float ToView(float value) const = 0;
         [[nodiscard]] virtual float FromView(float view) const = 0;
@@ -61,5 +60,8 @@ namespace ui::charts
 
         [[nodiscard]] virtual std::string_view Title() const = 0;
         [[nodiscard]] virtual std::size_t FormatCursorValue(float value, std::span<char> out) const = 0;
+
+    protected:
+        ~AxisTransform() = default;
     };
 }

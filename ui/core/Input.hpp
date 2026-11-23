@@ -69,7 +69,6 @@ namespace ui
         InputHandler() = default;
         InputHandler(const InputHandler& other) = delete;
         InputHandler& operator=(const InputHandler& other) = delete;
-        virtual ~InputHandler() = default;
 
         virtual void OnMousePress(const MouseEvent& event);
         virtual void OnMouseMove(const MouseEvent& event);
@@ -78,5 +77,8 @@ namespace ui
         virtual void OnMouseLeave();
         virtual void OnWheel(const WheelEvent& event);
         virtual void OnKeyPress(const KeyEvent& event);
+
+    protected:
+        ~InputHandler() = default;
     };
 }

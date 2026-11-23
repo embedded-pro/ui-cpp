@@ -30,7 +30,6 @@ namespace ui::shell
         ShellView() = default;
         ShellView(const ShellView& other) = delete;
         ShellView& operator=(const ShellView& other) = delete;
-        virtual ~ShellView() = default;
 
         virtual void SetStatus(std::string_view message) = 0;
         virtual void ShowAlert(std::string_view title, std::string_view message) = 0;
@@ -38,5 +37,8 @@ namespace ui::shell
 
         [[nodiscard]] virtual std::size_t PageCount() const = 0;
         [[nodiscard]] virtual std::size_t CurrentPage() const = 0;
+
+    protected:
+        ~ShellView() = default;
     };
 }

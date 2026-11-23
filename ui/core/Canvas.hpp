@@ -15,7 +15,6 @@ namespace ui
         Canvas() = default;
         Canvas(const Canvas& other) = delete;
         Canvas& operator=(const Canvas& other) = delete;
-        virtual ~Canvas() = default;
 
         virtual void Save() = 0;
         virtual void Restore() = 0;
@@ -47,6 +46,9 @@ namespace ui
 
         [[nodiscard]] virtual Size MeasureText(std::string_view text) const = 0;
         [[nodiscard]] virtual float LineHeight() const = 0;
+
+    protected:
+        ~Canvas() = default;
     };
 
     class CanvasStateGuard

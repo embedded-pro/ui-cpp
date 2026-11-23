@@ -14,7 +14,6 @@ namespace ui::shell
         FormView() = default;
         FormView(const FormView& other) = delete;
         FormView& operator=(const FormView& other) = delete;
-        virtual ~FormView() = default;
 
         // Realises the spec and installs the initial visibility and enablement. Calling it a second
         // time rebuilds from scratch.
@@ -38,5 +37,8 @@ namespace ui::shell
         [[nodiscard]] virtual bool IsControlVisible(model::FieldId field) const = 0;
         [[nodiscard]] virtual bool IsControlEnabled(model::FieldId field) const = 0;
         [[nodiscard]] virtual theme::StatusLevel FieldStatus(model::FieldId field) const = 0;
+
+    protected:
+        ~FormView() = default;
     };
 }

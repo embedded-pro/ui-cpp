@@ -10,7 +10,6 @@ namespace ui
         PaintedViewHost() = default;
         PaintedViewHost(const PaintedViewHost& other) = delete;
         PaintedViewHost& operator=(const PaintedViewHost& other) = delete;
-        virtual ~PaintedViewHost();
 
         virtual void Invalidate() = 0;
         virtual void OnViewDestroyed() = 0;
@@ -21,5 +20,8 @@ namespace ui
         friend class PaintedView;
 
         PaintedView* view{ nullptr };
+
+    protected:
+        ~PaintedViewHost();
     };
 }

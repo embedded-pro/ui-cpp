@@ -17,7 +17,8 @@ namespace ui
         PaintedView() = default;
         PaintedView(const PaintedView& other) = delete;
         PaintedView& operator=(const PaintedView& other) = delete;
-        ~PaintedView() override;
+        // Virtual: consumers own views through a base pointer.
+        virtual ~PaintedView();
 
         virtual void Paint(Canvas& canvas, const Rect& bounds) = 0;
 

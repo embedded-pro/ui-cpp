@@ -2,6 +2,10 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS Core Network)
 
 ui_add_library(ui.backend.qt.update QT
     SOURCES
+        CrashReason.cpp
+        CrashReason.hpp
+        CrashReporter.cpp
+        CrashReporter.hpp
         IssueLog.cpp
         IssueLog.hpp
         IssueReport.cpp
@@ -24,6 +28,10 @@ ui_add_library(ui.backend.qt.update QT
         Qt6::Core
         Qt6::Network
 )
+
+if (WIN32)
+    target_link_libraries(ui.backend.qt.update PRIVATE dbghelp)
+endif()
 
 add_subdirectory(test)
 add_subdirectory(widgets)

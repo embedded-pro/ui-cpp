@@ -88,7 +88,8 @@ JSON, which Qt already does on every desktop platform the tools ship on.
 | `UpdateInstallation` | Tells a packaged install from a portable one and builds the command that installs an update (`apt-get` through `pkexec`, or the NSIS setup)   |
 | `UpdateInstaller`    | Runs that command and reports whether the tool must exit first                                                                                |
 | `UpdateSession`      | Offer, download, install, cancel and dismiss as one state machine; `SetBlocked` holds the install back while the tool is busy with hardware   |
-| `IssueLog`           | A rotating log file plus the recent lines in memory, optionally capturing Qt's own messages                                                   |
+| `IssueLog`           | A rotating log file plus the recent lines in memory, optionally capturing Qt's own messages from a set level                                  |
+| `CrashReporter`      | On a crash, a `FATAL` line in the issue log and, on Windows, a minidump beside it; notes a previous run that did not close normally           |
 | `IssueReport`        | Builds the new-issue URL with the product, version, platform and recent log, trimmed to fit a URL                                             |
 
 `ui.backend.qt.update_widgets` (`ui/backend/qt/update/widgets`) adds the Widgets side every tool repeated: the banner, the

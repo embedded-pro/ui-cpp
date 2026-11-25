@@ -21,7 +21,7 @@ ui/stage     3D stage: scene graph, joints, meshes, STL, materials, view   — n
 ui/backend/recording  records draw calls — the test harness                 — no Qt
 
 ui/backend/qt         QtCanvas, QtPaintedWidget, QtTheme — Qt6 Widgets
-ui/backend/qt/update  release check, verified download, installer, issue log — Qt6 Network
+ui/backend/qt/update  release check, verified download, installer, issue log, crash reporter — Qt6 Network
   …/widgets           update banner, update assistant, issue report — Qt6 Widgets
 ```
 

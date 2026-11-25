@@ -14,7 +14,8 @@ namespace ui::backend::qt::update
     {
         info,
         warning,
-        error
+        error,
+        fatal
     };
 
     class IssueLog
@@ -27,6 +28,7 @@ namespace ui::backend::qt::update
             qint64 maxFileBytes{ 1024 * 1024 };
             int keptFiles{ 3 };
             std::size_t recentCapacity{ 200 };
+            QtMsgType minimumQtMessage{ QtWarningMsg };
         };
 
         explicit IssueLog(const Config& config);
@@ -40,6 +42,8 @@ namespace ui::backend::qt::update
         bool IsWritable() const;
         QString FilePath() const;
         QString Directory() const;
+        QString BaseName() const;
+        QtMsgType MinimumQtMessage() const;
         QStringList RecentLines(std::size_t count) const;
 
         void CaptureQtMessages();

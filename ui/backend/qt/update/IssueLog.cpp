@@ -26,12 +26,45 @@ namespace ui::backend::qt::update
             return writing;
         }
 
+        int Rank(QtMsgType type)
+        {
+            switch (type)
+            {
+                case QtDebugMsg:
+                    return 0;
+                case QtInfoMsg:
+                    return 1;
+                case QtWarningMsg:
+                    return 2;
+                case QtCriticalMsg:
+                    return 3;
+                default:
+                    return 4;
+            }
+        }
+
+        IssueSeverity SeverityOf(QtMsgType type)
+        {
+            switch (type)
+            {
+                case QtDebugMsg:
+                case QtInfoMsg:
+                    return IssueSeverity::info;
+                case QtWarningMsg:
+                    return IssueSeverity::warning;
+                case QtCriticalMsg:
+                    return IssueSeverity::error;
+                default:
+                    return IssueSeverity::fatal;
+            }
+        }
+
         void ForwardQtMessage(QtMsgType type, const QMessageLogContext& context, const QString& message)
         {
             const auto& capture = CaptureState();
             auto* log = capture.log.load();
-            if (log != nullptr && !WritingOnThisThread() && type != QtDebugMsg && type != QtInfoMsg)
-                log->Write(type == QtWarningMsg ? IssueSeverity::warning : IssueSeverity::error, "Qt: " + message);
+            if (log != nullptr && !WritingOnThisThread() && Rank(type) >= Rank(log->MinimumQtMessage()))
+                log->Write(SeverityOf(type), "Qt: " + message);
 
             if (capture.previousHandler != nullptr)
                 capture.previousHandler(type, context, message);
@@ -46,6 +79,8 @@ namespace ui::backend::qt::update
                 return "WARN ";
             case IssueSeverity::error:
                 return "ERROR";
+            case IssueSeverity::fatal:
+                return "FATAL";
             default:
                 return "INFO ";
         }
@@ -104,6 +139,16 @@ namespace ui::backend::qt::update
     QString IssueLog::Directory() const
     {
         return config.directory;
+    }
+
+    QString IssueLog::BaseName() const
+    {
+        return config.baseName;
+    }
+
+    QtMsgType IssueLog::MinimumQtMessage() const
+    {
+        return config.minimumQtMessage;
     }
 
     QStringList IssueLog::RecentLines(std::size_t count) const

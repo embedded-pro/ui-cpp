@@ -99,7 +99,8 @@ children are scene nodes. `extent` sizes the camera: it orbits a point at `focus
 above the floor at `homeDistance` × `extent`. `frame()` goes home, `showPreset(i)` to one of `presets`
 (front, side, top and iso by default), with keys F and 1–9 while `keyboardShortcuts` is on; a double tap
 frames and a tap emits `picked` with the `View3D` pick result. Colours, light levels and the
-floor, grid, shadow and ambient-occlusion switches are properties.
+floor, grid, shadow, ambient-occlusion, antialiasing and light-probe switches are properties; a consumer turns all four
+off on a software renderer, where they cost seconds per frame.
 
 Framing follows the content when the consumer gives it:
 

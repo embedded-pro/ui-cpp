@@ -3,14 +3,23 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
+#include <algorithm>
 #include <chrono>
 #include <csignal>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <string>
+#include <thread>
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 // windows.h first: dbghelp.h needs its types.
 #include <dbghelp.h>
@@ -34,6 +43,12 @@ namespace ui::backend::qt::update
             {
                 for (; value != nullptr && *value != '\0' && size + 1 < text.size(); ++value)
                     text[size++] = *value == '\n' ? ' ' : *value;
+            }
+
+            void AppendNewline()
+            {
+                if (size + 1 < text.size())
+                    text[size++] = '\n';
             }
 
             void AppendNumber(std::int64_t value, std::size_t digits)
@@ -210,14 +225,21 @@ namespace ui::backend::qt::update
 
     CrashReporter::~CrashReporter()
     {
+        if (!installed)
+            return;
         Uninstall();
         QFile::remove(QDir{ directory }.filePath(baseName + ".running"));
     }
 
     void CrashReporter::ReportFatal(const char* reason, void* exceptionPointers)
     {
+        // A second crashing thread waits, so the process does not die while the first writes.
         if (reported.test_and_set())
+        {
+            for (int waited = 0; waited != 200 && !written.load(); ++waited)
+                std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
             return;
+        }
 
         const auto dumped = WriteDump(exceptionPointers);
         Line line;
@@ -229,8 +251,9 @@ namespace ui::backend::qt::update
             line.Append("; dump ");
             line.Append(dumpName.c_str());
         }
-        line.Append("\n");
+        line.AppendNewline();
         AppendLine(line.text.data());
+        written.store(true);
     }
 
     QString CrashReporter::DumpPath() const

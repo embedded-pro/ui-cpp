@@ -19,7 +19,7 @@ namespace ui::backend::qt::update
         CrashReporter(const CrashReporter&) = delete;
         CrashReporter& operator=(const CrashReporter&) = delete;
 
-        // Async-signal-safe: no allocation, no lock, no Qt.
+        // POSIX: async-signal-safe. Windows: best effort, MiniDumpWriteDump allocates.
         void ReportFatal(const char* reason, void* exceptionPointers = nullptr);
 
         QString DumpPath() const;
@@ -45,6 +45,7 @@ namespace ui::backend::qt::update
         NativePath nativeDumpPath;
         std::string dumpName;
         std::atomic_flag reported;
+        std::atomic<bool> written{ false };
         bool installed{ false };
     };
 }

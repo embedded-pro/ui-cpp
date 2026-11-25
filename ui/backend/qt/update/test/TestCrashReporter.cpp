@@ -6,8 +6,12 @@
 #include <QRegularExpression>
 #include <QTemporaryDir>
 #include <csignal>
+#include <cstdlib>
 #include <exception>
 #include <stdexcept>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace
 {
@@ -128,6 +132,31 @@ TEST_F(TestCrashReporter, logs_the_exception_that_reaches_terminate)
     EXPECT_TRUE(FileLines(LogPath()).join('\n').contains("[FATAL] Crash: Unhandled C++ exception: mesh index out of range"));
 }
 
+TEST_F(TestCrashReporter, ends_the_fatal_line_with_a_newline)
+{
+    IssueLog log{ LogConfig() };
+    CrashReporter reporter{ log };
+    reporter.ReportFatal("first");
+
+    QFile file{ LogPath() };
+    ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+    EXPECT_TRUE(file.readAll().endsWith("Crash: first\n"));
+}
+
+TEST_F(TestCrashReporter, logs_an_abort)
+{
+    EXPECT_DEATH(
+        {
+            IssueLog log{ LogConfig() };
+            CrashReporter reporter{ log };
+            std::abort();
+        },
+        "");
+
+    EXPECT_TRUE(FileLines(LogPath()).join('\n').contains("[FATAL] Crash: Aborted"));
+}
+
+#ifndef _WIN32
 TEST_F(TestCrashReporter, logs_a_crash_signal)
 {
     EXPECT_DEATH(
@@ -140,6 +169,20 @@ TEST_F(TestCrashReporter, logs_a_crash_signal)
 
     EXPECT_TRUE(FileLines(LogPath()).join('\n').contains("[FATAL] Crash: Segmentation fault"));
 }
+#else
+TEST_F(TestCrashReporter, logs_an_access_violation)
+{
+    EXPECT_DEATH(
+        {
+            IssueLog log{ LogConfig() };
+            CrashReporter reporter{ log };
+            RaiseException(EXCEPTION_ACCESS_VIOLATION, 0, 0, nullptr);
+        },
+        "");
+
+    EXPECT_TRUE(FileLines(LogPath()).join('\n').contains("[FATAL] Crash: Unhandled exception 0xC0000005"));
+}
+#endif
 
 #ifdef _WIN32
 TEST_F(TestCrashReporter, writes_a_minidump_on_windows)

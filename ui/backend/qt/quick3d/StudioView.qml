@@ -33,6 +33,9 @@ Item {
     property bool gridVisible: true
     property bool shadows: true
     property bool ambientOcclusion: true
+    // Off for a software renderer (WARP, llvmpipe), where MSAA and the probe cost seconds per frame.
+    property bool antialiasing: true
+    property bool lightProbeEnabled: true
     property bool keyboardShortcuts: true
     property bool orthographic: false
 
@@ -143,6 +146,11 @@ Item {
         color: root.backgroundColor
     }
 
+    Texture {
+        id: probeTexture
+        source: root.lightProbe
+    }
+
     View3D {
         id: view
         anchors.fill: parent
@@ -151,12 +159,12 @@ Item {
         environment: SceneEnvironment {
             backgroundMode: SceneEnvironment.Color
             clearColor: root.backgroundColor
-            lightProbe: Texture { source: root.lightProbe }
+            lightProbe: root.lightProbeEnabled ? probeTexture : null
             probeExposure: root.probeExposure
             tonemapMode: SceneEnvironment.TonemapModeFilmic
-            antialiasingMode: SceneEnvironment.MSAA
+            antialiasingMode: root.antialiasing ? SceneEnvironment.MSAA : SceneEnvironment.NoAA
             antialiasingQuality: SceneEnvironment.High
-            specularAAEnabled: true
+            specularAAEnabled: root.antialiasing
             aoStrength: root.ambientOcclusion ? 55 : 0
             aoDistance: 5
             aoSoftness: 40

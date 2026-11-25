@@ -130,3 +130,25 @@ TEST_F(Quick3DModuleTest, AStatusBadgeShowsOnlyWhileItHasText)
 
     EXPECT_NE(Create("import Ui.Quick3D\nAxisTriad { length: 12 }\n"), nullptr);
 }
+
+TEST_F(Quick3DModuleTest, StudioViewDropsAntialiasingAndTheLightProbeForASoftwareRenderer)
+{
+    const auto studio = Create("import QtQuick3D\nimport Ui.Quick3D\nStudioView { antialiasing: false; lightProbeEnabled: false }\n");
+    ASSERT_NE(studio, nullptr);
+
+    auto* environment = studio->property("view").value<QObject*>()->property("environment").value<QObject*>();
+    ASSERT_NE(environment, nullptr);
+    EXPECT_EQ(environment->property("antialiasingMode").toInt(), 0);
+    EXPECT_FALSE(environment->property("specularAAEnabled").toBool());
+    EXPECT_EQ(environment->property("lightProbe").value<QObject*>(), nullptr);
+}
+
+TEST_F(Quick3DModuleTest, StudioViewAntialiasesAndLightsWithTheProbeByDefault)
+{
+    const auto studio = Create("import QtQuick3D\nimport Ui.Quick3D\nStudioView {}\n");
+    ASSERT_NE(studio, nullptr);
+
+    auto* environment = studio->property("view").value<QObject*>()->property("environment").value<QObject*>();
+    EXPECT_NE(environment->property("antialiasingMode").toInt(), 0);
+    EXPECT_NE(environment->property("lightProbe").value<QObject*>(), nullptr);
+}

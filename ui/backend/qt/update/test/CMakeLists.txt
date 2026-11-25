@@ -1,5 +1,6 @@
 ui_add_test(ui.backend.qt.update_test
     SOURCES
+        TestCrashReporter.cpp
         TestIssueLog.cpp
         TestIssueReport.cpp
         TestReleaseFeed.cpp

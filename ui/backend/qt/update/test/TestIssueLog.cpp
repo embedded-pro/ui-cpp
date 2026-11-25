@@ -224,3 +224,26 @@ TEST_F(TestIssueLog, forwards_qt_messages_to_the_handler_installed_before_it)
     EXPECT_EQ(2, ForwardedMessages());
     qInstallMessageHandler(original);
 }
+
+TEST_F(TestIssueLog, captures_qt_debug_and_info_from_the_configured_level)
+{
+    auto config = Config();
+    config.minimumQtMessage = QtDebugMsg;
+    IssueLog log{ config };
+    log.CaptureQtMessages();
+    qDebug("scene loaded");
+    qInfo("profile restored");
+
+    const auto lines = log.RecentLines(10);
+    ASSERT_EQ(2, lines.size());
+    EXPECT_TRUE(lines[0].endsWith("[INFO ] Qt: scene loaded"));
+    EXPECT_TRUE(lines[1].endsWith("[INFO ] Qt: profile restored"));
+}
+
+TEST_F(TestIssueLog, writes_fatal_severity)
+{
+    IssueLog log{ Config() };
+    log.Write(IssueSeverity::fatal, "Crash: segmentation fault");
+
+    EXPECT_TRUE(FileLines(log.FilePath()).back().endsWith("[FATAL] Crash: segmentation fault"));
+}

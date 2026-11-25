@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QRegularExpression>
 #include <QTemporaryDir>
 #include <csignal>
@@ -110,6 +111,46 @@ TEST_F(TestCrashReporter, a_clean_close_leaves_no_marker)
     EXPECT_FALSE(QFile::exists(QDir{ Directory() }.filePath("tool.running")));
     CrashReporter next{ log };
     EXPECT_TRUE(log.RecentLines(10).isEmpty());
+}
+
+TEST_F(TestCrashReporter, names_the_dump_beside_the_log)
+{
+    IssueLog log{ LogConfig() };
+    CrashReporter reporter{ log };
+
+    const QFileInfo dump{ reporter.DumpPath() };
+    EXPECT_EQ(QDir{ Directory() }.absolutePath(), dump.absolutePath());
+    EXPECT_TRUE(dump.fileName().startsWith("tool-"));
+    EXPECT_TRUE(dump.fileName().endsWith(".dmp"));
+}
+
+TEST_F(TestCrashReporter, keeps_only_the_newest_dumps)
+{
+    QDir{}.mkpath(Directory());
+    for (const auto* name : { "tool-20260101-000000.dmp", "tool-20260102-000000.dmp", "tool-20260103-000000.dmp", "tool-20260104-000000.dmp" })
+    {
+        QFile dump{ QDir{ Directory() }.filePath(name) };
+        ASSERT_TRUE(dump.open(QIODevice::WriteOnly));
+    }
+
+    IssueLog log{ LogConfig() };
+    CrashReporter reporter{ log, 3 };
+
+    const auto kept = QDir{ Directory() }.entryList({ "tool-*.dmp" }, QDir::Files, QDir::Name);
+    ASSERT_EQ(2, kept.size());
+    EXPECT_EQ("tool-20260103-000000.dmp", kept[0]);
+    EXPECT_EQ("tool-20260104-000000.dmp", kept[1]);
+}
+
+TEST_F(TestCrashReporter, a_second_reporter_leaves_the_first_in_charge)
+{
+    IssueLog log{ LogConfig() };
+    CrashReporter first{ log };
+    {
+        CrashReporter second{ log };
+    }
+
+    EXPECT_TRUE(QFile::exists(QDir{ Directory() }.filePath("tool.running")));
 }
 
 TEST_F(TestCrashReporter, logs_the_exception_that_reaches_terminate)

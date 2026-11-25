@@ -3,7 +3,10 @@
 #include <QString>
 #include <array>
 #include <atomic>
+#include <cstddef>
 #include <string>
+
+struct _EXCEPTION_POINTERS;
 
 namespace ui::backend::qt::update
 {
@@ -20,7 +23,7 @@ namespace ui::backend::qt::update
         CrashReporter& operator=(const CrashReporter&) = delete;
 
         // POSIX: async-signal-safe. Windows: best effort, MiniDumpWriteDump allocates.
-        void ReportFatal(const char* reason, void* exceptionPointers = nullptr);
+        void ReportFatal(const char* reason, _EXCEPTION_POINTERS* exceptionPointers = nullptr);
 
         QString DumpPath() const;
 
@@ -28,9 +31,9 @@ namespace ui::backend::qt::update
         void NoteUncleanPreviousRun(IssueLog& log);
         void PruneDumps(int keptDumps) const;
         void Install();
-        void Uninstall();
-        void AppendLine(const char* reason) const;
-        bool WriteDump(void* exceptionPointers) const;
+        void Uninstall() const;
+        void AppendLine(const char* text, std::size_t size) const;
+        bool WriteDump(_EXCEPTION_POINTERS* exceptionPointers) const;
 
 #ifdef _WIN32
         using NativePath = std::wstring;

@@ -2,6 +2,8 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS Core Network)
 
 ui_add_library(ui.backend.qt.update QT
     SOURCES
+        CrashReason.cpp
+        CrashReason.hpp
         CrashReporter.cpp
         CrashReporter.hpp
         IssueLog.cpp

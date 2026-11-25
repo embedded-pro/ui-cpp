@@ -1,4 +1,5 @@
 #include "ui/backend/qt/update/CrashReporter.hpp"
+#include "ui/backend/qt/update/CrashReason.hpp"
 #include "ui/backend/qt/update/IssueLog.hpp"
 #include <QDateTime>
 #include <QDir>
@@ -116,7 +117,7 @@ namespace ui::backend::qt::update
             return handlers;
         }
 
-        void Report(const char* reason, void* exceptionPointers = nullptr)
+        void Report(const char* reason, _EXCEPTION_POINTERS* exceptionPointers = nullptr)
         {
             if (auto* reporter = State().active.load(); reporter != nullptr)
                 reporter->ReportFatal(reason, exceptionPointers);
@@ -124,25 +125,7 @@ namespace ui::backend::qt::update
 
         [[noreturn]] void OnTerminate()
         {
-            Line reason;
-            reason.Append("Unhandled C++ exception");
-            try
-            {
-                if (const auto current = std::current_exception())
-                    std::rethrow_exception(current);
-                reason = {};
-                reason.Append("std::terminate without an exception");
-            }
-            catch (const std::exception& exception)
-            {
-                reason.Append(": ");
-                reason.Append(exception.what());
-            }
-            catch (...)
-            {
-                reason.Append(" of unknown type");
-            }
-            Report(reason.text.data());
+            Report(detail::CurrentExceptionReason().data());
             std::abort();
         }
 
@@ -178,26 +161,9 @@ namespace ui::backend::qt::update
 #else
         constexpr std::array<int, 5> crashSignals{ SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT };
 
-        const char* SignalName(int signal)
-        {
-            switch (signal)
-            {
-                case SIGSEGV:
-                    return "Segmentation fault";
-                case SIGBUS:
-                    return "Bus error";
-                case SIGFPE:
-                    return "Floating-point exception";
-                case SIGILL:
-                    return "Illegal instruction";
-                default:
-                    return "Aborted";
-            }
-        }
-
         void OnSignal(int signal)
         {
-            Report(SignalName(signal));
+            Report(detail::SignalName(signal));
             std::signal(signal, SIG_DFL);
             std::raise(signal);
         }
@@ -231,7 +197,7 @@ namespace ui::backend::qt::update
         QFile::remove(QDir{ directory }.filePath(baseName + ".running"));
     }
 
-    void CrashReporter::ReportFatal(const char* reason, void* exceptionPointers)
+    void CrashReporter::ReportFatal(const char* reason, _EXCEPTION_POINTERS* exceptionPointers)
     {
         // A second crashing thread waits, so the process does not die while the first writes.
         if (reported.test_and_set())
@@ -252,7 +218,7 @@ namespace ui::backend::qt::update
             line.Append(dumpName.c_str());
         }
         line.AppendNewline();
-        AppendLine(line.text.data());
+        AppendLine(line.text.data(), line.size);
         written.store(true);
     }
 
@@ -296,8 +262,7 @@ namespace ui::backend::qt::update
         state.previousAbort = std::signal(SIGABRT, OnAbort);
         _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #else
-        struct sigaction action
-        {};
+        struct sigaction action{};
 
         action.sa_handler = OnSignal;
         sigemptyset(&action.sa_mask);
@@ -306,7 +271,7 @@ namespace ui::backend::qt::update
 #endif
     }
 
-    void CrashReporter::Uninstall()
+    void CrashReporter::Uninstall() const
     {
         if (!installed)
             return;
@@ -325,9 +290,8 @@ namespace ui::backend::qt::update
         state.active = nullptr;
     }
 
-    void CrashReporter::AppendLine(const char* text) const
+    void CrashReporter::AppendLine(const char* text, std::size_t size) const
     {
-        const auto size = std::strlen(text);
 #ifdef _WIN32
         const auto file = CreateFileW(nativeLogPath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (file == INVALID_HANDLE_VALUE)
@@ -336,7 +300,7 @@ namespace ui::backend::qt::update
         WriteFile(file, text, static_cast<DWORD>(size), &written, nullptr);
         CloseHandle(file);
 #else
-        const auto file = ::open(nativeLogPath.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644);
+        const auto file = ::open(nativeLogPath.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0600);
         if (file < 0)
             return;
         [[maybe_unused]] const auto written = ::write(file, text, size);
@@ -344,13 +308,13 @@ namespace ui::backend::qt::update
 #endif
     }
 
-    bool CrashReporter::WriteDump(void* exceptionPointers) const
+    bool CrashReporter::WriteDump(_EXCEPTION_POINTERS* exceptionPointers) const
     {
 #ifdef _WIN32
         const auto file = CreateFileW(nativeDumpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (file == INVALID_HANDLE_VALUE)
             return false;
-        MINIDUMP_EXCEPTION_INFORMATION exception{ GetCurrentThreadId(), static_cast<EXCEPTION_POINTERS*>(exceptionPointers), FALSE };
+        MINIDUMP_EXCEPTION_INFORMATION exception{ GetCurrentThreadId(), exceptionPointers, FALSE };
         const auto type = static_cast<MINIDUMP_TYPE>(MiniDumpWithThreadInfo | MiniDumpWithIndirectlyReferencedMemory);
         const auto written = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file, type,
             exceptionPointers != nullptr ? &exception : nullptr, nullptr, nullptr);
